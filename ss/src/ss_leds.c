@@ -18,11 +18,11 @@ int8_t ss_leds_init(void) {
 
 
 void ss_led_error_on(void) {
-    ss_io_write(PIN('C', 0), SS_GPIO_ON);
+    ss_io_write(PIN('C', 0), SS_GPIO_OFF);
 }
 
 void ss_led_error_off(void) {
-    ss_io_write(PIN('C', 0), SS_GPIO_OFF);
+    ss_io_write(PIN('C', 0), SS_GPIO_ON);
 }
 
 void ss_led_error_toggle(void) {
@@ -32,11 +32,11 @@ void ss_led_error_toggle(void) {
 
 
 void ss_led_heartbeat_on(void) {
-    ss_io_write(PIN('C',1), SS_GPIO_ON);
+    ss_io_write(PIN('C',1), SS_GPIO_OFF);
 }
 
 void ss_led_heartbeat_off(void) {
-    ss_io_write(PIN('C',1), SS_GPIO_OFF);
+    ss_io_write(PIN('C',1), SS_GPIO_ON);
 }
 
 void ss_led_heartbeat_toggle(void) {
@@ -46,11 +46,11 @@ void ss_led_heartbeat_toggle(void) {
 
 
 void ss_led_dbg1_on(void) {
-    ss_io_write(PIN('C',4), SS_GPIO_ON);
+    ss_io_write(PIN('C',4), SS_GPIO_OFF);
 }
 
 void ss_led_dbg1_off(void) {
-    ss_io_write(PIN('C',4), SS_GPIO_OFF);
+    ss_io_write(PIN('C',4), SS_GPIO_ON);
 }
 
 void ss_led_dbg1_toggle(void) {
@@ -60,11 +60,11 @@ void ss_led_dbg1_toggle(void) {
 
 
 void ss_led_dbg2_on(void) {
-    ss_io_write(PIN('C',5), SS_GPIO_ON);
+    ss_io_write(PIN('C',5), SS_GPIO_OFF);
 }
 
 void ss_led_dbg2_off(void) {
-    ss_io_write(PIN('C',5), SS_GPIO_OFF);
+    ss_io_write(PIN('C',5), SS_GPIO_ON);
 }
 
 void ss_led_dbg2_toggle(void) {
