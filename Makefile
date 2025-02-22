@@ -17,17 +17,13 @@
 ## along with this library.  If not, see <http://www.gnu.org/licenses/>.
 ##
 
-BINARY = sspbt
 
-#OBJS		+= main.o
 
-OBJS += $(patsubst %.c, %.o, $(wildcard ss/src/*.c))
-#OBJS += $(patsubst %.c, %.o, $(wildcard usr/src/*.c))
+OBJS += $(patsubst %.c, %.o, $(wildcard fse_pb_bsp/ss/src/*.c))
 
-LDSCRIPT = stm32f4-discovery.ld
 
-#gdb:
-#	gdb-multiarch --tui -silent -x 'tools/gdbinit' -iex 'set auto-load safe-path /'
+LDSCRIPT = fse_pb_bsp/stm32f4-discovery.ld
 
-include tools/Makefile.include
+
+
 

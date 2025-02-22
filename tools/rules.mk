@@ -57,7 +57,7 @@ ifeq ($(strip $(OPENCM3_DIR)),)
 # user has not specified the library path, so we try to detect it
 
 # where we search for the library
-LIBPATHS := ./libopencm3 ../../../../libopencm3 ../../../../../libopencm3
+LIBPATHS := ./libopencm3 ../../../../libopencm3 ../../../../../libopencm3 ./fse_pb_bsp/libopencm3
 
 OPENCM3_DIR := $(wildcard $(LIBPATHS:=/locm3.sublime-project))
 OPENCM3_DIR := $(firstword $(dir $(OPENCM3_DIR)))
@@ -119,8 +119,8 @@ TGT_CXXFLAGS	+= -fno-common -ffunction-sections -fdata-sections
 TGT_CPPFLAGS	+= -MD
 TGT_CPPFLAGS	+= -Wall -Wundef
 TGT_CPPFLAGS	+= $(DEFS)
-TGT_CPPFLAGS	+= -Iss/inc
-TGT_CPPFLAGS	+= -Iusr/inc
+TGT_CPPFLAGS	+= -Ifse_pb_bsp/ss/inc
+
 
 
 ###############################################################################
