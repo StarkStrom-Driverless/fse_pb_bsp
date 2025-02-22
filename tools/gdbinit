@@ -1,0 +1,57 @@
+# - .estool/gdbinit -
+
+# This file is executed on startup by arm-none-eabi-gdb-py [--tui].  It is a
+# project specific initialization file. You may also have a .gdbinit in your
+# home directory for common settings.
+#
+# The GDB debugger documentation is available online by typing
+# "info gdb". Be sure to install the package "gdb-doc".
+
+dir .
+
+set output-radix 0x10
+set endian little
+set prompt (arm-gdb) 
+set confirm off
+set pagination off
+
+set logging file gdb_logfile.txt
+set logging on
+
+file usart.elf
+
+define exit
+quit
+end
+
+document exit
+Just an alias for quit.
+end
+
+define debug-program
+monitor reset halt
+continue
+end
+
+document debug-program
+Run under debugger (reset halt + continue)
+end
+
+define run-program
+monitor reset run
+end
+
+document run-program
+Run without debugging.
+end
+
+# Replacement for "target remote localhost:3333". Variable "gdbport" 
+# now holds GDB port number.
+python
+from __future__ import print_function
+cmd = "target remote localhost:3333"
+gdb.execute(cmd)
+end
+
+b main
+debug-program
