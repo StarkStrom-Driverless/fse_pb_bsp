@@ -215,6 +215,9 @@ uint16_t ss_pwm_init(uint16_t pin_id, uint32_t frequency, uint32_t fsys) {
 
     timer_enable_counter(timer_id);
 
+    if (pin_id == PIN('C', 8))
+        timer_enable_break_main_output(timer_id);
+
     timer_enable_oc_output(timer_id, channel);
 
     return pin_id;
