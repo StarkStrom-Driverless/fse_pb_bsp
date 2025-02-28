@@ -13,4 +13,6 @@ uint16_t ss_pwm_init(uint16_t pin_id, uint32_t frequency, uint32_t fsys);
 
 uint8_t ss_pwm_write(uint16_t pin_id, uint32_t value);
 
+uint8_t ss_is_pin_id_extended_timer(uint16_t pin_id);
+
 #endif
