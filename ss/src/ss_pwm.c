@@ -191,6 +191,26 @@ uint8_t get_pwm_af_mode_for_pin_id(uint16_t pin_id) {
     return af;
 }
 
+uint8_t ss_is_pin_id_extended_timer(uint16_t pin_id) {
+    uint8_t extended = 0;
+    switch(pin_id) {
+        case PIN('C', 6):
+        case PIN('C', 7):
+        case PIN('C', 8):
+        case PIN('C', 9):
+        case PIN('A', 8):
+        case PIN('A', 9):
+        case PIN('A', 10):
+        case PIN('A', 11):
+            extended = 1;
+            break;
+
+        default: break;
+    }
+
+    return extended;
+}
+
 uint16_t ss_pwm_init(uint16_t pin_id, uint32_t frequency, uint32_t fsys) {
     ss_io_init(pin_id, GPIO_MODE_AF);
 
@@ -215,9 +235,10 @@ uint16_t ss_pwm_init(uint16_t pin_id, uint32_t frequency, uint32_t fsys) {
 
     timer_enable_counter(timer_id);
 
-    if (pin_id == PIN('C', 8))
+    if(ss_is_pin_id_extended_timer(pin_id)) {
         timer_enable_break_main_output(timer_id);
-
+    }
+        
     timer_enable_oc_output(timer_id, channel);
 
     return pin_id;
