@@ -20,6 +20,7 @@
 
 
 OBJS += $(patsubst %.c, %.o, $(wildcard fse_pb_bsp/ss/src/*.c))
+OBJS += $(patsubst %.c, %.o, $(wildcard fse_pb_bsp/controls/src/*.c))
 
 
 LDSCRIPT = fse_pb_bsp/stm32f4-discovery.ld
