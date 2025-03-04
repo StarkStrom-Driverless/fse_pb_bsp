@@ -19,7 +19,7 @@ uint32_t ss_get_adc_from_pin_id(uint16_t pin_id);
 
 uint8_t ss_get_adc_channel_from_pin_id(uint16_t pin_id);
 
-int8_t ss_adc_init(uint16_t pin_id, struct SS_ADC* adc_struct);
+uint16_t ss_adc_init(uint16_t pin_id, struct SS_ADC* adc_struct);
 
 int8_t ss_adc_start(uint16_t pin_id, struct SS_ADC* adc_struct);
 

@@ -96,7 +96,7 @@ uint8_t ss_get_adc_channel_from_pin_id(uint16_t pin_id) {
     return adc_channel;
 }
 
-int8_t ss_adc_init(uint16_t pin_id, struct SS_ADC* adc_struct) {
+uint16_t ss_adc_init(uint16_t pin_id, struct SS_ADC* adc_struct) {
     adc_struct->adc_converstion_status = 2;
 
     ss_enable_adc_clock_from_pin_id(pin_id);
@@ -119,7 +119,7 @@ int8_t ss_adc_init(uint16_t pin_id, struct SS_ADC* adc_struct) {
 
     nvic_enable_irq(NVIC_ADC_IRQ);
 
-    return 0;
+    return pin_id;
 }
 
 int8_t ss_adc_start(uint16_t pin_id, struct SS_ADC* adc_struct) {
