@@ -4,10 +4,12 @@
 
 extern Systick_Handle handle1;
 extern Systick_Handle handle2;
+extern Systick_Handle handle_pid;
 
 void sys_tick_handler(void) {
     handle1.tick++;
     handle2.tick++;
+    handle_pid.tick++;
 }
 
 int8_t ss_init_systick(uint32_t reload) {
