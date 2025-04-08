@@ -5,6 +5,7 @@
 #include <stddef.h>
 
 #define FIFO_SIZE 5
+#define MAX_TIMEOUT_DETECTION 10
 
 struct can_tx_msg {
 	uint32_t std_id;
@@ -23,6 +24,18 @@ struct can_rx_msg {
 	uint8_t dlc;
 	uint8_t data[8];
 	uint8_t fmi;
+};
+
+struct MsgStatus {
+	uint32_t std_id;
+	uint16_t active_counter;
+	uint16_t reset_value;
+	uint8_t timeout_detected;
+};
+
+struct TimeOutDetection {
+	struct MsgStatus msgs[MAX_TIMEOUT_DETECTION];
+	uint8_t msg_count;
 };
 
 
@@ -63,6 +76,12 @@ uint8_t is_fifo_full(struct Fifo* fifo);
 int8_t fifo_add_can_frame(struct Fifo* fifo, struct can_rx_msg* can_frame);
 int8_t fifo_remove_can_frame(struct Fifo* fifo, struct can_rx_msg* can_frame);
 
+
+
+void ss_can_init_timeout_detection(struct TimeOutDetection* tod);
+uint8_t ss_can_add_timeout(struct TimeOutDetection* tod, uint32_t id, uint16_t reset_value);
+uint8_t ss_can_check_timeout_detection(struct TimeOutDetection* tod);
+void ss_can_update_timeout_detection(struct TimeOutDetection* tod, uint32_t id);
 
 
 #endif

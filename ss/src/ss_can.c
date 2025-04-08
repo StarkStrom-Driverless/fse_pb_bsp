@@ -317,3 +317,47 @@ int8_t fifo_remove_can_frame(struct Fifo* fifo, struct can_rx_msg* can_frame) {
 
     return 0;
 }
+
+
+void ss_can_init_timeout_detection(struct TimeOutDetection* tod) {
+    tod->msg_count = 0;
+}
+
+uint8_t ss_can_add_timeout(struct TimeOutDetection* tod, uint32_t id, uint16_t reset_value) {
+    uint8_t ret = 1;
+
+    tod->msgs[tod->msg_count].std_id = id;
+    tod->msgs[tod->msg_count].active_counter = reset_value;
+    tod->msgs[tod->msg_count].reset_value = reset_value;
+    tod->msgs[tod->msg_count].timeout_detected = 0;
+
+    if (tod->msg_count > MAX_TIMEOUT_DETECTION) {
+        ret = 0;
+    } else {
+        tod->msg_count++;
+    }
+    
+    return ret;
+}
+
+uint8_t ss_can_check_timeout_detection(struct TimeOutDetection* tod) {
+    uint8_t ret = 1;
+    for (uint8_t i = 0; i < tod->msg_count; i++) {
+        if (tod->msgs[i].active_counter == 0) {
+            ret = 0;
+            tod->msgs[i].timeout_detected = 1;
+        } else {
+            tod->msgs[i].timeout_detected = 0;
+            tod->msgs[i].active_counter--;
+        }
+    }
+    return ret;
+}
+
+void ss_can_update_timeout_detection(struct TimeOutDetection* tod, uint32_t id) {
+    for (uint8_t i = 0; i < tod->msg_count; i++) {
+        if (tod->msgs[i].std_id == id) {
+            tod->msgs[i].active_counter = tod->msgs[i].reset_value;
+        }
+    }
+}
