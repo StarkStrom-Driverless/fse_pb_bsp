@@ -289,7 +289,6 @@ void can1_sce_isr(void)
 
 
 
-
 void init_fifo(struct Fifo* fifo) {
     if (fifo != NULL) {
         fifo->front = -1;
@@ -302,29 +301,21 @@ uint8_t is_fifo_empty(struct Fifo* fifo) {
 }
 
 uint8_t is_fifo_full(struct Fifo* fifo) {
-    return fifo != NULL && fifo->rear == FIFO_SIZE - 1;
+    return fifo != NULL && ((fifo->rear + 1) % FIFO_SIZE == fifo->front);
 }
 
 int8_t fifo_add_can_frame(struct Fifo* fifo, struct can_rx_msg* can_frame) {
-    if (fifo == NULL || can_frame == NULL) return -1;  // Überprüfung auf Null-Zeiger
-
-    // Wenn die FIFO voll ist, gibt es keinen Platz
+    if (fifo == NULL || can_frame == NULL) return -1;
     if (is_fifo_full(fifo)) return -1;
 
-    // Wenn die FIFO leer ist, setze den front-Index auf 0
-    if (fifo->front == -1) fifo->front = 0;
-
-    // Erhöhe den rear-Index (gehe zum nächsten freien Platz)
-    if (fifo->rear < FIFO_SIZE - 1) {
-        fifo->rear++;
+    if (is_fifo_empty(fifo)) {
+        fifo->front = 0;
+        fifo->rear = 0;
     } else {
-        return -1;
+        fifo->rear = (fifo->rear + 1) % FIFO_SIZE;
     }
-    
 
-    
-
-    // Füge das CAN-Frame hinzu
+    // Kopiere das CAN-Frame
     fifo->can_frames[fifo->rear].std_id = can_frame->std_id;
     fifo->can_frames[fifo->rear].ext_id = can_frame->ext_id;
     fifo->can_frames[fifo->rear].ide = can_frame->ide;
@@ -332,7 +323,6 @@ int8_t fifo_add_can_frame(struct Fifo* fifo, struct can_rx_msg* can_frame) {
     fifo->can_frames[fifo->rear].dlc = can_frame->dlc;
     fifo->can_frames[fifo->rear].fmi = can_frame->fmi;
 
-    // Kopiere die Daten (maximal 8 Bytes, je nach dlc)
     for (int i = 0; i < can_frame->dlc; i++) {
         fifo->can_frames[fifo->rear].data[i] = can_frame->data[i];
     }
@@ -341,14 +331,10 @@ int8_t fifo_add_can_frame(struct Fifo* fifo, struct can_rx_msg* can_frame) {
 }
 
 int8_t fifo_remove_can_frame(struct Fifo* fifo, struct can_rx_msg* can_frame) {
-    if (fifo == NULL || can_frame == NULL) return -1;  // Überprüfung auf Null-Zeiger
-
-    // Wenn die FIFO leer ist, gibt es kein Frame zu entfernen
+    if (fifo == NULL || can_frame == NULL) return -1;
     if (is_fifo_empty(fifo)) return -1;
 
-    //if (fifo->front > FIFO_SIZE - 1) return -1;
-
-    // Kopiere das CAN-Frame vom front der FIFO in den übergebenen Buffer
+    // Kopiere das CAN-Frame
     can_frame->std_id = fifo->can_frames[fifo->front].std_id;
     can_frame->ext_id = fifo->can_frames[fifo->front].ext_id;
     can_frame->ide = fifo->can_frames[fifo->front].ide;
@@ -356,25 +342,21 @@ int8_t fifo_remove_can_frame(struct Fifo* fifo, struct can_rx_msg* can_frame) {
     can_frame->dlc = fifo->can_frames[fifo->front].dlc;
     can_frame->fmi = fifo->can_frames[fifo->front].fmi;
 
-    // Kopiere die Daten (maximal 8 Bytes, je nach dlc)
     for (int i = 0; i < can_frame->dlc; i++) {
         can_frame->data[i] = fifo->can_frames[fifo->front].data[i];
-        fifo->can_frames[fifo->front].data[i] = 0;  // Lösche die Daten im FIFO
+        fifo->can_frames[fifo->front].data[i] = 0;  // Optional: leeren
     }
 
-    // Wenn front == rear, FIFO ist nun leer
+    // Puffer leer?
     if (fifo->front == fifo->rear) {
         fifo->front = -1;
         fifo->rear = -1;
     } else {
-        // Bewege den front-Index zum nächsten Element
-        fifo->front++;
-        if (fifo->front > FIFO_SIZE - 1) fifo->front = 0;
+        fifo->front = (fifo->front + 1) % FIFO_SIZE;
     }
 
     return 0;
 }
-
 
 void ss_can_init_timeout_detection(struct TimeOutDetection* tod) {
     tod->msg_count = 0;
