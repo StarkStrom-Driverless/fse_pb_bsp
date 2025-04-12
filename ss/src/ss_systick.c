@@ -6,12 +6,14 @@ extern Systick_Handle handle1;
 extern Systick_Handle handle2;
 extern Systick_Handle handle_pid;
 extern Systick_Handle handle_error;
+extern Systick_Handle handle_tod;
 
 void sys_tick_handler(void) {
     handle1.tick++;
     handle2.tick++;
     handle_pid.tick++;
     handle_error.tick++;
+    handle_tod.tick++;
 }
 
 int8_t ss_init_systick(uint32_t reload) {

@@ -4,7 +4,7 @@
 #include <inttypes.h>
 #include <stddef.h>
 
-#define FIFO_SIZE 5
+#define FIFO_SIZE 10
 #define MAX_TIMEOUT_DETECTION 10
 
 struct can_tx_msg {
