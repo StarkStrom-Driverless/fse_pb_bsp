@@ -183,6 +183,8 @@ int8_t ss_can_init(uint8_t can_interface_id, uint32_t baudrate) {
 }
 
 int8_t ss_can_add_messages(uint32_t* ids, uint8_t len) {
+    
+
     int counter = 0;
 
     uint32_t std_ids[28];
@@ -256,8 +258,6 @@ int8_t ss_can_send(uint8_t can_interface_id, struct can_tx_msg* can_frame) {
 
 void can1_rx0_isr(void)
 {
-
-
     // Sicherstellen, dass wirklich eine Nachricht anliegt
     if ((CAN_RF0R(CAN1) & CAN_RF0R_FMP0_MASK) != 0) {
         struct can_rx_msg can_frame;
@@ -287,6 +287,15 @@ void can1_sce_isr(void)
     CAN_ESR(CAN1) &= ~(CAN_ESR_BOFF | CAN_ESR_EPVF | CAN_ESR_EWGF);
 }
 
+static inline void disable_irq(void) {
+    __asm volatile("cpsid i");
+}
+
+static inline void enable_irq(void) {
+    __asm volatile("cpsie i");
+}
+
+
 
 
 void init_fifo(struct Fifo* fifo) {
@@ -305,6 +314,8 @@ uint8_t is_fifo_full(struct Fifo* fifo) {
 }
 
 int8_t fifo_add_can_frame(struct Fifo* fifo, struct can_rx_msg* can_frame) {
+    disable_irq();
+    
     if (fifo == NULL || can_frame == NULL) return -1;
     if (is_fifo_full(fifo)) return -1;
 
@@ -327,10 +338,14 @@ int8_t fifo_add_can_frame(struct Fifo* fifo, struct can_rx_msg* can_frame) {
         fifo->can_frames[fifo->rear].data[i] = can_frame->data[i];
     }
 
+    enable_irq();
+
     return 0;
 }
 
 int8_t fifo_remove_can_frame(struct Fifo* fifo, struct can_rx_msg* can_frame) {
+    disable_irq();
+
     if (fifo == NULL || can_frame == NULL) return -1;
     if (is_fifo_empty(fifo)) return -1;
 
@@ -344,7 +359,7 @@ int8_t fifo_remove_can_frame(struct Fifo* fifo, struct can_rx_msg* can_frame) {
 
     for (int i = 0; i < can_frame->dlc; i++) {
         can_frame->data[i] = fifo->can_frames[fifo->front].data[i];
-        fifo->can_frames[fifo->front].data[i] = 0;  // Optional: leeren
+        fifo->can_frames[fifo->front].data[i] = 0xFF;  // Optional: leeren
     }
 
     // Puffer leer?
@@ -355,6 +370,7 @@ int8_t fifo_remove_can_frame(struct Fifo* fifo, struct can_rx_msg* can_frame) {
         fifo->front = (fifo->front + 1) % FIFO_SIZE;
     }
 
+    enable_irq();
     return 0;
 }
 
