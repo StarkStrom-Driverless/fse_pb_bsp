@@ -10,6 +10,7 @@
     - [PWM](#pwm)
     - [Systick](#systick)
     - [CAN](#can)
+    - [ADC](#adc)
   - [PIN capabilities](#pin-capabilities)
   - [PORTA](#porta)
   - [PORTB](#portb)
@@ -138,39 +139,40 @@ The following thing is nasty. I know it and if a have enough time i will change 
 
 To use the systick-stuff you have to change stuff insight the library. So make sure you make a seperate branch in fse_pb_bsp.
 
-If you want a new systick-handle do this.
 
-- fse_pb_bsp/src/ss_systick.c
-
-```c
-// add this line
-extern Systick_Handle handle1; 
-
-void sys_tick_handler(void) {
-    // add this line
-    handle1.tick++;
-}
-```
 
 - main.c
 ```c 
 #include "ss_gpio.h"
 #include "ss_systick.h"
 
-// Change period.
-// ss_handle_timer() is true after 200 systickhandler interrupts
-Systick_Handle handle1 = {.timer = 0, .period=200, .tick = 0};
+// Define the systick-handling struct
+struct SystickCntr systick_cntr;
 
 int main(void) {
 
     // Systickhandler is called after 16MHz / 1600 Processor-cycles 
     ss_init_systick(1600);
 
-    uint16_t pa2 = ss_io_init(PIN('A', 2),  SS_GPIO_MODE_OUTPUT);
+    /**
+     *  Init the Systick handling
+     *  - With add_handle you can create a new handler with a given execution period 
+     *  - add_handle returns a id of the handler which can be used in the main-loop
+     */
+    ss_init_systick_cntr(&systick_cntr);
+    uint8_t heartbeat_handle = ss_systick_add_handle(&systick_cntr, 2000);
+
 
     for (;;) {
-        if (ss_handle_timer(&handle1)) {
-            ss_io_write(pa2, SS_GPIO_TOOGLE);
+
+        /**
+         *  systick_expired is the function which returns true if the parallel handler is expired after the defined handle-period.
+         * This is a very simple non blocking scheduling of "tasks"
+         * - pass the handler-struct systick_cntr as a pointer 
+         * - pass the handler-id from add_handler
+         */
+        if (ss_systick_expired(&systick_cntr, heartbeat_handle)) {
+            ss_led_heartbeat_toggle(); 
         }
     }
 
@@ -261,6 +263,74 @@ int main(void) {
             }
             
         }
+    }
+
+    return 0;
+}
+```
+
+### ADC
+The ADC API provides an interface to use the onboard ADC's of the stm
+
+It can be used like this.
+- This example demonstrades a periodic read of an adc-value
+- The adc-value which is reat is updated in the background
+- So this is non blockin also
+
+```C
+#include "ss_adc.h"
+#include "ss_systick.h"
+
+struct SystickCntr systick_cntr;
+
+// define the adc-handling struct
+struct SS_ADC ss_adc;
+
+
+int main(void)
+{
+    /**************************************************************************
+     *                                      SYSTICK                           *     
+     *************************************************************************/
+    /**
+     * SYSTICK INIT
+     */
+    ss_init_systick(160);
+
+    /**
+     * SYSTICK HANDLE
+     */
+    ss_init_systick_cntr(&systick_cntr);
+    uint8_t adc_handle = ss_systick_add_handle(&systick_cntr, 1000);
+
+
+
+
+    /**************************************************************************
+     *                                      ADC INIT                          *     
+     *************************************************************************/
+    /**
+     *  - init every adc-channel sperate with the pin-id and the adc-handle struct as a pointer
+     *  - adc_init also returns the pin-id for the adc-channel
+     *  - After all adc-channels are initialised call adc_start
+     **/
+    uint16_t adc_pin = ss_adc_init(PIN('A', 0), &ss_adc);
+    ss_adc_start(&ss_adc);
+
+
+
+
+    while (1) {
+        
+        /**
+         * Read adc-value for a channel after adc_handle time is expired
+         * adc_read needs the pin-id which and a pointer of the adc handle
+         */
+        if(ss_systick_expired(&systick_cntr, adc_handle)) {
+            uint16_t value = ss_adc_read(adc_pin, &ss_adc);
+
+        }
+        
     }
 
     return 0;
