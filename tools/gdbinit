@@ -18,7 +18,7 @@ set pagination off
 set logging file gdb_logfile.txt
 set logging on
 
-file ssvesc.elf
+file ss_caninterface.elf
 
 define exit
 quit
