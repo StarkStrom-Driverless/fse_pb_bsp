@@ -131,7 +131,7 @@ uint8_t ss_iob_get(uint16_t pin_id, struct IOB* iob) {
             iob->iobs[PINNO(pin_id)].value = 0;
             return 1;
         } else {
-            if (ss_io_read(pin_id) == 1) {
+            if (ss_io_read(pin_id)) {
                 return 1;
             } else {
                 return 0;
@@ -142,7 +142,7 @@ uint8_t ss_iob_get(uint16_t pin_id, struct IOB* iob) {
             iob->iobs[PINNO(pin_id)].value = 0;
             return 1;
         } else {
-            if (ss_io_read(pin_id) == 0) {
+            if (ss_io_read(pin_id)) {
                 return 1;
             } else {
                 return 0;

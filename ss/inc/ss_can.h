@@ -67,7 +67,13 @@ int8_t ss_can_add_messages(uint32_t* ids, uint8_t len);
 
 void usb_lp_can_rx0_isr(void);
 
+void ss_can_reset_frame(struct can_tx_msg* msg);
 
+void ss_can_set_common_to_frame(struct can_tx_msg* msg, uint32_t id, uint8_t dlc);
+
+void ss_can_set_signal_to_frame(struct can_tx_msg* msg, uint8_t start_bit, uint8_t length, uint64_t value);
+
+uint64_t ss_can_get_signal_from_frame(struct can_rx_msg* msg, uint8_t start_bit, uint8_t length);
 
 
 void init_fifo(struct Fifo* fifo);

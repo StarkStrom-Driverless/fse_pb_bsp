@@ -416,3 +416,55 @@ void ss_can_update_timeout_detection(struct TimeOutDetection* tod, uint32_t id) 
         }
     }
 }
+
+void ss_can_set_common_to_frame(struct can_tx_msg *msg, uint32_t id, uint8_t dlc) {
+    msg->std_id = id;
+    msg->dlc = dlc;
+    msg->rtr = 0;
+    msg->ide = 0;
+}
+
+void ss_can_set_signal_to_frame(struct can_tx_msg *msg, uint8_t start_bit, uint8_t length, uint64_t value) {
+    uint64_t data = 0;
+    for (int i = 0; i < 8; ++i) {
+        data |= ((uint64_t)msg->data[i]) << (i * 8);
+    }
+
+    uint64_t mask = (length == 64) ? ~0ULL : ((1ULL << length) - 1);
+    value &= mask;
+    mask <<= start_bit;
+    data = (data & ~mask) | (value << start_bit);
+
+    for (int i = 0; i < 8; ++i) {
+        msg->data[i] = (data >> (i * 8)) & 0xFF;
+    }
+}
+
+uint64_t ss_can_get_signal_from_frame(struct can_rx_msg* msg, uint8_t start_bit, uint8_t length) {
+    uint64_t data = 0;
+
+    for (int i = 0; i < 8; ++i) {
+        data |= ((uint64_t)msg->data[i]) << (i * 8);
+    }
+
+
+    uint64_t mask = (length == 64) ? ~0ULL : ((1ULL << length) - 1);
+    return (data >> start_bit) & mask;
+}
+
+void ss_can_reset_frame(struct can_tx_msg *msg) {
+    msg->std_id = 0;
+    msg->ext_id = 0;
+    msg->ide = 0;
+    msg->rtr = 0;
+    msg->dlc = 0;
+    msg->data[0] = 0;
+    msg->data[1] = 0;
+    msg->data[2] = 0;
+    msg->data[3] = 0;
+    msg->data[4] = 0;
+    msg->data[5] = 0;
+    msg->data[6] = 0;
+    msg->data[7] = 0;
+
+}
