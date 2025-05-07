@@ -31,7 +31,7 @@ int8_t ss_init_systick(uint32_t reload) {
     return 0;
 }
 
-bool ss_handle_timer(Systick_Handle* handle) {
+uint8_t ss_handle_timer(Systick_Handle* handle) {
     if (handle->tick + handle->period < handle->timer) handle->timer = 0;
     if (handle->timer == 0) handle->timer = handle->tick + handle->period;
     if (handle->timer > handle->tick) return false;
@@ -51,6 +51,6 @@ uint8_t ss_systick_add_handle(struct SystickCntr* cntr, uint32_t period) {
     return cntr->count++;
 }
 
-bool ss_systick_expired(struct SystickCntr* cntr, uint8_t id) {
+uint8_t ss_systick_expired(struct SystickCntr* cntr, uint8_t id) {
     return ss_handle_timer(&cntr->handler[id]);
 }
