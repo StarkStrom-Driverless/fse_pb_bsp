@@ -2,6 +2,8 @@
 
 cp test/main.c ..
 cp test/Makefile ..
+cp test/.gitignore ..
+ 
 mkdir -p ../usr/src
 mkdir -p ../usr/inc
 
