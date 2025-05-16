@@ -2,8 +2,8 @@
 
 mv test/main.c ..
 mv test/Makefile ..
-mkdir ../usr/src
-mkdir ../usr/inc
+mkdir -p ../usr/src
+mkdir -p ../usr/inc
 
 git submodule init
 git submodule update

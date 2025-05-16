@@ -8,6 +8,6 @@ gdb:
 	gdb-multiarch --tui -silent -x 'fse_pb_bsp/tools/gdbinit' -iex 'set auto-load safe-path /'
 
 
-include ../Makefile
-include ../tools/Makefile.include
-include ../tools/rules.mk
+include fse_pb_bsp/Makefile
+include fse_pb_bsp/tools/Makefile.include
+include fse_pb_bsp/tools/rules.mk
