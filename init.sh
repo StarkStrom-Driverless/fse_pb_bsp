@@ -1,7 +1,7 @@
 #!/bin/bash
 
-mv test/main.c ..
-mv test/Makefile ..
+cp test/main.c ..
+cp test/Makefile ..
 mkdir -p ../usr/src
 mkdir -p ../usr/inc
 

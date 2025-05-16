@@ -17,7 +17,7 @@
 ## along with this library.  If not, see <http://www.gnu.org/licenses/>.
 ##
 
-OBJS += $(patsubst %.c, %.o, $(wildcard ss/src/*.c))
+OBJS += $(patsubst %.c, %.o, $(wildcard fse_pb_bsp/ss/src/*.c))
 
 LDSCRIPT = fse_pb_bsp/stm32f4-discovery.ld
 
