@@ -1,5 +1,6 @@
 BINARY = bp_test
 
+OBJS += main.o
 OBJS += $(patsubst %.c, %.o, $(wildcard usr/src/*.c))
 
 TGT_CPPFLAGS	+= -Iusr/inc
