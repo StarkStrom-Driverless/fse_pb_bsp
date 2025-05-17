@@ -18,6 +18,7 @@
 ##
 
 OBJS += $(patsubst %.c, %.o, $(wildcard fse_pb_bsp/ss/src/*.c))
+TGT_CPPFLAGS	+= -Ifse_pb_bsp/ss/inc
 
 LDSCRIPT = fse_pb_bsp/stm32f4-discovery.ld
 

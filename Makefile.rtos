@@ -1,0 +1,21 @@
+TGT_CFLAGS += -Ifse_pb_bsp/rtos/include
+TGT_CFLAGS += -Ifse_pb_bsp/rtos/portable/GCC/ARM_CM4F
+#TGT_CFLAGS += -Ifse_pb_bsp/rtos/CMSIS_RTOS
+
+OBJS += fse_pb_bsp/rtos/tasks.o
+OBJS += fse_pb_bsp/rtos/queue.o
+OBJS += fse_pb_bsp/rtos/list.o
+OBJS += fse_pb_bsp/rtos/timers.o
+OBJS += fse_pb_bsp/rtos/event_groups.o
+OBJS += fse_pb_bsp/rtos/stream_buffer.o
+
+# Heap (wähle genau eine!)
+OBJS += fse_pb_bsp/rtos/portable/MemMang/heap_4.o
+
+# Port für STM32F4 (Cortex-M4 mit FPU)
+OBJS += fse_pb_bsp/rtos/portable/GCC/ARM_CM4F/port.o
+
+
+TGT_CFLAGS += -DSS_USE_RTOS
+TGT_CXXFLAGS += -DSS_USE_RTOS
+

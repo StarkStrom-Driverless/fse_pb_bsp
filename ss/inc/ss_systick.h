@@ -25,7 +25,9 @@ uint8_t ss_systick_add_handle(struct SystickCntr* cntr, uint32_t period);
 
 uint8_t ss_systick_expired(struct SystickCntr* cntr, uint8_t id);
 
+#ifndef SS_USE_RTOS
 void sys_tick_handler(void);
+#endif
 
 int8_t ss_init_systick(uint32_t reload);
 

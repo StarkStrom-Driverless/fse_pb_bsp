@@ -10,18 +10,13 @@ extern Systick_Handle handle_tod;
 
 extern struct SystickCntr systick_cntr;
 
+#ifndef SS_USE_RTOS
 void sys_tick_handler(void) {
     for (uint8_t i = 0; i < systick_cntr.count; i++) {
         systick_cntr.handler[i].tick++;
     }
-    /*
-    handle1.tick++;
-    handle2.tick++;
-    handle_pid.tick++;
-    handle_error.tick++;
-    handle_tod.tick++;
-    */
 }
+#endif
 
 int8_t ss_init_systick(uint32_t reload) {
     systick_set_clocksource(STK_CSR_CLKSOURCE_AHB_DIV8);
@@ -30,6 +25,7 @@ int8_t ss_init_systick(uint32_t reload) {
     systick_counter_enable();
     return 0;
 }
+
 
 uint8_t ss_handle_timer(Systick_Handle* handle) {
     if (handle->tick + handle->period < handle->timer) handle->timer = 0;

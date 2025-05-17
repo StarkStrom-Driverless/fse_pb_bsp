@@ -16,9 +16,9 @@ set confirm off
 set pagination off
 
 set logging file gdb_logfile.txt
-set logging on
+set logging enabled on
 
-file ss_caninterface.elf
+file bp_test.elf
 
 define exit
 quit

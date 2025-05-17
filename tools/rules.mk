@@ -119,8 +119,8 @@ TGT_CXXFLAGS	+= -fno-common -ffunction-sections -fdata-sections
 TGT_CPPFLAGS	+= -MD
 TGT_CPPFLAGS	+= -Wall -Wundef
 TGT_CPPFLAGS	+= $(DEFS)
-TGT_CPPFLAGS	+= -Ifse_pb_bsp/ss/inc
-TGT_CPPFLAGS	+= -Ifse_pb_bsp/controls/inc
+
+
 
 
 
