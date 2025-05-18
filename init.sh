@@ -3,6 +3,7 @@
 cp test/main.c ..
 cp test/Makefile ..
 cp test/.gitignore ..
+cp test/FreeRTOSConfig.h ../usr/inc
  
 mkdir -p ../usr/src
 mkdir -p ../usr/inc
