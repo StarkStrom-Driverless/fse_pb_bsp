@@ -1,6 +1,7 @@
 #include "ss_gpio.h"
 #include <libopencm3/stm32/rcc.h>
 #include <libopencm3/stm32/gpio.h>
+#include "ss_delay.h"
 
 int8_t ss_enable_rcc_from_id(uint16_t pin_id) {
     int8_t status = 0;
@@ -15,8 +16,13 @@ int8_t ss_enable_rcc_from_id(uint16_t pin_id) {
 }
 
 uint16_t ss_io_init(uint16_t pin_id, uint8_t mode) {
+    
+    
+    gpio_mode_setup(GPIO(PINBANK(pin_id)), mode, GPIO_PUPD_PULLDOWN, BIT(PINNO(pin_id)));
+
+    gpio_clear(GPIO(PINBANK(pin_id)), BIT(PINNO(pin_id)));
     ss_enable_rcc_from_id(pin_id);
-    gpio_mode_setup(GPIO(PINBANK(pin_id)), mode, GPIO_PUPD_NONE, BIT(PINNO(pin_id)));
+
     return pin_id;
 }
 
