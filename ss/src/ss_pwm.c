@@ -216,7 +216,7 @@ uint16_t ss_pwm_init(uint16_t pin_id, uint32_t frequency, uint32_t fsys) {
 
     gpio_set_af(GPIO(PINBANK(pin_id)), get_pwm_af_mode_for_pin_id(pin_id), BIT(PINNO(pin_id)));
 
-    
+    ss_enable_timer_clock_from_pin_id(pin_id);
 
     uint32_t timer_id = ss_get_timer_from_pin_id(pin_id);
     uint8_t channel = ss_get_timer_channel_from_pin_id(pin_id);
@@ -231,7 +231,7 @@ uint16_t ss_pwm_init(uint16_t pin_id, uint32_t frequency, uint32_t fsys) {
 
     timer_enable_oc_preload(timer_id, channel);
 
-    timer_set_oc_value(timer_id, channel, 50);
+    timer_set_oc_value(timer_id, channel, 0);
 
     timer_enable_counter(timer_id);
 
@@ -241,7 +241,7 @@ uint16_t ss_pwm_init(uint16_t pin_id, uint32_t frequency, uint32_t fsys) {
         
     timer_enable_oc_output(timer_id, channel);
 
-    ss_enable_timer_clock_from_pin_id(pin_id);
+    
 
     return pin_id;
 }

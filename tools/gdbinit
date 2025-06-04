@@ -18,7 +18,7 @@ set pagination off
 set logging file gdb_logfile.txt
 set logging enabled on
 
-file bp_test.elf
+file fse_can_interface.elf
 
 define exit
 quit
