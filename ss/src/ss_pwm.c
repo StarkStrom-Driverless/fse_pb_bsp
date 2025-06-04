@@ -246,7 +246,51 @@ uint16_t ss_pwm_init(uint16_t pin_id, uint32_t frequency, uint32_t fsys) {
     return pin_id;
 }
 
+uint16_t ss_pwm_init_highres(uint16_t pin_id, uint32_t frequency, uint32_t fsys) {
+    ss_io_init(pin_id, GPIO_MODE_AF);
+
+    gpio_set_af(GPIO(PINBANK(pin_id)), get_pwm_af_mode_for_pin_id(pin_id), BIT(PINNO(pin_id)));
+
+    ss_enable_timer_clock_from_pin_id(pin_id);
+
+    uint32_t timer_id = ss_get_timer_from_pin_id(pin_id);
+    uint8_t channel = ss_get_timer_channel_from_pin_id(pin_id);
+
+    timer_set_mode(timer_id, TIM_CR1_CKD_CK_INT, TIM_CR1_CMS_EDGE, TIM_CR1_DIR_UP);
+
+    timer_set_prescaler(timer_id, (fsys / (100 * frequency)) - 1);
+
+    timer_set_period(timer_id, 1000);
+
+    timer_set_oc_mode(timer_id, channel, TIM_OCM_PWM1);
+
+    timer_enable_oc_preload(timer_id, channel);
+
+    timer_set_oc_value(timer_id, channel, 0);
+
+    timer_enable_counter(timer_id);
+
+    if(ss_is_pin_id_extended_timer(pin_id)) {
+        timer_enable_break_main_output(timer_id);
+    }
+        
+    timer_enable_oc_output(timer_id, channel);
+
+    
+
+    return pin_id;
+
+}
+
+
 uint8_t ss_pwm_write(uint16_t pin_id, uint32_t value) {
+    uint32_t timer_id = ss_get_timer_from_pin_id(pin_id);
+    uint8_t channel = ss_get_timer_channel_from_pin_id(pin_id);
+    timer_set_oc_value(timer_id, channel, value);
+    return 0;
+}
+
+uint8_t ss_pwm_write_highres(uint16_t pin_id, uint32_t value) {
     uint32_t timer_id = ss_get_timer_from_pin_id(pin_id);
     uint8_t channel = ss_get_timer_channel_from_pin_id(pin_id);
     timer_set_oc_value(timer_id, channel, value);

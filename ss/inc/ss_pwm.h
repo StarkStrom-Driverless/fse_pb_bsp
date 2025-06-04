@@ -15,4 +15,8 @@ uint8_t ss_pwm_write(uint16_t pin_id, uint32_t value);
 
 uint8_t ss_is_pin_id_extended_timer(uint16_t pin_id);
 
+uint16_t ss_pwm_init_highres(uint16_t pin_id);
+
+uint8_t ss_pwm_write_highres(uint16_t pin_id, uint32_t value);
+
 #endif
