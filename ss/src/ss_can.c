@@ -7,6 +7,8 @@
 #include "ss_gpio.h"
 #include "ss_can.h"
 
+QueueHandle_t can_queues[2];
+
 int8_t ss_enable_can_rcc(uint8_t can_interface_id) {
     int8_t status = 0;
     switch(can_interface_id) {
@@ -133,7 +135,7 @@ uint32_t ss_get_can_port_from_id(uint8_t can_interface_id) {
     return can_port;
 }
 
-int8_t ss_can_init(uint8_t can_interface_id, uint32_t baudrate) {
+QueueHandle_t ss_can_init(uint8_t can_interface_id, uint32_t baudrate) {
     int8_t status = 0;
     uint32_t prescaler = 0;
     uint32_t sjw = 0;
@@ -180,6 +182,10 @@ int8_t ss_can_init(uint8_t can_interface_id, uint32_t baudrate) {
 
     nvic_enable_irq(NVIC_CAN1_SCE_IRQ);
     can_enable_irq(CAN1, CAN_IER_ERRIE);
+
+    can_queues[can_interface_id-1] = xQueueCreate(10, sizeof(struct can_rx_msg));
+
+    return can_queues[can_interface_id-1];
 }
 
 int8_t ss_can_add_messages(uint32_t* ids, uint8_t len) {
@@ -256,21 +262,37 @@ int8_t ss_can_send(uint8_t can_interface_id, struct can_tx_msg* can_frame) {
     return 0;
 }
 
+
+uint8_t ss_can_frame_received(struct can_rx_msg* msg, QueueHandle_t queue) {
+    if (xQueueReceive(queue, msg, (TickType_t) 10 ) == pdPASS) {
+        return 1;
+    } else {
+        return 0;
+    }
+}
+    
+
 void can1_rx0_isr(void)
 {
-    // Sicherstellen, dass wirklich eine Nachricht anliegt
+
+    BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+
     if ((CAN_RF0R(CAN1) & CAN_RF0R_FMP0_MASK) != 0) {
         struct can_rx_msg can_frame;
         ss_can_read(1, &can_frame);
-        fifo_add_can_frame(&can_receive_fifos[0], &can_frame);
+        xQueueSendFromISR(can_queues[0], &can_frame, &xHigherPriorityTaskWoken);
     }
 
-    // Eventuell: FIFO Overrun Flag löschen
     if (CAN_RF0R(CAN1) & CAN_RF0R_FOVR0) {
-        CAN_RF0R(CAN1) &= ~CAN_RF0R_FOVR0; // Flag löschen
-        // Optional: Log / Fehlerzähler
+        CAN_RF0R(CAN1) &= ~CAN_RF0R_FOVR0;
     }
 
+    if( xHigherPriorityTaskWoken )
+
+    {
+        portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+
+    }
 }
 
 void can1_sce_isr(void)
@@ -287,6 +309,8 @@ void can1_sce_isr(void)
     CAN_ESR(CAN1) &= ~(CAN_ESR_BOFF | CAN_ESR_EPVF | CAN_ESR_EWGF);
 }
 
+
+
 static inline void disable_irq(void) {
     __asm volatile("cpsid i");
 }
@@ -298,81 +322,7 @@ static inline void enable_irq(void) {
 
 
 
-void init_fifo(struct Fifo* fifo) {
-    if (fifo != NULL) {
-        fifo->front = -1;
-        fifo->rear = -1;
-    }
-}
 
-uint8_t is_fifo_empty(struct Fifo* fifo) {
-    return fifo != NULL && fifo->front == -1;
-}
-
-uint8_t is_fifo_full(struct Fifo* fifo) {
-    return fifo != NULL && ((fifo->rear + 1) % FIFO_SIZE == fifo->front);
-}
-
-int8_t fifo_add_can_frame(struct Fifo* fifo, struct can_rx_msg* can_frame) {
-    disable_irq();
-    
-    if (fifo == NULL || can_frame == NULL) return -1;
-    if (is_fifo_full(fifo)) return -1;
-
-    if (is_fifo_empty(fifo)) {
-        fifo->front = 0;
-        fifo->rear = 0;
-    } else {
-        fifo->rear = (fifo->rear + 1) % FIFO_SIZE;
-    }
-
-    // Kopiere das CAN-Frame
-    fifo->can_frames[fifo->rear].std_id = can_frame->std_id;
-    fifo->can_frames[fifo->rear].ext_id = can_frame->ext_id;
-    fifo->can_frames[fifo->rear].ide = can_frame->ide;
-    fifo->can_frames[fifo->rear].rtr = can_frame->rtr;
-    fifo->can_frames[fifo->rear].dlc = can_frame->dlc;
-    fifo->can_frames[fifo->rear].fmi = can_frame->fmi;
-
-    for (int i = 0; i < can_frame->dlc; i++) {
-        fifo->can_frames[fifo->rear].data[i] = can_frame->data[i];
-    }
-
-    enable_irq();
-
-    return 0;
-}
-
-int8_t fifo_remove_can_frame(struct Fifo* fifo, struct can_rx_msg* can_frame) {
-    disable_irq();
-
-    if (fifo == NULL || can_frame == NULL) return -1;
-    if (is_fifo_empty(fifo)) return -1;
-
-    // Kopiere das CAN-Frame
-    can_frame->std_id = fifo->can_frames[fifo->front].std_id;
-    can_frame->ext_id = fifo->can_frames[fifo->front].ext_id;
-    can_frame->ide = fifo->can_frames[fifo->front].ide;
-    can_frame->rtr = fifo->can_frames[fifo->front].rtr;
-    can_frame->dlc = fifo->can_frames[fifo->front].dlc;
-    can_frame->fmi = fifo->can_frames[fifo->front].fmi;
-
-    for (int i = 0; i < can_frame->dlc; i++) {
-        can_frame->data[i] = fifo->can_frames[fifo->front].data[i];
-        fifo->can_frames[fifo->front].data[i] = 0xFF;  // Optional: leeren
-    }
-
-    // Puffer leer?
-    if (fifo->front == fifo->rear) {
-        fifo->front = -1;
-        fifo->rear = -1;
-    } else {
-        fifo->front = (fifo->front + 1) % FIFO_SIZE;
-    }
-
-    enable_irq();
-    return 0;
-}
 
 void ss_can_init_timeout_detection(struct TimeOutDetection* tod) {
     tod->msg_count = 0;

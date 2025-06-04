@@ -7,7 +7,7 @@
 #include "ss_gpio.h"
 #include "ss_adc.h"
 
-extern struct SS_ADC ss_adc;
+
 
 int8_t ss_enable_adc_clock_from_pin_id(uint16_t pin_id) {
     int8_t status = 0;
@@ -124,7 +124,7 @@ uint16_t ss_adc_get_measurement_pos_from_pin_id(uint16_t pin_id) {
 
 
 uint16_t ss_adc_init(uint16_t pin_id, struct SS_ADC* adc_struct) {
-    adc_struct->adc_converstion_status = 2;
+
 
     ss_enable_adc_clock_from_pin_id(pin_id);
 
@@ -151,13 +151,21 @@ uint16_t ss_adc_init(uint16_t pin_id, struct SS_ADC* adc_struct) {
     return pin_id;
 }
 
-void ss_adc_set_next_measurment_pos(struct SS_ADC* adc_struct) {
-    while (adc_struct->measurements[adc_struct->measurement_pos].enable == 0) {
+uint8_t ss_adc_set_next_measurment_pos(struct SS_ADC* adc_struct) {
+    if (!adc_struct) return 0;
+
+    uint8_t original_pos = adc_struct->measurement_pos;
+    do {
         adc_struct->measurement_pos++;
-        if (adc_struct->measurement_pos == MAX_MEASUREMENT) {
+        if (adc_struct->measurement_pos >= MAX_MEASUREMENT) {
             adc_struct->measurement_pos = 0;
         }
-    }
+        if (adc_struct->measurement_pos == original_pos) {
+
+            return 0;
+        }
+    }while(adc_struct->measurements[adc_struct->measurement_pos].enable == 0);
+    return 1;
 }
 
 int8_t ss_adc_start(struct SS_ADC* adc_struct) {
@@ -171,8 +179,11 @@ int8_t ss_adc_start(struct SS_ADC* adc_struct) {
 
     ss_adc_set_next_measurment_pos(adc_struct);
 
-    uint16_t pin_id = adc_struct->measurements[adc_struct->measurement_pos].pin_id;
-    ss_adc_start_channel(pin_id, adc_struct);
+    if (ss_adc_set_next_measurment_pos(&ss_adc)) {
+        uint16_t pin_id = adc_struct->measurements[adc_struct->measurement_pos].pin_id;
+        ss_adc_start_channel(pin_id, adc_struct);
+    }
+
 }
 
 int8_t ss_adc_start_channel(uint16_t pin_id, struct SS_ADC* adc_struct) {
@@ -204,9 +215,11 @@ void adc_isr(void) {
     else if (adc_eoc(ADC3)) {
         ss_adc.measurements[ss_adc.measurement_pos].measurement = adc_read_regular(ADC3);
     }
-    ss_adc_set_next_measurment_pos(&ss_adc);
+    if (ss_adc_set_next_measurment_pos(&ss_adc)) {
+        ss_adc_start_channel(ss_adc.measurements[ss_adc.measurement_pos].pin_id, &ss_adc);
+    }
 
-    ss_adc_start_channel(ss_adc.measurements[ss_adc.measurement_pos].pin_id, &ss_adc);
+    
 }
 
 

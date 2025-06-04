@@ -4,6 +4,10 @@
 #include <inttypes.h>
 #include <stddef.h>
 
+
+#include <FreeRTOS.h>
+#include <queue.h>
+
 #define FIFO_SIZE 10
 #define MAX_TIMEOUT_DETECTION 10
 
@@ -45,7 +49,7 @@ struct Fifo {
     int rear;
 };
 
-extern struct Fifo can_receive_fifos[2];
+extern QueueHandle_t can_queues[2];
 
 int8_t ss_enable_can_rcc(uint8_t can_interface_id);
 
@@ -57,7 +61,7 @@ int8_t ss_can_get_bit_timings(uint32_t baudrate, uint32_t* sjw, uint32_t* tseg1,
 
 uint32_t ss_get_can_port_from_id(uint8_t can_interface_id);
 
-int8_t ss_can_init(uint8_t can_interface_id, uint32_t baudrate);
+QueueHandle_t ss_can_init(uint8_t can_interface_id, uint32_t baudrate);
 
 int8_t ss_can_read(uint8_t can_interface_id, struct can_rx_msg* can_frame);
 
@@ -75,13 +79,7 @@ void ss_can_set_signal_to_frame(struct can_tx_msg* msg, uint8_t start_bit, uint8
 
 uint64_t ss_can_get_signal_from_frame(struct can_rx_msg* msg, uint8_t start_bit, uint8_t length);
 
-
-void init_fifo(struct Fifo* fifo);
-uint8_t is_fifo_empty(struct Fifo* fifo);
-uint8_t is_fifo_full(struct Fifo* fifo);
-int8_t fifo_add_can_frame(struct Fifo* fifo, struct can_rx_msg* can_frame);
-int8_t fifo_remove_can_frame(struct Fifo* fifo, struct can_rx_msg* can_frame);
-
+uint8_t ss_can_frame_received(struct can_rx_msg* msg, QueueHandle_t queue);
 
 
 void ss_can_init_timeout_detection(struct TimeOutDetection* tod);
