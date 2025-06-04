@@ -9,7 +9,7 @@ void vApplicationStackOverflowHook(TaskHandle_t xTask, char * pcTaskName) {
 int8_t ss_rtos_task_add(TaskFunction_t task_ptr, void *const params, UBaseType_t prio, const char* name) {
     int8_t ret = 1;
     if (prio < configMAX_PRIORITIES) {
-        xTaskCreate (task_ptr,name,100,params,prio,NULL);
+        xTaskCreate (task_ptr,name,512,params,prio,NULL);
     } else {
         ret = 0;
     }
