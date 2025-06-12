@@ -180,8 +180,12 @@ QueueHandle_t ss_can_init(uint8_t can_interface_id, uint32_t baudrate) {
                                     
     can_enable_irq(can_port, CAN_IER_FMPIE0);
 
-    nvic_enable_irq(NVIC_CAN1_SCE_IRQ);
+    nvic_set_priority(NVIC_CAN1_RX0_IRQ, 5);
+    nvic_enable_irq(NVIC_CAN1_RX0_IRQ); 
+
     can_enable_irq(CAN1, CAN_IER_ERRIE);
+
+
 
     can_queues[can_interface_id-1] = xQueueCreate(10, sizeof(struct can_rx_msg));
 
@@ -274,7 +278,6 @@ uint8_t ss_can_frame_received(struct can_rx_msg* msg, QueueHandle_t queue) {
 
 void can1_rx0_isr(void)
 {
-
     BaseType_t xHigherPriorityTaskWoken = pdFALSE;
 
     if ((CAN_RF0R(CAN1) & CAN_RF0R_FMP0_MASK) != 0) {
@@ -283,16 +286,13 @@ void can1_rx0_isr(void)
         xQueueSendFromISR(can_queues[0], &can_frame, &xHigherPriorityTaskWoken);
     }
 
+    // Überlauf behandeln!
     if (CAN_RF0R(CAN1) & CAN_RF0R_FOVR0) {
         CAN_RF0R(CAN1) &= ~CAN_RF0R_FOVR0;
     }
 
-    if( xHigherPriorityTaskWoken )
-
-    {
-        portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
-
-    }
+    // Context-Switch bei Bedarf
+    portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
 }
 
 void can1_sce_isr(void)

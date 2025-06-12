@@ -1,15 +1,26 @@
 #include "ss_rtos.h"
 
-extern void vApplicationStackOverflowHook( TaskHandle_t xTask, char * pcTaskName );
 
-void vApplicationStackOverflowHook(TaskHandle_t xTask, char * pcTaskName) {
-	for(;;);	// Loop forever here..
-}
+
+
 
 int8_t ss_rtos_task_add(TaskFunction_t task_ptr, void *const params, UBaseType_t prio, const char* name) {
     int8_t ret = 1;
     if (prio < configMAX_PRIORITIES) {
-        BaseType_t task_created = xTaskCreate (task_ptr,name,2048,params,prio,NULL);
+        BaseType_t task_created = xTaskCreate (task_ptr,name,1024,params,prio,NULL);
+        if (task_created != pdPASS) {
+            ret = 0;
+        }
+    } else {
+        ret = 0;
+    }
+    return ret;
+}
+
+int8_t ss_rtos_big_task_add(TaskFunction_t task_ptr, void *const params, UBaseType_t prio, const char* name) {
+    int8_t ret = 1;
+    if (prio < configMAX_PRIORITIES) {
+        BaseType_t task_created = xTaskCreate (task_ptr,name,8196,params,prio,NULL);
         if (task_created != pdPASS) {
             ret = 0;
         }
