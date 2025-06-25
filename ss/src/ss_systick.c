@@ -3,9 +3,11 @@
 #include <inttypes.h>
 
 extern Systick_Handle handle1; 
+extern Systick_Handle handle2; 
 
 void sys_tick_handler(void) {
     handle1.tick++;
+    handle2.tick++;
 }
 
 int8_t ss_init_systick(uint32_t reload) {
