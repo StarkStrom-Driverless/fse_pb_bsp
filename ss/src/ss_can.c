@@ -7,6 +7,7 @@
 #include "ss_gpio.h"
 #include "ss_can.h"
 
+
 QueueHandle_t can_queues[2];
 
 int8_t ss_enable_can_rcc(uint8_t can_interface_id) {
@@ -135,12 +136,10 @@ uint32_t ss_get_can_port_from_id(uint8_t can_interface_id) {
     return can_port;
 }
 
-QueueHandle_t ss_can_init(uint8_t can_interface_id, uint32_t baudrate) {
+QueueHandle_t ss_can_init(uint8_t can_interface_id, uint32_t baudrate, struct SS_CLOCK* ss_clock) {
     int8_t status = 0;
-    uint32_t prescaler = 0;
-    uint32_t sjw = 0;
-    uint32_t tseg1 = 0;
-    uint32_t tseg2 = 0;
+
+    struct SS_CLOCK_CAN config; 
 
     uint32_t can_port = ss_get_can_port_from_id(can_interface_id);
 
@@ -148,7 +147,7 @@ QueueHandle_t ss_can_init(uint8_t can_interface_id, uint32_t baudrate) {
 
     if (ss_enable_can_rcc(can_interface_id) == -1) status = -1;
 
-    if (ss_can_get_bit_timings(baudrate, &sjw, &tseg1, &tseg2, &prescaler) == -1) status = -1;
+    ss_clock_can(&config, baudrate, ss_clock);
 
     can_reset(can_port);
 
@@ -159,10 +158,10 @@ QueueHandle_t ss_can_init(uint8_t can_interface_id, uint32_t baudrate) {
                             false,
                             false,
                             false,
-                            sjw,
-                            tseg1,
-                            tseg2,
-                            prescaler,
+                            config.sjw,
+                            config.tseg1,
+                            config.tseg2,
+                            config.prescaler,
                             false,
                             false);
 

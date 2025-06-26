@@ -50,14 +50,14 @@ uint32_t ss_get_timer_channel_from_pin_id(uint16_t pin_id) {
 uint32_t ss_get_timer_from_pin_id(uint16_t pin_id) {
     uint32_t timer_addr = 0;
     switch(pin_id) {
-        case PIN('A', 0):
-        case PIN('A', 1):
-        case PIN('A', 2):
-        case PIN('A', 3):
+        case PIN('A', 0):           // CH1
+        case PIN('A', 1):           // CH2
+        case PIN('A', 2):           // CH3
+        case PIN('A', 3):           // CH4
             timer_addr = TIM5; 
             break; 
 
-        case PIN('A', 5):
+        case PIN('A', 5):           // CH1
         case PIN('A', 15):
         case PIN('B', 10):
         case PIN('B', 11): 
@@ -211,7 +211,57 @@ uint8_t ss_is_pin_id_extended_timer(uint16_t pin_id) {
     return extended;
 }
 
-uint16_t ss_pwm_init(uint16_t pin_id, uint32_t frequency, uint32_t fsys) {
+uint16_t ss_pwm_get_frequenzy_from_clock_config(uint16_t pin_id, struct SS_CLOCK* clock) {
+    uint16_t frequency = 16;
+    
+    switch(pin_id) {
+        case PIN('A', 0):
+        case PIN('A', 1):
+        case PIN('A', 2):
+        case PIN('A', 3):
+            frequency = clock->apb1; 
+            break; 
+
+        case PIN('A', 5):
+        case PIN('A', 15):
+        case PIN('B', 10):
+        case PIN('B', 11): 
+            frequency = clock->apb1; 
+            break;
+
+        case PIN('A', 6):
+        case PIN('A', 7):
+        case PIN('B', 0):
+        case PIN('B', 1):  
+            frequency = clock->apb1;  
+            break;
+
+        case PIN('A', 8):
+        case PIN('A', 9):
+        case PIN('A', 10):
+        case PIN('A', 11): 
+            frequency = clock->apb2; 
+            break;
+
+        case PIN('B', 14):
+        case PIN('B', 15): 
+            frequency = clock->apb1;  
+            break;
+
+        case PIN('C', 6):
+        case PIN('C', 7):
+        case PIN('C', 8):
+        case PIN('C', 9):  
+            frequency = clock->apb2; 
+            break;
+
+        default: break;
+    }
+
+    return frequency;
+}
+
+uint16_t ss_pwm_init(uint16_t pin_id, uint32_t frequency, struct SS_CLOCK* clock) {
     ss_io_init(pin_id, GPIO_MODE_AF);
 
     gpio_set_af(GPIO(PINBANK(pin_id)), get_pwm_af_mode_for_pin_id(pin_id), BIT(PINNO(pin_id)));
@@ -220,10 +270,11 @@ uint16_t ss_pwm_init(uint16_t pin_id, uint32_t frequency, uint32_t fsys) {
 
     uint32_t timer_id = ss_get_timer_from_pin_id(pin_id);
     uint8_t channel = ss_get_timer_channel_from_pin_id(pin_id);
+    uint16_t fsys = ss_pwm_get_frequenzy_from_clock_config(pin_id, clock);
 
     timer_set_mode(timer_id, TIM_CR1_CKD_CK_INT, TIM_CR1_CMS_EDGE, TIM_CR1_DIR_UP);
 
-    timer_set_prescaler(timer_id, (fsys / (100 * frequency)) - 1);
+    timer_set_prescaler(timer_id, (fsys*1000000 / (100 * frequency)) - 1);
 
     timer_set_period(timer_id, 100);
 
@@ -246,7 +297,7 @@ uint16_t ss_pwm_init(uint16_t pin_id, uint32_t frequency, uint32_t fsys) {
     return pin_id;
 }
 
-uint16_t ss_pwm_init_highres(uint16_t pin_id, uint32_t frequency, uint32_t fsys) {
+uint16_t ss_pwm_init_highres(uint16_t pin_id, uint32_t frequency, struct SS_CLOCK* clock)  {
     ss_io_init(pin_id, GPIO_MODE_AF);
 
     gpio_set_af(GPIO(PINBANK(pin_id)), get_pwm_af_mode_for_pin_id(pin_id), BIT(PINNO(pin_id)));
@@ -255,10 +306,11 @@ uint16_t ss_pwm_init_highres(uint16_t pin_id, uint32_t frequency, uint32_t fsys)
 
     uint32_t timer_id = ss_get_timer_from_pin_id(pin_id);
     uint8_t channel = ss_get_timer_channel_from_pin_id(pin_id);
+    uint16_t fsys = ss_pwm_get_frequenzy_from_clock_config(pin_id, clock);
 
     timer_set_mode(timer_id, TIM_CR1_CKD_CK_INT, TIM_CR1_CMS_EDGE, TIM_CR1_DIR_UP);
 
-    timer_set_prescaler(timer_id, (fsys / (100 * frequency)) - 1);
+    timer_set_prescaler(timer_id, (fsys*1000000 / (100 * frequency)) - 1);
 
     timer_set_period(timer_id, 1000);
 

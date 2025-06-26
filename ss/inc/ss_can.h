@@ -8,6 +8,8 @@
 #include <FreeRTOS.h>
 #include <queue.h>
 
+#include "ss_clock.h"
+
 #define FIFO_SIZE 10
 #define MAX_TIMEOUT_DETECTION 10
 
@@ -61,7 +63,7 @@ int8_t ss_can_get_bit_timings(uint32_t baudrate, uint32_t* sjw, uint32_t* tseg1,
 
 uint32_t ss_get_can_port_from_id(uint8_t can_interface_id);
 
-QueueHandle_t ss_can_init(uint8_t can_interface_id, uint32_t baudrate);
+QueueHandle_t ss_can_init(uint8_t can_interface_id, uint32_t baudrate, struct SS_CLOCK* ss_clock);
 
 int8_t ss_can_read(uint8_t can_interface_id, struct can_rx_msg* can_frame);
 

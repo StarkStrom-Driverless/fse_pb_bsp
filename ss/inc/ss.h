@@ -12,5 +12,6 @@
 #include "ss_iob.h"
 #include "ss_spi.h"
 #include "ss_rtos.h"
+#include "ss_clock.h"
 
 #endif
