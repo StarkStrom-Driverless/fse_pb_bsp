@@ -134,6 +134,12 @@ uint16_t ss_adc_init(uint16_t pin_id, struct SS_ADC* adc_struct) {
 
     adc_power_off(adc);
 
+    adc_disable_scan_mode(adc);
+
+    adc_set_single_conversion_mode(adc);
+
+    adc_disable_discontinuous_mode_regular(adc);
+
     adc_power_on(adc);
 
     adc_set_sample_time_on_all_channels(adc, ADC_SMPR_SMP_28CYC);
@@ -162,7 +168,7 @@ uint8_t ss_adc_set_next_measurment_pos(struct SS_ADC* adc_struct) {
         }
         if (adc_struct->measurement_pos == original_pos) {
 
-            return 0;
+            return 1;
         }
     }while(adc_struct->measurements[adc_struct->measurement_pos].enable == 0);
     return 1;
@@ -177,7 +183,7 @@ int8_t ss_adc_start(struct SS_ADC* adc_struct) {
     }
     if (!found) return -1;
 
-    ss_adc_set_next_measurment_pos(adc_struct);
+    //ss_adc_set_next_measurment_pos(adc_struct);
 
     if (ss_adc_set_next_measurment_pos(&ss_adc)) {
         uint16_t pin_id = adc_struct->measurements[adc_struct->measurement_pos].pin_id;
