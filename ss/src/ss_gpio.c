@@ -17,7 +17,16 @@ int8_t ss_enable_rcc_from_id(uint16_t pin_id) {
 
 uint16_t ss_io_init(uint16_t pin_id, uint8_t mode) {
     ss_enable_rcc_from_id(pin_id);
-    gpio_mode_setup(GPIO(PINBANK(pin_id)), mode, GPIO_PUPD_NONE, BIT(PINNO(pin_id)));
+    if (mode == SS_GPIO_MODE_INPUT_PU) {
+        gpio_mode_setup(GPIO(PINBANK(pin_id)), SS_GPIO_MODE_INPUT, GPIO_PUPD_PULLUP, BIT(PINNO(pin_id)));
+    }
+    else if (mode == SS_GPIO_MODE_INPUT_PD) {
+        gpio_mode_setup(GPIO(PINBANK(pin_id)), SS_GPIO_MODE_INPUT, GPIO_PUPD_PULLDOWN, BIT(PINNO(pin_id)));
+    }
+    else {
+        gpio_mode_setup(GPIO(PINBANK(pin_id)), mode, GPIO_PUPD_NONE, BIT(PINNO(pin_id)));
+    }
+    
 
     return pin_id;
 }
