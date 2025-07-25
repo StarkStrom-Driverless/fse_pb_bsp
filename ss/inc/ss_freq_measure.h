@@ -7,11 +7,14 @@
 
 struct FREQ_PIN {
     volatile uint32_t last_capture;
+    volatile float frequency;
+    uint8_t init;
     uint32_t resolution;
     uint16_t pin_id;
     uint8_t enabled;
     uint8_t requested;
-
+    uint32_t timer;
+    uint32_t ic;
 };
 
 struct FREQ_PORT {
@@ -28,7 +31,7 @@ extern struct SS_FREQ_MEASURE ss_freq_measure;
 
 struct FREQ_PIN* ss_freq_measure_init(uint16_t pin_id, struct SS_CLOCK* clock, uint32_t resolution);
 
-uint32_t ss_freq_measure_get(uint16_t pin_id);
+float ss_freq_measure_get(uint16_t pin_id);
 
 
 #endif

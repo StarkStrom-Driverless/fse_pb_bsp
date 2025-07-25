@@ -255,7 +255,7 @@ int8_t ss_can_read(uint8_t can_interface_id, struct can_rx_msg* can_frame) {
 int8_t ss_can_send(uint8_t can_interface_id, struct can_tx_msg* can_frame) {
     uint32_t can_port = ss_get_can_port_from_id(can_interface_id);
     
-    can_transmit(   can_port,
+    int8_t ret =  can_transmit(   can_port,
                     can_frame->std_id,
                     can_frame->ide,
                     can_frame->rtr,

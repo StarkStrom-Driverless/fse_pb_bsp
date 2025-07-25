@@ -7,7 +7,7 @@
 #include "ss_gpio.h"
 #include "ss_adc.h"
 
-
+struct SS_ADC ss_adc;
 
 int8_t ss_enable_adc_clock_from_pin_id(uint16_t pin_id) {
     int8_t status = 0;
@@ -123,7 +123,7 @@ uint16_t ss_adc_get_measurement_pos_from_pin_id(uint16_t pin_id) {
 
 
 
-uint16_t ss_adc_init(uint16_t pin_id, struct SS_ADC* adc_struct) {
+uint16_t ss_adc_init(uint16_t pin_id) {
 
 
     ss_enable_adc_clock_from_pin_id(pin_id);
@@ -143,50 +143,51 @@ uint16_t ss_adc_init(uint16_t pin_id, struct SS_ADC* adc_struct) {
     nvic_enable_irq(NVIC_ADC_IRQ);
 
     uint8_t measurement_pos = ss_adc_get_measurement_pos_from_pin_id(pin_id);
-    adc_struct->measurements[measurement_pos].enable = 1;
-    adc_struct->measurements[measurement_pos].pin_id = pin_id;
-    adc_struct->measurement_pos = 0;
+    ss_adc.measurements[measurement_pos].enable = 1;
+    ss_adc.measurements[measurement_pos].pin_id = pin_id;
+    ss_adc.measurement_pos = 0;
 
+    ss_adc_start();
 
     return pin_id;
 }
 
-uint8_t ss_adc_set_next_measurment_pos(struct SS_ADC* adc_struct) {
-    if (!adc_struct) return 0;
+uint8_t ss_adc_set_next_measurment_pos() {
 
-    uint8_t original_pos = adc_struct->measurement_pos;
+
+    uint8_t original_pos = ss_adc.measurement_pos;
     do {
-        adc_struct->measurement_pos++;
-        if (adc_struct->measurement_pos >= MAX_MEASUREMENT) {
-            adc_struct->measurement_pos = 0;
+        ss_adc.measurement_pos++;
+        if (ss_adc.measurement_pos >= MAX_MEASUREMENT) {
+            ss_adc.measurement_pos = 0;
         }
-        if (adc_struct->measurement_pos == original_pos) {
+        if (ss_adc.measurement_pos == original_pos) {
 
             return 0;
         }
-    }while(adc_struct->measurements[adc_struct->measurement_pos].enable == 0);
+    }while(ss_adc.measurements[ss_adc.measurement_pos].enable == 0);
     return 1;
 }
 
-int8_t ss_adc_start(struct SS_ADC* adc_struct) {
+int8_t ss_adc_start() {
     uint8_t found = 0;
     for (uint8_t i = 0; i < MAX_MEASUREMENT; i++) {
-        if (adc_struct->measurements[i].enable == 1) {
+        if (ss_adc.measurements[i].enable == 1) {
             found = 1;
         }
     }
     if (!found) return -1;
 
-    ss_adc_set_next_measurment_pos(adc_struct);
+    ss_adc_set_next_measurment_pos();
 
-    if (ss_adc_set_next_measurment_pos(&ss_adc)) {
-        uint16_t pin_id = adc_struct->measurements[adc_struct->measurement_pos].pin_id;
-        ss_adc_start_channel(pin_id, adc_struct);
+    if (ss_adc_set_next_measurment_pos()) {
+        uint16_t pin_id = ss_adc.measurements[ss_adc.measurement_pos].pin_id;
+        ss_adc_start_channel(pin_id);
     }
 
 }
 
-int8_t ss_adc_start_channel(uint16_t pin_id, struct SS_ADC* adc_struct) {
+int8_t ss_adc_start_channel(uint16_t pin_id) {
     uint32_t adc = ss_get_adc_from_pin_id(pin_id);
 
     uint8_t adc_channel = ss_get_adc_channel_from_pin_id(pin_id);
@@ -200,9 +201,9 @@ int8_t ss_adc_start_channel(uint16_t pin_id, struct SS_ADC* adc_struct) {
 
 
 
-uint16_t ss_adc_read(uint16_t pin_id, struct SS_ADC* adc_struct) {
+uint16_t ss_adc_read(uint16_t pin_id) {
     uint8_t measure_pos = ss_adc_get_measurement_pos_from_pin_id(pin_id);
-    return adc_struct->measurements[measure_pos].measurement;
+    return ss_adc.measurements[measure_pos].measurement;
 }
 
 void adc_isr(void) {
@@ -216,7 +217,7 @@ void adc_isr(void) {
         ss_adc.measurements[ss_adc.measurement_pos].measurement = adc_read_regular(ADC3);
     }
     if (ss_adc_set_next_measurment_pos(&ss_adc)) {
-        ss_adc_start_channel(ss_adc.measurements[ss_adc.measurement_pos].pin_id, &ss_adc);
+        ss_adc_start_channel(ss_adc.measurements[ss_adc.measurement_pos].pin_id);
     }
 
     
