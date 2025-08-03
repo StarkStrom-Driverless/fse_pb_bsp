@@ -405,13 +405,15 @@ float ss_freq_measure_get(uint16_t pin_id) {
                 channel->frequency = freq;
             }
         } else {
-            channel->frequency = 0;
+            channel->frequency = 0.0f;
         }
 
     }
 
-
-    channel->requested++;
+    if (channel->requested < 100) {
+        channel->requested++;
+    }
+    
 
     return channel->frequency;
 }

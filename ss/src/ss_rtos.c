@@ -7,7 +7,7 @@
 int8_t ss_rtos_task_add(TaskFunction_t task_ptr, void *const params, UBaseType_t prio, const char* name) {
     int8_t ret = 1;
     if (prio < configMAX_PRIORITIES) {
-        BaseType_t task_created = xTaskCreate (task_ptr,name,1024,params,prio,NULL);
+        BaseType_t task_created = xTaskCreate (task_ptr,name,2048,params,prio,NULL);
         if (task_created != pdPASS) {
             ret = 0;
         }
