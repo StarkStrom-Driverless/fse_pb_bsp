@@ -8,6 +8,8 @@
 #include "ss_can.h"
 
 
+
+
 QueueHandle_t can_queues[2];
 
 struct SS_CAN ss_can;
@@ -312,6 +314,9 @@ void can1_rx0_isr(void)
             portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
             return;
         }
+
+
+
 
         xQueueSendFromISR(msg->queue, &can_frame, &xHigherPriorityTaskWoken);
 

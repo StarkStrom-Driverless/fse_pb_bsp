@@ -25,13 +25,13 @@ int8_t ss_enable_adc_clock_from_pin_id(uint16_t pin_id);
 
 uint32_t ss_get_adc_from_pin_id(uint16_t pin_id);
 
-uint8_t ss_adc_set_next_measurment_pos();
+uint8_t ss_adc_set_next_measurment_pos(void);
 
 uint8_t ss_get_adc_channel_from_pin_id(uint16_t pin_id);
 
 uint16_t ss_adc_init(uint16_t pin_id);
 
-int8_t ss_adc_start();
+int8_t ss_adc_start(void);
 
 int8_t ss_adc_start_channel(uint16_t pin_id);
 
@@ -40,7 +40,5 @@ uint16_t ss_adc_read(uint16_t pin_id);
 void adc1_2_isr(void);
 
 void adc3_isr(void);
-
-extern struct SS_ADC ss_adc;
 
 #endif

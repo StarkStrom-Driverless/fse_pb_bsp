@@ -49,9 +49,9 @@ uint8_t ss_clock_can(struct SS_CLOCK_CAN* config, uint32_t baudrate, struct SS_C
 
             case 42:
                 {
-                    config->prescaler = 6;
-                    config->tseg1 = CAN_BTR_TS1_4TQ;
-                    config->tseg2 = CAN_BTR_TS2_2TQ;
+                    config->prescaler = 3;
+                    config->tseg1 = CAN_BTR_TS1_12TQ;
+                    config->tseg2 = CAN_BTR_TS2_1TQ;
                     config->sjw = CAN_BTR_SJW_1TQ;
                 }
                 break;

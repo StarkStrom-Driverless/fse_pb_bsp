@@ -43,7 +43,7 @@ int8_t ss_rtos_big_task_add(TaskFunction_t task_ptr, void *const params, UBaseTy
     return ret;
 }
 
-void ss_rtos_start() {
+void ss_rtos_start(void) {
     vTaskStartScheduler();
 }
 
