@@ -154,8 +154,7 @@ int8_t ss_spi_init(uint8_t spi_interface_id, uint32_t baudrate) {
 
     spi_set_full_duplex_mode(spi_port);
 
-    spi_set_clock_phase_1(spi_port);
-
+    spi_set_clock_phase_0(spi_port);
 
     spi_set_clock_polarity_0(spi_port);
 

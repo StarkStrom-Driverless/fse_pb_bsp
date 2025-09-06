@@ -19,7 +19,7 @@ struct IOB {
 
 extern struct IOB iob;
 
-void ss_iob_init(struct IOB* iob);
+struct IOB* ss_iob_init(struct IOB* iob);
 
 uint16_t ss_iob_add(uint16_t pin_id, struct IOB* iob, uint8_t polarity);
 

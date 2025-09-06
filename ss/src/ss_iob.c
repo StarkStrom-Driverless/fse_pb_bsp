@@ -9,10 +9,14 @@
 
 #include "ss_iob.h"
 
-void ss_iob_init(struct IOB* iob) {
+struct IOB iob;
+
+struct IOB* ss_iob_init(struct IOB* iob) {
     for (int i = 0; i < MAX_INPUT_OBSERVATIONS; i++) {
         iob->iobs[i].enabled = 0;
     }
+
+    return &iob;
 }
 
 uint32_t get_exti_from_pin_id(uint16_t pin_id) {

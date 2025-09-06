@@ -1,15 +1,7 @@
 #include "ss.h"
 
 
-#define REAR 0
-#define FRONT 1
-#define LV_VOLTAGE_SAMPLES 50
- 
 
-struct SystickCntr systick_cntr;
-struct Fifo can_receive_fifos[2];
-struct SS_ADC ss_adc;
-struct IOB iob;
 
 
 
@@ -37,8 +29,7 @@ static void task2(void* args) {
  
 int main(void)
 {
-    uint16_t pin = ss_io_init(PIN('A', 15), SS_GPIO_MODE_OUTPUT);
-    ss_io_write(pin, SS_GPIO_OFF);
+
 
 
     ss_leds_init();
@@ -58,4 +49,11 @@ int main(void)
 
     return 0;
 
+}
+
+
+void vApplicationStackOverflowHook(TaskHandle_t xTask, char * pcTaskName) {
+    while(1) {
+        ss_led_error_on();
+    }
 }
