@@ -11,12 +11,18 @@ int8_t ss_rtos_task_add(  TaskFunction_t task_ptr,
                         UBaseType_t prio,
                         const char* name);
 
+int8_t ss_rtos_rx_task_add( TaskFunction_t task_ptr, 
+                            void *const params, 
+                            UBaseType_t prio, 
+                            const char* name, 
+                            TaskHandle_t *task_handle);
+
 int8_t ss_rtos_big_task_add(  TaskFunction_t task_ptr,
                         void * const params, 
                         UBaseType_t prio,
                         const char* name);                    
 
-void ss_rtos_start();
+void ss_rtos_start(void);
 
 void ss_rtos_delay_ms(const uint32_t delay_ms);
 

@@ -353,14 +353,21 @@ struct FREQ_PIN* ss_freq_measure_init(uint16_t pin_id, struct SS_CLOCK* clock, u
     
         timer_enable_counter(timer);
 
+        switch (ic)
+        {
+            case TIM_IC1: channel->last_capture = TIM_CCR1(timer); break;
+            case TIM_IC2: channel->last_capture = TIM_CCR2(timer); break;
+            case TIM_IC3: channel->last_capture = TIM_CCR3(timer); break;
+            case TIM_IC4: channel->last_capture = TIM_CCR4(timer); break;
+            default: break;
+        }
 
 
-        channel->last_capture = 0;
         channel->resolution = resolution;
         channel->pin_id = pin_id;
         channel->enabled = 1;
         channel->requested = 0;
-        channel->frequency = 0.0;
+        channel->frequency = 0.0f;
         channel->init = 0;
         channel->timer = timer;
         channel->ic = ic;
@@ -375,30 +382,38 @@ float ss_freq_measure_get(uint16_t pin_id) {
     if (!channel->enabled) return 0;
 
     
-    if (channel->requested == 1) {
-        uint32_t timer = channel->timer;
-        uint32_t ic = channel->ic;
-        uint32_t now = 0;
+    if (channel->requested >= 15) {
+        if (channel->requested < 30) {
+            uint32_t timer = channel->timer;
+            uint32_t ic = channel->ic;
+            uint32_t now = 0;
+            uint32_t diff = 0;
 
-        switch (ic)
-        {
-            case TIM_IC1: now = TIM_CCR1(timer); break;
-            case TIM_IC2: now = TIM_CCR2(timer); break;
-            case TIM_IC3: now = TIM_CCR3(timer); break;
-            case TIM_IC4: now = TIM_CCR4(timer); break;
-            default: break;
-        }
+            switch (ic)
+            {
+                case TIM_IC1: now = TIM_CCR1(timer); break;
+                case TIM_IC2: now = TIM_CCR2(timer); break;
+                case TIM_IC3: now = TIM_CCR3(timer); break;
+                case TIM_IC4: now = TIM_CCR4(timer); break;
+                default: break;
+            }
 
-        uint32_t diff = now - diff;
-        float freq = channel->resolution / diff;
-        if (freq < 2 * channel->frequency) {
-            channel->frequency = 0;
-        }
         
+            diff = now - channel->last_capture;
+            if (diff >= 0) {
+                float freq = channel->resolution / diff;
+                channel->frequency = freq;
+            }
+        } else {
+            channel->frequency = 0.0f;
+        }
+
     }
 
-
-    channel->requested = 1;
+    if (channel->requested < 100) {
+        channel->requested++;
+    }
+    
 
     return channel->frequency;
 }
@@ -452,7 +467,7 @@ void ss_freq_meausure_isr(uint32_t timer, uint8_t port_id) {
 
         uint32_t delta = 0;
 
-        if (now > channel->last_capture) {
+        if (now >= channel->last_capture) {
             delta = now - channel->last_capture;
         } else {
             delta = (0xFFFF - channel->last_capture) + now;
@@ -460,8 +475,12 @@ void ss_freq_meausure_isr(uint32_t timer, uint8_t port_id) {
 
         channel->last_capture = now;
 
+        float tmp = channel->resolution / delta;
+        if (tmp < 5000.0f) {
+            channel->frequency = channel->resolution / delta;
+        }
+        
 
-        channel->frequency = channel->resolution / delta;
 
 
         channel->requested = 0;

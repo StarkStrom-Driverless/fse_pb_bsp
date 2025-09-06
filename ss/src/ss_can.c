@@ -8,7 +8,11 @@
 #include "ss_can.h"
 
 
+
+
 QueueHandle_t can_queues[2];
+
+struct SS_CAN ss_can;
 
 int8_t ss_enable_can_rcc(uint8_t can_interface_id) {
     int8_t status = 0;
@@ -136,7 +140,7 @@ uint32_t ss_get_can_port_from_id(uint8_t can_interface_id) {
     return can_port;
 }
 
-QueueHandle_t ss_can_init(uint8_t can_interface_id, uint32_t baudrate, struct SS_CLOCK* ss_clock) {
+struct SS_CAN* ss_can_init(uint8_t can_interface_id, uint32_t baudrate, struct SS_CLOCK* ss_clock) {
     int8_t status = 0;
 
     struct SS_CLOCK_CAN config; 
@@ -182,18 +186,40 @@ QueueHandle_t ss_can_init(uint8_t can_interface_id, uint32_t baudrate, struct SS
     nvic_set_priority(NVIC_CAN1_RX0_IRQ, 5);
     nvic_enable_irq(NVIC_CAN1_RX0_IRQ); 
 
+    ss_can.channel[can_interface_id-1].insert_pos = 0;
+
     can_enable_irq(CAN1, CAN_IER_ERRIE);
 
 
 
-    can_queues[can_interface_id-1] = xQueueCreate(10, sizeof(struct can_rx_msg));
+    //can_queues[can_interface_id-1] = xQueueCreate(10, sizeof(struct can_rx_msg));
 
-    return can_queues[can_interface_id-1];
-}
-
-int8_t ss_can_add_messages(uint32_t* ids, uint8_t len) {
     
 
+    return &ss_can;
+}
+
+
+struct CAN_Mgs* ss_can_add_message_queue(uint8_t can_interface_id,  uint32_t id) {
+    ss_can.channel[can_interface_id - 1].msg[ss_can.channel[can_interface_id - 1].insert_pos].id = id;
+    ss_can.channel[can_interface_id - 1 ].msg[ss_can.channel[can_interface_id - 1].insert_pos].queue = xQueueCreate(10, sizeof(struct can_rx_msg));
+    ss_can.channel[can_interface_id - 1 ].msg[ss_can.channel[can_interface_id - 1].insert_pos].task_handle = 0;
+    ss_can.channel[can_interface_id - 1].insert_pos++;
+    return &ss_can.channel[can_interface_id - 1].msg[ss_can.channel[can_interface_id - 1].insert_pos-1];
+}
+
+struct CAN_Mgs* ss_can_get_message_handle_from_id(uint8_t can_interface_id,  uint32_t id) {
+    for (uint8_t i = 0; i < ss_can.channel[can_interface_id - 1].insert_pos; i++) {
+        if (ss_can.channel[can_interface_id - 1].msg[i].id == id) {
+            return &ss_can.channel[can_interface_id - 1].msg[i];
+        }
+    }
+    return 0;
+}
+
+
+
+int8_t ss_can_add_messages(uint32_t* ids, uint8_t len) {
     int counter = 0;
 
     uint32_t std_ids[28];
@@ -282,7 +308,22 @@ void can1_rx0_isr(void)
     if ((CAN_RF0R(CAN1) & CAN_RF0R_FMP0_MASK) != 0) {
         struct can_rx_msg can_frame;
         ss_can_read(1, &can_frame);
-        xQueueSendFromISR(can_queues[0], &can_frame, &xHigherPriorityTaskWoken);
+
+        struct CAN_Mgs* msg = ss_can_get_message_handle_from_id(1, can_frame.std_id);
+        if (msg == 0) {
+            portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+            return;
+        }
+
+
+
+
+        xQueueSendFromISR(msg->queue, &can_frame, &xHigherPriorityTaskWoken);
+
+        if (msg->task_handle != 0) {
+            vTaskNotifyGiveFromISR(msg->task_handle, &xHigherPriorityTaskWoken);
+        }
+        
     }
 
     // Überlauf behandeln!

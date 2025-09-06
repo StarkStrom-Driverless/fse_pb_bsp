@@ -152,7 +152,7 @@ uint16_t ss_adc_init(uint16_t pin_id) {
     return pin_id;
 }
 
-uint8_t ss_adc_set_next_measurment_pos() {
+uint8_t ss_adc_set_next_measurment_pos(void) {
 
 
     uint8_t original_pos = ss_adc.measurement_pos;
@@ -169,7 +169,7 @@ uint8_t ss_adc_set_next_measurment_pos() {
     return 1;
 }
 
-int8_t ss_adc_start() {
+int8_t ss_adc_start(void) {
     uint8_t found = 0;
     for (uint8_t i = 0; i < MAX_MEASUREMENT; i++) {
         if (ss_adc.measurements[i].enable == 1) {
@@ -185,6 +185,7 @@ int8_t ss_adc_start() {
         ss_adc_start_channel(pin_id);
     }
 
+    return -1;
 }
 
 int8_t ss_adc_start_channel(uint16_t pin_id) {
@@ -216,7 +217,7 @@ void adc_isr(void) {
     else if (adc_eoc(ADC3)) {
         ss_adc.measurements[ss_adc.measurement_pos].measurement = adc_read_regular(ADC3);
     }
-    if (ss_adc_set_next_measurment_pos(&ss_adc)) {
+    if (ss_adc_set_next_measurment_pos()) {
         ss_adc_start_channel(ss_adc.measurements[ss_adc.measurement_pos].pin_id);
     }
 
