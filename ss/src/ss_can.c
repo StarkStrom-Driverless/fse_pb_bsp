@@ -10,6 +10,7 @@
 
 
 
+
 QueueHandle_t can_queues[2];
 
 struct SS_CAN ss_can;
@@ -140,7 +141,7 @@ uint32_t ss_get_can_port_from_id(uint8_t can_interface_id) {
     return can_port;
 }
 
-struct SS_CAN* ss_can_init(uint8_t can_interface_id, uint32_t baudrate, struct SS_CLOCK* ss_clock) {
+struct SS_CAN* ss_can_init(uint8_t can_interface_id, uint32_t baudrate) {
     int8_t status = 0;
 
     struct SS_CLOCK_CAN config; 
@@ -151,7 +152,7 @@ struct SS_CAN* ss_can_init(uint8_t can_interface_id, uint32_t baudrate, struct S
 
     if (ss_enable_can_rcc(can_interface_id) == -1) status = -1;
 
-    ss_clock_can(&config, baudrate, ss_clock);
+    ss_clock_can(&config, baudrate);
 
     can_reset(can_port);
 

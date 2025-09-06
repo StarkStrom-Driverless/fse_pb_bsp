@@ -4,6 +4,9 @@
 #include <inttypes.h>
 
 #include <libopencm3/stm32/can.h>
+#include <libopencm3/stm32/spi.h>
+
+#include "ss_feedback.h"
 
 #define SS_CLOCK_DEFAULT 0
 #define SS_CLOCK_FAST 1
@@ -21,10 +24,14 @@ struct SS_CLOCK_CAN {
     uint32_t sjw;
 };
 
+
+
 extern struct SS_CLOCK ss_clock;
 
-struct SS_CLOCK* ss_clock_init(uint8_t config);
+SS_FEEDBACK ss_clock_init(uint8_t config);
 
-uint8_t ss_clock_can(struct SS_CLOCK_CAN* config, uint32_t baudrate, struct SS_CLOCK* clock_config);
+SS_FEEDBACK ss_clock_can(struct SS_CLOCK_CAN* config, uint32_t baudrate);
+
+SS_FEEDBACK ss_clock_spi(uint32_t* prescaler, uint32_t baudrate, uint8_t interface);
 
 #endif

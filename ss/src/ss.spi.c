@@ -5,6 +5,7 @@
 
 #include "ss_gpio.h"
 #include "ss_spi.h"
+#include "ss_clock.h"
 
 
 int8_t ss_enable_spi_gpios(uint8_t spi_interface_id) {
@@ -111,60 +112,42 @@ uint32_t ss_get_spi_port_from_id(uint8_t spi_interface_id) {
     return spi_port;
 }
 
-uint32_t ss_get_spi_prescaler(uint32_t baudrate, uint32_t clk) {
-    uint32_t prescaler = 0;
-    
-    uint32_t br = clk / baudrate;
-    br = (br < 2 || br > 256) ? 2 : br;
 
-    switch(br) {
-        case 2: prescaler = SPI_CR1_BR_FPCLK_DIV_2; break;
-        case 4: prescaler = SPI_CR1_BR_FPCLK_DIV_4; break;
-        case 8: prescaler = SPI_CR1_BR_FPCLK_DIV_8; break;
-        case 16: prescaler = SPI_CR1_BR_FPCLK_DIV_16; break;
-        case 32: prescaler = SPI_CR1_BR_FPCLK_DIV_32; break;
-        case 64: prescaler = SPI_CR1_BR_FPCLK_DIV_64; break;
-        case 128: prescaler = SPI_CR1_BR_FPCLK_DIV_128; break;
-        case 256: prescaler = SPI_CR1_BR_FPCLK_DIV_256; break;
-        default: prescaler = SPI_CR1_BR_FPCLK_DIV_256; break;
-    }
 
-    return prescaler;
-}
-
-int8_t ss_spi_init(uint8_t spi_interface_id, uint32_t baudrate) {
-    uint8_t status = 0;
-
+SS_FEEDBACK ss_spi_init(uint8_t spi_interface_id, uint32_t baudrate)
+{
     uint32_t spi_port = ss_get_spi_port_from_id(spi_interface_id);
 
-    uint32_t spi_prescaler = ss_get_spi_prescaler(baudrate, 16000000);
 
-    if (ss_enable_spi_rcc(spi_interface_id) == -1) status = -1;
+    if (ss_enable_spi_rcc(spi_interface_id) == -1)
+        return SET_TOPLEVEL_ERROR(SS_FEEDBACK_SPI_INIT_ERROR, SS_FEEDBACK_RCC_INIT_ERROR);
+    if (ss_enable_spi_gpios(spi_interface_id) == -1)
+        return SET_TOPLEVEL_ERROR(SS_FEEDBACK_SPI_INIT_ERROR, SS_FEEDBACK_SPI_GPIO_INIT_ERROR);
 
-    if (ss_enable_spi_gpios(spi_interface_id) == -1) status = -1;
 
-    int ret = spi_init_master(  spi_port,
-                                spi_prescaler,
-                                SPI_CR1_CPOL_CLK_TO_0_WHEN_IDLE,
-                                SPI_CR1_CPHA_CLK_TRANSITION_1,
-                                SPI_CR1_DFF_8BIT,
-                                SPI_CR1_MSBFIRST);
+    uint32_t spi_prescaler = 0;
+    if (ss_clock_spi(&spi_prescaler, baudrate, spi_interface_id) != SS_FEEDBACK_OK)
+        return SET_TOPLEVEL_ERROR(SS_FEEDBACK_SPI_INIT_ERROR, SS_FEEDBACK_CLOCK_SPI_INIT_ERROR);
 
-    if (ret == 1) status = -1;
 
+    spi_disable(spi_port);
+
+    spi_set_master_mode(spi_port);
+    spi_set_dff_8bit(spi_port);
+    spi_send_msb_first(spi_port);
     spi_set_full_duplex_mode(spi_port);
 
-    spi_set_clock_phase_0(spi_port);
+    spi_set_clock_polarity_0(spi_port);   // CPOL=0
+    spi_set_clock_phase_0(spi_port);      // CPHA=0
 
-    spi_set_clock_polarity_0(spi_port);
+    spi_disable_software_slave_management(spi_port);
+    spi_enable_software_slave_management(spi_port);  // SSM=1
+    spi_set_nss_high(spi_port);                       // SSI=1
 
-    spi_enable_software_slave_management(spi_port);
-
-    spi_set_nss_high(spi_port);
+    spi_set_baudrate_prescaler(spi_port, spi_prescaler);
 
     spi_enable(spi_port);
-
-    return status;
+    return SS_FEEDBACK_OK;
 }
 
 int8_t ss_spi_rxtx(uint8_t spi_interface_id, uint8_t* rx, uint8_t* tx, uint16_t num) {
