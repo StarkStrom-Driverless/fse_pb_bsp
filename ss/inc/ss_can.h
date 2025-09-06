@@ -47,12 +47,6 @@ struct TimeOutDetection {
 };
 
 
-struct Fifo {
-    struct can_rx_msg can_frames[FIFO_SIZE];
-    int front;
-    int rear;
-};
-
 struct CAN_Mgs {
 	uint32_t id;
 	QueueHandle_t queue;
