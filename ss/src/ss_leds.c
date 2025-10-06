@@ -2,17 +2,24 @@
 #include "ss_leds.h"
 
 int8_t ss_leds_init(void) {
-    ss_io_init(PIN('C', 1), SS_GPIO_MODE_OUTPUT);
-    ss_io_init(PIN('C', 0), SS_GPIO_MODE_OUTPUT);
-    ss_io_init(PIN('C', 4), SS_GPIO_MODE_OUTPUT);
-    ss_io_init(PIN('C', 5), SS_GPIO_MODE_OUTPUT);
+    if (ss_io_init(PIN('C', 1), SS_GPIO_MODE_OUTPUT) != SS_FEEDBACK_OK)
+        return SS_FEEDBACK_IO_PB_LEDS_INIT_ERROR;
+
+    if (ss_io_init(PIN('C', 0), SS_GPIO_MODE_OUTPUT) != SS_FEEDBACK_OK)
+        return SS_FEEDBACK_IO_PB_LEDS_INIT_ERROR;
+
+    if (ss_io_init(PIN('C', 4), SS_GPIO_MODE_OUTPUT) != SS_FEEDBACK_OK)
+        return SS_FEEDBACK_IO_PB_LEDS_INIT_ERROR;
+
+    if (ss_io_init(PIN('C', 5), SS_GPIO_MODE_OUTPUT) != SS_FEEDBACK_OK)
+        return SS_FEEDBACK_IO_PB_LEDS_INIT_ERROR;
 
     ss_led_error_off();
     ss_led_heartbeat_off();
     ss_led_dbg1_off();
     ss_led_dbg2_off();
 
-    return 0;
+    return SS_FEEDBACK_OK;
 }
 
 

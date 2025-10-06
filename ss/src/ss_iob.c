@@ -6,17 +6,18 @@
 
 #include <ss_gpio.h>
 #include <ss_makros.h>
-
 #include "ss_iob.h"
 
-struct IOB iob;
+#define SS_FEEDBACK_BASE SS_FEEDBACK_IO_IOB_ERROR
 
-struct IOB* ss_iob_init(struct IOB* iob) {
+struct IOB ss_iob;
+
+SS_FEEDBACK ss_iob_init() {
     for (int i = 0; i < MAX_INPUT_OBSERVATIONS; i++) {
-        iob->iobs[i].enabled = 0;
+        ss_iob.iobs[i].enabled = 0;
     }
 
-    return &iob;
+    return SS_FEEDBACK_OK;
 }
 
 uint32_t get_exti_from_pin_id(uint16_t pin_id) {
@@ -91,37 +92,49 @@ uint8_t get_nvic_exit_from_pin_id(uint16_t pin_id) {
     return nvic_exti;
 }
 
-uint16_t ss_iob_add(uint16_t pin_id, struct IOB* iob, uint8_t polarity) {
-    ss_io_init(pin_id, SS_GPIO_MODE_INPUT);
+SS_FEEDBACK ss_iob_add(uint16_t pin_id, uint8_t polarity) {
+    SS_FEEDBACK rc;
+
+    if (PINNO(pin_id) > MAX_INPUT_OBSERVATIONS) {
+        return SS_SET_TOPLEVEL_ERROR(SS_FEEDBACK_BASE, SS_FEEDBACK_IO_IOB_PINID_OFR);
+    }
+
+    rc = ss_io_init(pin_id, SS_GPIO_MODE_INPUT);
+    SS_HANDLE_ERROR_WITH_EXIT(rc);
 
     rcc_periph_clock_enable(RCC_SYSCFG);
 
     uint32_t exti = get_exti_from_pin_id(pin_id);
-    uint32_t port = get_port_from_pin_id(pin_id);
-    uint8_t nvic_exti = get_nvic_exit_from_pin_id(pin_id);
+    SS_HANDLE_NULL_WITH_EXIT(exti);
 
-    iob->iobs[PINNO(pin_id)].enabled = 1;
-    iob->iobs[PINNO(pin_id)].pin_id = pin_id;
+    uint32_t port = get_port_from_pin_id(pin_id);
+    SS_HANDLE_NULL_WITH_EXIT(port);
+
+    uint8_t nvic_exti = get_nvic_exit_from_pin_id(pin_id);
+    SS_HANDLE_NULL_WITH_EXIT(nvic_exti);
+
+    ss_iob.iobs[PINNO(pin_id)].enabled = 1;
+    ss_iob.iobs[PINNO(pin_id)].pin_id = pin_id;
     
 
     exti_select_source(exti, port);
 
     if (polarity == SS_GPIO_RAISING) {
         exti_set_trigger(exti, EXTI_TRIGGER_RISING);
-        iob->iobs[PINNO(pin_id)].value = 0;
-        iob->iobs[PINNO(pin_id)].polarity = SS_GPIO_RAISING;
+        ss_iob.iobs[PINNO(pin_id)].value = 0;
+        ss_iob.iobs[PINNO(pin_id)].polarity = SS_GPIO_RAISING;
 
     } else {
         exti_set_trigger(exti, EXTI_TRIGGER_FALLING);
-        iob->iobs[PINNO(pin_id)].value = 1;
-        iob->iobs[PINNO(pin_id)].polarity = SS_GPIO_FALLING;
+        ss_iob.iobs[PINNO(pin_id)].value = 1;
+        ss_iob.iobs[PINNO(pin_id)].polarity = SS_GPIO_FALLING;
     }
 
     exti_enable_request(exti);
     
     nvic_enable_irq(nvic_exti);
 
-    return pin_id;
+    return SS_FEEDBACK_OK;
 }
 
 uint8_t exti_get_pending(uint8_t line) {
@@ -129,10 +142,10 @@ uint8_t exti_get_pending(uint8_t line) {
     return (EXTI_PR & (1 << line)) != 0;
 }
 
-uint8_t ss_iob_get(uint16_t pin_id, struct IOB* iob) {
-    if (iob->iobs[PINNO(pin_id)].polarity == SS_GPIO_RAISING) {
-        if (iob->iobs[PINNO(pin_id)].value) {
-            iob->iobs[PINNO(pin_id)].value = 0;
+uint8_t ss_iob_get(uint16_t pin_id) {
+    if (ss_iob.iobs[PINNO(pin_id)].polarity == SS_GPIO_RAISING) {
+        if (ss_iob.iobs[PINNO(pin_id)].value) {
+            ss_iob.iobs[PINNO(pin_id)].value = 0;
             return 1;
         } else {
             if (ss_io_read(pin_id)) {
@@ -142,8 +155,8 @@ uint8_t ss_iob_get(uint16_t pin_id, struct IOB* iob) {
             }
         }
     } else {
-        if (iob->iobs[PINNO(pin_id)].value) {
-            iob->iobs[PINNO(pin_id)].value = 0;
+        if (ss_iob.iobs[PINNO(pin_id)].value) {
+            ss_iob.iobs[PINNO(pin_id)].value = 0;
             return 1;
         } else {
             if (ss_io_read(pin_id)) {
@@ -159,27 +172,27 @@ uint8_t ss_iob_get(uint16_t pin_id, struct IOB* iob) {
 
 void exti0_isr(void) {
     exti_reset_request(EXTI0);
-    iob.iobs[0].value = 1;
+    ss_iob.iobs[0].value = 1;
 }
 
 void exti1_isr(void) {
     exti_reset_request(EXTI1);
-    iob.iobs[1].value = 1;  
+    ss_iob.iobs[1].value = 1;  
 }
 
 void exti2_isr(void) {
     exti_reset_request(EXTI2);
-    iob.iobs[2].value = 1;  
+    ss_iob.iobs[2].value = 1;  
 }
 
 void exti3_isr(void) {
     exti_reset_request(EXTI3);
-    iob.iobs[3].value = 1;  
+    ss_iob.iobs[3].value = 1;  
 }
 
 void exti4_isr(void) {
     exti_reset_request(EXTI4);
-    iob.iobs[4].value = 1; 
+    ss_iob.iobs[4].value = 1; 
 }
 
 void exti9_5_isr(void) {
@@ -207,7 +220,7 @@ void exti9_5_isr(void) {
     }
 
     if (exti != -1) {
-        iob.iobs[exti].value = 1;
+        ss_iob.iobs[exti].value = 1;
     }
     
 }
@@ -241,6 +254,6 @@ void exti15_10_isr(void) {
     }
 
     if (exti != -1) {
-        iob.iobs[exti].value = 1;
+        ss_iob.iobs[exti].value = 1;
     }
 }

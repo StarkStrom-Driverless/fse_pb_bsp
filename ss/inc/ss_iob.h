@@ -1,6 +1,8 @@
 #ifndef _SS_IOB_H_
 #define _SS_IOB_H_
 
+#include "ss_feedback.h"
+
 #define MAX_INPUT_OBSERVATIONS 16
 
 #define SS_GPIO_RAISING 0
@@ -17,17 +19,17 @@ struct IOB {
     struct InputObservation iobs[MAX_INPUT_OBSERVATIONS];
 };
 
-extern struct IOB iob;
+extern struct IOB ss_iob;
 
-struct IOB* ss_iob_init(struct IOB* iob);
+SS_FEEDBACK ss_iob_init();
 
-uint16_t ss_iob_add(uint16_t pin_id, struct IOB* iob, uint8_t polarity);
+SS_FEEDBACK ss_iob_add(uint16_t pin_id, uint8_t polarity);
 
-uint8_t ss_iob_get(uint16_t pin_id, struct IOB* iob);
+uint8_t ss_iob_get(uint16_t pin_id);
 
 uint32_t get_exti_from_pin_id(uint16_t pin_id);
 
-
+uint8_t exti_get_pending(uint8_t line);
 
 
 void exti0_isr(void);

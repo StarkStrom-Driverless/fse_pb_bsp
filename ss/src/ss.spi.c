@@ -7,9 +7,11 @@
 #include "ss_spi.h"
 #include "ss_clock.h"
 
+#define SS_FEEDBACK_BASE SS_FEEDBACK_SPI_INIT_ERROR
 
-int8_t ss_enable_spi_gpios(uint8_t spi_interface_id) {
-    int8_t status = 0;
+
+SS_FEEDBACK ss_enable_spi_gpios(uint8_t spi_interface_id) {
+    SS_FEEDBACK rc = SS_FEEDBACK_OK;
 
     uint16_t miso = 0;
     uint16_t mosi = 0;
@@ -17,57 +19,68 @@ int8_t ss_enable_spi_gpios(uint8_t spi_interface_id) {
     
     switch (spi_interface_id) {
         case 1:
-            miso = ss_io_init(PIN('A', 6), GPIO_MODE_AF);
-            mosi = ss_io_init(PIN('A', 7), GPIO_MODE_AF);
-            sck = ss_io_init(PIN('A', 5), GPIO_MODE_AF);
+            miso = PIN('A', 6);
+            mosi = PIN('A', 7);
+            sck = PIN('A', 5);
             break;
 
         case 2: 
-            miso = ss_io_init(PIN('B', 14), GPIO_MODE_AF);
-            mosi = ss_io_init(PIN('B', 15), GPIO_MODE_AF);
-            sck = ss_io_init(PIN('B', 13), GPIO_MODE_AF);
+            miso = PIN('B', 14);
+            mosi = PIN('B', 15);
+            sck = PIN('B', 13);
             break;
 
         case 3: 
-            miso = ss_io_init(PIN('C', 11), GPIO_MODE_AF);
-            mosi = ss_io_init(PIN('C', 12), GPIO_MODE_AF);
-            sck = ss_io_init(PIN('C', 10), GPIO_MODE_AF);
+            miso = PIN('C', 11);
+            mosi = PIN('C', 12);
+            sck = PIN('C', 10);
             break;
 
         default:
-            status = -1;
+            rc = SS_FEEDBACK_SPI_GPIO_INIT_ERROR;
+
             break;
     }
+    SS_HANDLE_ERROR_WITH_EXIT(rc);
 
-    if (status == 0) {
-        uint8_t af = 0;
-        switch(spi_interface_id) {
-            case 1:
-            case 2:
-                af = GPIO_AF5;
-                break;
-            
-            case 3:
-                af = GPIO_AF6;
-                break;
+    rc = ss_io_init(miso, GPIO_MODE_AF);
+    SS_HANDLE_ERROR_WITH_EXIT(rc);
 
-            default:
-                status = -1;
-                break;
-        }
+    rc = ss_io_init(mosi, GPIO_MODE_AF);
+    SS_HANDLE_ERROR_WITH_EXIT(rc);
 
-        if (status == -1) return status;
+    rc = ss_io_init(sck, GPIO_MODE_AF);
+    SS_HANDLE_ERROR_WITH_EXIT(rc);
 
-        gpio_set_af(GPIO(PINBANK(miso)), af, BIT(PINNO(miso)));
-        gpio_set_af(GPIO(PINBANK(mosi)), af, BIT(PINNO(mosi)));
-        gpio_set_af(GPIO(PINBANK(sck)), af, BIT(PINNO(sck)));
+
+    uint8_t af = 0;
+    switch(spi_interface_id) {
+        case 1:
+        case 2:
+            af = GPIO_AF5;
+            break;
+        
+        case 3:
+            af = GPIO_AF6;
+            break;
+
+        default:
+            rc = SS_FEEDBACK_SPI_GPIO_INIT_ERROR;
+            break;
     }
+    SS_HANDLE_ERROR_WITH_EXIT(rc);
 
-    return status;
+       
+    gpio_set_af(GPIO(PINBANK(miso)), af, BIT(PINNO(miso)));
+    gpio_set_af(GPIO(PINBANK(mosi)), af, BIT(PINNO(mosi)));
+    gpio_set_af(GPIO(PINBANK(sck)), af, BIT(PINNO(sck)));
+
+
+    return rc;
 }
 
-int8_t ss_enable_spi_rcc(uint8_t can_interface_id) {
-    int8_t status = 0;
+SS_FEEDBACK ss_enable_spi_rcc(uint8_t can_interface_id) {
+    SS_FEEDBACK status = SS_FEEDBACK_OK;
 
     switch(can_interface_id) {
         case 1:
@@ -83,7 +96,7 @@ int8_t ss_enable_spi_rcc(uint8_t can_interface_id) {
             break;
 
         default:
-            status = -1;
+            status = SS_FEEDBACK_SPI_RCC_INIT_ERROR;
             break;
     }
 
@@ -116,18 +129,20 @@ uint32_t ss_get_spi_port_from_id(uint8_t spi_interface_id) {
 
 SS_FEEDBACK ss_spi_init(uint8_t spi_interface_id, uint32_t baudrate)
 {
+    SS_FEEDBACK rc;
+
     uint32_t spi_port = ss_get_spi_port_from_id(spi_interface_id);
 
+    rc = ss_enable_spi_rcc(spi_interface_id);
+    SS_HANDLE_ERROR_WITH_EXIT(rc);
 
-    if (ss_enable_spi_rcc(spi_interface_id) == -1)
-        return SET_TOPLEVEL_ERROR(SS_FEEDBACK_SPI_INIT_ERROR, SS_FEEDBACK_RCC_INIT_ERROR);
-    if (ss_enable_spi_gpios(spi_interface_id) == -1)
-        return SET_TOPLEVEL_ERROR(SS_FEEDBACK_SPI_INIT_ERROR, SS_FEEDBACK_SPI_GPIO_INIT_ERROR);
+    rc = ss_enable_spi_gpios(spi_interface_id);
+    SS_HANDLE_ERROR_WITH_EXIT(rc);
 
 
     uint32_t spi_prescaler = 0;
-    if (ss_clock_spi(&spi_prescaler, baudrate, spi_interface_id) != SS_FEEDBACK_OK)
-        return SET_TOPLEVEL_ERROR(SS_FEEDBACK_SPI_INIT_ERROR, SS_FEEDBACK_CLOCK_SPI_INIT_ERROR);
+    rc = ss_clock_spi(&spi_prescaler, baudrate, spi_interface_id);
+    SS_HANDLE_ERROR_WITH_EXIT(rc);
 
 
     spi_disable(spi_port);

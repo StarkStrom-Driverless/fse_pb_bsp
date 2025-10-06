@@ -124,8 +124,6 @@ uint16_t ss_adc_get_measurement_pos_from_pin_id(uint16_t pin_id) {
 
 
 uint16_t ss_adc_init(uint16_t pin_id) {
-
-
     ss_enable_adc_clock_from_pin_id(pin_id);
 
     ss_io_init(pin_id, GPIO_MODE_ANALOG);

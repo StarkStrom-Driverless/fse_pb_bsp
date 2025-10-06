@@ -4,43 +4,40 @@
 
 
 
-int8_t ss_rtos_task_add(TaskFunction_t task_ptr, void *const params, UBaseType_t prio, const char* name) {
-    int8_t ret = 1;
+SS_FEEDBACK ss_rtos_task_add(TaskFunction_t task_ptr, void *const params, UBaseType_t prio, const char* name) {
     if (prio < configMAX_PRIORITIES) {
         BaseType_t task_created = xTaskCreate (task_ptr,name,1024,params,prio,NULL);
         if (task_created != pdPASS) {
-            ret = 0;
+            return SS_FEEDBACK_RTOS_INIT_TASK_ERROR;
         }
     } else {
-        ret = 0;
+        return SS_FEEDBACK_RTOS_INIT_TASK_ERROR;
     }
-    return ret;
+    return SS_FEEDBACK_OK;
 }
 
-int8_t ss_rtos_rx_task_add(TaskFunction_t task_ptr, void *const params, UBaseType_t prio, const char* name, TaskHandle_t* task_handle) {
-    int8_t ret = 1;
+SS_FEEDBACK ss_rtos_rx_task_add(TaskFunction_t task_ptr, void *const params, UBaseType_t prio, const char* name, TaskHandle_t* task_handle) {
     if (prio < configMAX_PRIORITIES) {
         BaseType_t task_created = xTaskCreate (task_ptr,name,1024,params,prio,task_handle);
         if (task_created != pdPASS) {
-            ret = 0;
+            return SS_FEEDBACK_RTOS_INIT_RX_TASK_ERROR;
         }
     } else {
-        ret = 0;
+        return SS_FEEDBACK_RTOS_INIT_RX_TASK_ERROR;
     }
-    return ret;
+    return SS_FEEDBACK_OK;
 }
 
-int8_t ss_rtos_big_task_add(TaskFunction_t task_ptr, void *const params, UBaseType_t prio, const char* name) {
-    int8_t ret = 1;
+SS_FEEDBACK ss_rtos_big_task_add(TaskFunction_t task_ptr, void *const params, UBaseType_t prio, const char* name) {
     if (prio < configMAX_PRIORITIES) {
         BaseType_t task_created = xTaskCreate (task_ptr,name,8196,params,prio,NULL);
         if (task_created != pdPASS) {
-            ret = 0;
+            return SS_FEEDBACK_RTOS_INIT_BIGTASK_ERROR;
         }
     } else {
-        ret = 0;
+        return SS_FEEDBACK_RTOS_INIT_BIGTASK_ERROR;
     }
-    return ret;
+    return SS_FEEDBACK_OK;
 }
 
 void ss_rtos_start(void) {

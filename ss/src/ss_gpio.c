@@ -1,22 +1,29 @@
 #include "ss_gpio.h"
 #include <libopencm3/stm32/rcc.h>
 #include <libopencm3/stm32/gpio.h>
-#include "ss_delay.h"
 
-int8_t ss_enable_rcc_from_id(uint16_t pin_id) {
-    int8_t status = 0;
+
+
+SS_FEEDBACK ss_enable_rcc_from_id(uint16_t pin_id) {
+
     switch (PINBANK(pin_id)) {
         case 0: rcc_periph_clock_enable(RCC_GPIOA); break;
         case 1: rcc_periph_clock_enable(RCC_GPIOB); break;
         case 2: rcc_periph_clock_enable(RCC_GPIOC); break;
         case 3: rcc_periph_clock_enable(RCC_GPIOD); break;
-        default: status = -1; break;
+        default: 
+            return SS_FEEDBACK_RCC_INIT_ERROR;
+            break;
     }
-    return status;
+    return SS_FEEDBACK_OK;
 }
 
-uint16_t ss_io_init(uint16_t pin_id, uint8_t mode) {
-    ss_enable_rcc_from_id(pin_id);
+SS_FEEDBACK ss_io_init(uint16_t pin_id, uint8_t mode) {
+    
+    if (ss_enable_rcc_from_id(pin_id) !=  SS_FEEDBACK_OK) {
+        return SS_SET_TOPLEVEL_ERROR(SS_FEEDBACK_IO_INIT_ERROR, SS_FEEDBACK_RCC_INIT_ERROR);
+    }
+
     if (mode == SS_GPIO_MODE_INPUT_PU) {
         gpio_mode_setup(GPIO(PINBANK(pin_id)), SS_GPIO_MODE_INPUT, GPIO_PUPD_PULLUP, BIT(PINNO(pin_id)));
     }
@@ -27,8 +34,7 @@ uint16_t ss_io_init(uint16_t pin_id, uint8_t mode) {
         gpio_mode_setup(GPIO(PINBANK(pin_id)), mode, GPIO_PUPD_NONE, BIT(PINNO(pin_id)));
     }
     
-
-    return pin_id;
+    return SS_FEEDBACK_OK;
 }
 
 void ss_io_write(uint16_t pin_id, uint8_t value) {

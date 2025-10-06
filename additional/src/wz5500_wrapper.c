@@ -49,17 +49,24 @@ static void wizchip_spi_writeburst(uint8_t* pBuf, uint16_t len) {
 }
 
 SS_FEEDBACK ss_eth_init(wiz_NetInfo* netinfo, uint32_t spi_baudrate) {
-    wz5500.cs_pin_id = ss_io_init(PIN('A', 4), SS_GPIO_MODE_OUTPUT);
-    wz5500.rst_pin_id = ss_io_init(PIN('B', 10), SS_GPIO_MODE_OUTPUT);
+    wz5500.cs_pin_id = PIN('A', 4);
+    wz5500.rst_pin_id = PIN('B', 10);
+    SS_FEEDBACK rc = 0;
+
+    rc = ss_io_init(wz5500.cs_pin_id, SS_GPIO_MODE_OUTPUT);
+    SS_HANDLE_ERROR_WITH_EXIT(rc);
+
+    rc = ss_io_init(wz5500.rst_pin_id, SS_GPIO_MODE_OUTPUT);
+    SS_HANDLE_ERROR_WITH_EXIT(rc);
 
     ss_io_write(wz5500.cs_pin_id, SS_GPIO_ON);
 
     ss_io_write(wz5500.rst_pin_id, SS_GPIO_OFF);
-    delay(10000);
+    ss_delay(1000);
     ss_io_write(wz5500.rst_pin_id, SS_GPIO_ON);
 
     if (ss_spi_init(W5500_SPI_ID, spi_baudrate) != SS_FEEDBACK_OK) {
-        return SET_TOPLEVEL_ERROR(SS_FEEDBACK_ETHERNET_INIT_ERROR, SS_FEEDBACK_SPI_INIT_ERROR);
+        return SS_SET_TOPLEVEL_ERROR(SS_FEEDBACK_ETHERNET_INIT_ERROR, SS_FEEDBACK_SPI_INIT_ERROR);
     }
 
     reg_wizchip_cs_cbfunc(wizchip_cs_select, wizchip_cs_deselect);
@@ -79,7 +86,7 @@ SS_FEEDBACK ss_eth_init(wiz_NetInfo* netinfo, uint32_t spi_baudrate) {
     };
     ctlwizchip(CW_SET_PHYCONF, &pc);
     ctlwizchip(CW_RESET_PHY, 0);
-    delay(800000);
+    ss_delay(1000);
 
     uint8_t ver = getVERSIONR();
     if (getVERSIONR() != 0x04) {

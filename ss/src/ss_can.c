@@ -6,7 +6,7 @@
 #include <stddef.h>
 #include "ss_gpio.h"
 #include "ss_can.h"
-
+#include "ss_feedback.h"
 
 
 
@@ -43,6 +43,9 @@ int8_t ss_enable_can_gpios(uint8_t can_interface_id) {
 
     switch(can_interface_id) {
         case 1:
+            tx = PIN('B', 9);
+            rx = PIN('B', 8);
+            stb = PIN('B', 7);
             tx = ss_io_init(PIN('B', 9), GPIO_MODE_AF);
             rx = ss_io_init(PIN('B', 8), GPIO_MODE_AF);
             stb = ss_io_init(PIN('B', 7), GPIO_MODE_OUTPUT);
@@ -60,6 +63,8 @@ int8_t ss_enable_can_gpios(uint8_t can_interface_id) {
             status = -1;
             break;
     }
+
+
 
     if (status == 0) {
         gpio_set_af(GPIO(PINBANK(tx)), GPIO_AF9, BIT(PINNO(tx)));

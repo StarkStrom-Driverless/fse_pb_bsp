@@ -3,21 +3,22 @@
 
 #include "FreeRTOS.h"
 #include "task.h"
+#include "ss_feedback.h"
 
 #define SS_RTOS_DELAY_MS pdMS_TO_TICKS
 
-int8_t ss_rtos_task_add(  TaskFunction_t task_ptr,
+SS_FEEDBACK ss_rtos_task_add(  TaskFunction_t task_ptr,
                         void * const params, 
                         UBaseType_t prio,
                         const char* name);
 
-int8_t ss_rtos_rx_task_add( TaskFunction_t task_ptr, 
+SS_FEEDBACK ss_rtos_rx_task_add( TaskFunction_t task_ptr, 
                             void *const params, 
                             UBaseType_t prio, 
                             const char* name, 
                             TaskHandle_t *task_handle);
 
-int8_t ss_rtos_big_task_add(  TaskFunction_t task_ptr,
+SS_FEEDBACK ss_rtos_big_task_add(  TaskFunction_t task_ptr,
                         void * const params, 
                         UBaseType_t prio,
                         const char* name);                    
