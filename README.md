@@ -220,7 +220,7 @@ int main(void) {
          *   call ss_can_send with the can-index and a pointer to the frame
          */
         if (ss_handle_timer(&handle2)) {
-            struct can_tx_msg can_frame;
+            struct SS_CAN_FRAME can_frame;
             can_frame.std_id = 0x111;
             can_frame.ide = 0;
             can_frame.rtr = 0;
@@ -240,7 +240,7 @@ int main(void) {
          */
         if (!is_fifo_empty(&can_receive_fifos[0])) {
             
-            struct can_rx_msg can_frame;
+            struct SS_CAN_FRAME can_frame;
             fifo_remove_can_frame(&can_receive_fifos[0], &can_frame);
 
             switch(can_frame.std_id) {

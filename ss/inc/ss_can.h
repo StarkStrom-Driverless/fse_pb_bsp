@@ -3,28 +3,17 @@
 
 #include <inttypes.h>
 #include <stddef.h>
-
-
 #include <FreeRTOS.h>
 #include <queue.h>
-
 #include "ss_clock.h"
-
-
+#include "ss_rtos.h"
 
 #define FIFO_SIZE 10
-#define MAX_TIMEOUT_DETECTION 10
+#define MAX_CAN_MSGS 10
+#define SS_FILTER_BANKS 14
+#define SS_FILTER_IDS (SS_FILTER_BANKS * 4)
 
-struct can_tx_msg {
-	uint32_t std_id;
-	uint32_t ext_id;
-	uint8_t ide;
-	uint8_t rtr;
-	uint8_t dlc;
-	uint8_t data[8];
-};
-
-struct can_rx_msg {
+struct SS_CAN_FRAME {
 	uint32_t std_id;
 	uint32_t ext_id;
 	uint8_t ide;
@@ -34,29 +23,49 @@ struct can_rx_msg {
 	uint8_t fmi;
 };
 
-struct MsgStatus {
+struct SS_CAN_ID {
+	uint32_t id;
+	uint8_t is_ide;
+	int8_t group_number;
+};
+
+struct SS_CAN_ID_FILTERS {
+    struct SS_CAN_ID ids[SS_FILTER_IDS];
+    uint8_t insert_pos;
+    uint8_t free_id_group;
+    uint8_t free_ide_group;
+};
+
+struct SS_CAN_TOD_MSG_STATUS {
 	uint32_t std_id;
 	uint16_t active_counter;
 	uint16_t reset_value;
 	uint8_t timeout_detected;
 };
 
-struct TimeOutDetection {
-	struct MsgStatus msgs[MAX_TIMEOUT_DETECTION];
+struct SS_TOD {
+	struct SS_CAN_TOD_MSG_STATUS msgs[MAX_CAN_MSGS];
 	uint8_t msg_count;
 };
 
-
-struct CAN_Mgs {
-	uint32_t id;
+struct SS_CAN_MSG_QUEUE {
 	QueueHandle_t queue;
 	TaskHandle_t task_handle;
+	uint32_t id;
+};
+
+struct SS_CAN_MSG_QUEUES {
+	struct SS_CAN_MSG_QUEUE queues[MAX_CAN_MSGS];
+	uint8_t insert_pos;
 };
 
 struct CAN_Channel {
-	uint8_t insert_pos;
-	struct CAN_Mgs msg[10];
+	struct SS_CAN_MSG_QUEUES msg_queues;
+	struct SS_TOD tod;
+	struct SS_CAN_ID_FILTERS filters;
+	struct SS_CAN_MSG_QUEUE std_msg_queue;
 };
+
 
 struct SS_CAN {
 	struct CAN_Channel channel[2]; 
@@ -64,47 +73,77 @@ struct SS_CAN {
 
 extern struct SS_CAN ss_can;
 
-extern QueueHandle_t can_queues[2];
-
-int8_t ss_enable_can_rcc(uint8_t can_interface_id);
-
-int8_t ss_enable_can_gpios(uint8_t can_interface_id);
-
-int8_t ss_init_can_nvic(uint8_t can_interface_id, uint8_t prio);
-
-int8_t ss_can_get_bit_timings(uint32_t baudrate, uint32_t* sjw, uint32_t* tseg1, uint32_t* tseg2, uint32_t* prescaler);
-
-uint32_t ss_get_can_port_from_id(uint8_t can_interface_id);
-
-struct SS_CAN* ss_can_init(uint8_t can_interface_id, uint32_t baudrate);
-
-struct CAN_Mgs* ss_can_add_message_queue(uint8_t can_interface_id,  uint32_t id);
-
-struct CAN_Mgs* ss_can_get_message_handle_from_id(uint8_t can_interface_id,  uint32_t id);
-
-int8_t ss_can_read(uint8_t can_interface_id, struct can_rx_msg* can_frame);
-
-int8_t ss_can_send(uint8_t can_interface_id, struct can_tx_msg* can_frame);
-
-int8_t ss_can_add_messages(uint32_t* ids, uint8_t len);
-
-void usb_lp_can_rx0_isr(void);
-
-void ss_can_reset_frame(struct can_tx_msg* msg);
-
-void ss_can_set_common_to_frame(struct can_tx_msg* msg, uint32_t id, uint8_t dlc);
-
-void ss_can_set_signal_to_frame(struct can_tx_msg* msg, uint8_t start_bit, uint8_t length, uint64_t value);
-
-uint64_t ss_can_get_signal_from_frame(struct can_rx_msg* msg, uint8_t start_bit, uint8_t length);
-
-uint8_t ss_can_frame_received(struct can_rx_msg* msg, QueueHandle_t queue);
 
 
-void ss_can_init_timeout_detection(struct TimeOutDetection* tod);
-uint8_t ss_can_add_timeout(struct TimeOutDetection* tod, uint32_t id, uint16_t reset_value);
-uint8_t ss_can_check_timeout_detection(struct TimeOutDetection* tod);
-void ss_can_update_timeout_detection(struct TimeOutDetection* tod, uint32_t id);
+/***
+ * 
+ *  CAN USERSPACE FUNCTIONS
+ * 
+ */
+SS_FEEDBACK ss_can_init(uint8_t can_interface_id, uint32_t baudrate);
+SS_FEEDBACK ss_can_read(uint8_t can_interface_id, struct SS_CAN_FRAME* can_frame);
+SS_FEEDBACK ss_can_send(uint8_t can_interface_id, struct SS_CAN_FRAME* can_frame);
 
+
+/***
+ * 
+ *   CAN QUEUE FUNCTIONS
+ * 
+ */
+SS_FEEDBACK ss_can_queue_std_init(uint8_t channel);
+SS_FEEDBACK ss_can_queues_init(uint8_t channel);
+char* u32_to_str(uint32_t value, char *buffer);
+SS_FEEDBACK ss_can_queue_handle_add(uint8_t channel, 
+                                    uint32_t id, 
+                                    TaskFunction_t task_ptr, 
+                                    void *const params, 
+                                    uint8_t prio);
+SS_FEEDBACK ss_can_queue_get(	uint8_t channel, 
+								uint32_t id, 
+								struct SS_CAN_MSG_QUEUE **queue);
+
+SS_FEEDBACK ss_can_queue_read(struct SS_CAN_MSG_QUEUE *queue, struct SS_CAN_FRAME* frame);
+
+
+/***
+ * 
+ *      CAN HELPER FUNCTIONS
+ * 
+ */
+SS_FEEDBACK ss_can_enable_rcc(uint8_t can_interface_id);
+SS_FEEDBACK ss_can_enable_gpios(uint8_t can_interface_id);
+SS_FEEDBACK ss_can_nvic_init(uint8_t can_interface_id, uint8_t prio);
+uint32_t ss_can_get_port_from_id(uint8_t can_interface_id);
+
+/***
+ * 
+ *  CAN FRAME MANUPULATION FUNCTIONS
+ * 
+ */
+void ss_can_frame_set_common(struct SS_CAN_FRAME *msg, uint32_t id, uint8_t dlc);
+void ss_can_frame_set_signal(struct SS_CAN_FRAME *msg, uint8_t start_bit, uint8_t length, uint64_t value);
+uint64_t ss_can_frame_get_signal(struct SS_CAN_FRAME* msg, uint8_t start_bit, uint8_t length);
+void ss_can_frame_reset(struct SS_CAN_FRAME *msg);
+
+/***
+ * 
+ *  CAN FRAME TIMEOUT DETECTION FUNCTIONS
+ * 
+ */
+SS_FEEDBACK ss_can_tod_init(uint8_t channel);
+SS_FEEDBACK ss_can_tod_add(uint8_t channel, uint32_t id, uint16_t reset_value);
+SS_FEEDBACK ss_can_tod_check();
+SS_FEEDBACK ss_can_tod_update(uint8_t channel, uint32_t id);
+
+
+/***
+ * 
+ *  CAN FILTER ID HANDLING
+ * 
+ */
+SS_FEEDBACK ss_can_filter_init(uint8_t channel);
+SS_FEEDBACK ss_can_filter_add_msg_11(uint8_t channel, uint16_t id);
+SS_FEEDBACK ss_can_filter_add_msg_28(uint8_t channel, uint32_t ide);
+SS_FEEDBACK ss_can_filter_add_msg(uint8_t channel, uint32_t id);
 
 #endif
