@@ -23,29 +23,60 @@ struct SS_CAN ss_can;
  *      ISR
  * 
  */
-void can1_rx0_isr(void)
-{
+void can_isr(uint8_t channel) {
     BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+    uint32_t port = ss_can_get_port_from_id(channel);
+    
 
-    if ((CAN_RF0R(CAN1) & CAN_RF0R_FMP0_MASK) != 0) {
-        struct SS_CAN_FRAME can_frame;
-        struct SS_CAN_MSG_QUEUE* queue;
+    if (channel == 1) {
+        if ((CAN_RF0R(port) & CAN_RF0R_FMP0_MASK) != 0) {
+            struct SS_CAN_FRAME can_frame;
+            struct SS_CAN_MSG_QUEUE* queue;
+            
+            ss_can_read(channel, &can_frame);
+            
+            if (ss_can_queue_get(channel, can_frame.std_id, &queue) == SS_FEEDBACK_OK) {
+                xQueueSendFromISR(queue->queue, &can_frame, &xHigherPriorityTaskWoken);
+            }
+        }
+        
 
-        ss_can_read(1, &can_frame);
+        if (CAN_RF0R(port) & CAN_RF0R_FOVR0) {
+            CAN_RF0R(port) &= ~CAN_RF0R_FOVR0;
+        }
+    } else if (channel == 2) {
 
-        if (ss_can_queue_get(1, can_frame.std_id, &queue) == SS_FEEDBACK_OK) {
-            xQueueSendFromISR(queue->queue, &can_frame, &xHigherPriorityTaskWoken);
+        if ((CAN_RF1R(port) & CAN_RF1R_FMP1_MASK) != 0) {
+            struct SS_CAN_FRAME can_frame;
+            struct SS_CAN_MSG_QUEUE* queue;
+            
+            ss_can_read(channel, &can_frame);
+            
+            if (ss_can_queue_get(channel, can_frame.std_id, &queue) == SS_FEEDBACK_OK) {
+                xQueueSendFromISR(queue->queue, &can_frame, &xHigherPriorityTaskWoken);
+            }
+        }
+
+        if (CAN_RF1R(port) & CAN_RF1R_FOVR1) {
+            CAN_RF1R(port) &= ~CAN_RF1R_FOVR1;
         }
     }
-
-    // Überlauf behandeln!
-    if (CAN_RF0R(CAN1) & CAN_RF0R_FOVR0) {
-        CAN_RF0R(CAN1) &= ~CAN_RF0R_FOVR0;
-    }
-
-    // Context-Switch bei Bedarf
+    
     portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
 }
+
+void can1_rx0_isr(void)
+{
+    can_isr(1);
+}
+
+
+
+void can2_rx1_isr(void)
+{
+    can_isr(2);
+}
+
 
 
 /***
@@ -127,8 +158,8 @@ SS_FEEDBACK ss_can_nvic_init(uint8_t can_interface_id, uint8_t prio) {
             break;
         
         case 2:
-            nvic_enable_irq(NVIC_CAN2_RX0_IRQ);
-            nvic_set_priority(NVIC_CAN2_RX0_IRQ, prio);
+            nvic_enable_irq(NVIC_CAN2_RX1_IRQ);
+            nvic_set_priority(NVIC_CAN2_RX1_IRQ, prio);
             break;
 
         default:
@@ -185,6 +216,21 @@ SS_FEEDBACK ss_can_get_id_type_from_id(uint32_t id) {
     return rc;
 }
 
+SS_FEEDBACK ss_can_enable_pending_interrupt(uint8_t channel, uint32_t can_port) {
+    SS_FEEDBACK rc = SS_FEEDBACK_OK;
+
+    switch (channel)
+    {
+        case 0: can_enable_irq(can_port, CAN_IER_FMPIE0); break;
+        case 1: can_enable_irq(can_port, CAN_IER_FMPIE1); break;
+    
+        default:
+        break;
+    }
+
+    return rc;
+}
+
 
 /***
  * 
@@ -233,7 +279,8 @@ SS_FEEDBACK ss_can_init(uint8_t can_interface_id, uint32_t baudrate) {
     rc = ss_can_nvic_init(can_interface_id, 1);
     SS_HANDLE_ERROR_WITH_EXIT(rc);
                                     
-    can_enable_irq(can_port, CAN_IER_FMPIE0);
+    rc = ss_can_enable_pending_interrupt(can_interface_id - 1, can_port);
+    SS_HANDLE_ERROR_WITH_EXIT(rc);
 
     rc = ss_can_filter_init(can_interface_id - 1);
     SS_HANDLE_ERROR_WITH_EXIT(rc);
@@ -248,9 +295,10 @@ SS_FEEDBACK ss_can_init(uint8_t can_interface_id, uint32_t baudrate) {
 SS_FEEDBACK ss_can_read(uint8_t can_interface_id, struct SS_CAN_FRAME* can_frame) {
     SS_FEEDBACK rc = SS_FEEDBACK_OK;
     uint32_t can_port = ss_can_get_port_from_id(can_interface_id);
+    uint8_t fifo = (can_interface_id == 2) ? 1 : 0;
 
     can_receive(    can_port,
-                    0,
+                    fifo,
                     false,
                     &can_frame->std_id,
                     &can_frame->ide,
@@ -260,7 +308,7 @@ SS_FEEDBACK ss_can_read(uint8_t can_interface_id, struct SS_CAN_FRAME* can_frame
                     can_frame->data,
                     0x0000);
 
-    can_fifo_release(can_port, 0);
+    can_fifo_release(can_port, fifo);
 
     return rc;
 }
@@ -420,9 +468,6 @@ SS_FEEDBACK ss_can_queue_read(struct SS_CAN_MSG_QUEUE *queue, struct SS_CAN_FRAM
 SS_FEEDBACK ss_can_filter_init(uint8_t channel) {
     SS_FEEDBACK rc = SS_FEEDBACK_OK;
 
-
-
-
     ss_can.channel[channel].filters.insert_pos = 0;
     ss_can.channel[channel].filters.free_id_group = 0;
     ss_can.channel[channel].filters.free_ide_group = SS_FILTER_BANKS - 1;
@@ -434,6 +479,14 @@ SS_FEEDBACK ss_can_filter_init(uint8_t channel) {
         id->group_number = -1;
     }
 
+    if (channel == 1) {
+        CAN_FMR(CAN1) |= CAN_FMR_FINIT;
+        CAN_FMR(CAN1) &= ~CAN_FMR_CAN2SB_MASK;
+        CAN_FMR(CAN1) |= (SS_FILTER_BANKS << CAN_FMR_CAN2SB_SHIFT);
+        CAN_FMR(CAN1) &= ~CAN_FMR_FINIT;
+    }
+
+
     return rc;
 }
 
@@ -441,6 +494,8 @@ SS_FEEDBACK ss_can_filter_add_msg_11(uint8_t channel, uint16_t id) {
     SS_FEEDBACK rc = SS_FEEDBACK_OK;
 
     channel--;
+
+    uint8_t offset = (channel == 1) ? SS_FILTER_BANKS : 0;
 
     if (channel != 0 && channel != 1) {
         rc = SS_FEEDBACK_CAN_PERIPH_ERROR;
@@ -465,8 +520,9 @@ SS_FEEDBACK ss_can_filter_add_msg_11(uint8_t channel, uint16_t id) {
         }
     }
 
+
     
-    can_filter_id_list_16bit_init(  filters->free_id_group,
+    can_filter_id_list_16bit_init(  filters->free_id_group + offset,
                                     tmp[0],
                                     tmp[1],
                                     tmp[2],
@@ -490,6 +546,8 @@ SS_FEEDBACK ss_can_filter_add_msg_11(uint8_t channel, uint16_t id) {
 
 SS_FEEDBACK ss_can_filter_add_msg_28(uint8_t channel, uint32_t ide) {
     SS_FEEDBACK rc = SS_FEEDBACK_OK;
+
+    uint8_t offset = (channel == 1) ? SS_FILTER_BANKS : 0;
 
     channel--;
 
