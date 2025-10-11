@@ -114,6 +114,7 @@ SS_FEEDBACK ss_can_enable_rcc(uint8_t can_interface_id);
 SS_FEEDBACK ss_can_enable_gpios(uint8_t can_interface_id);
 SS_FEEDBACK ss_can_nvic_init(uint8_t can_interface_id, uint8_t prio);
 uint32_t ss_can_get_port_from_id(uint8_t can_interface_id);
+uint32_t ss_can_get_fifo_from_channel(uint8_t channel);
 
 /***
  * 

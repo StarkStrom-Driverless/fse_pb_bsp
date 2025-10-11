@@ -49,6 +49,9 @@ typedef uint32_t SS_FEEDBACK;
 #define SS_FEEDBACK_CAN_QUEUE_STD_WRONG_USE         (SS_FEEDBACK)0x7a
 #define SS_FEEDBACK_CAN_NO_MSG_RECEIVED             (SS_FEEDBACK)0x7b
 #define SS_FEEDBACK_CAN_MSG_RECEIVED                (SS_FEEDBACK)0x7c
+#define SS_FEEDBACK_CAN_MSG_STD_ID                  (SS_FEEDBACK)0x7d
+#define SS_FEEDBACK_CAN_MSG_IDE                     (SS_FEEDBACK)0x7e
+#define SS_FEEDBACK_CAN_MSG_IDE_INVALID             (SS_FEEDBACK)0x7f
 
 #define SS_FEEDBACK_BASE                            SS_FEEDBACK_BASE_NOT_SET
 

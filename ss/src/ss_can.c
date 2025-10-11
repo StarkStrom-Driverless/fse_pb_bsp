@@ -33,7 +33,7 @@ void can1_rx0_isr(void)
 
         ss_can_read(1, &can_frame);
 
-        if (ss_can_queue_get(1, can_frame.std_id, queue) == SS_FEEDBACK_OK) {
+        if (ss_can_queue_get(1, can_frame.std_id, &queue) == SS_FEEDBACK_OK) {
             xQueueSendFromISR(queue->queue, &can_frame, &xHigherPriorityTaskWoken);
         }
     }
@@ -160,6 +160,31 @@ uint32_t ss_can_get_port_from_id(uint8_t can_interface_id) {
     return can_port;
 }
 
+uint32_t ss_can_get_fifo_from_channel(uint8_t channel) {
+    uint32_t fifo = 0;
+    switch (channel)
+    {
+        case 0: fifo = CAN_FIFO0; break;
+        case 1: fifo = CAN_FIFO1; break;
+        default: break;
+    }
+    return fifo;
+}
+
+SS_FEEDBACK ss_can_get_id_type_from_id(uint32_t id) {
+    SS_FEEDBACK rc = SS_FEEDBACK_CAN_MSG_IDE_INVALID;
+
+    if (!(id & ~(0xFFFFFFF))) {
+        if(id <= 0x7FF) {
+            rc = SS_FEEDBACK_CAN_MSG_STD_ID;
+        } else {
+            rc = SS_FEEDBACK_CAN_MSG_IDE;
+        }
+    }
+
+    return rc;
+}
+
 
 /***
  * 
@@ -201,6 +226,9 @@ SS_FEEDBACK ss_can_init(uint8_t can_interface_id, uint32_t baudrate) {
                             false);
     if (ret) return SS_FEEDBACK_CAN_INIT_ERROR;
 
+    
+
+    
 
     rc = ss_can_nvic_init(can_interface_id, 1);
     SS_HANDLE_ERROR_WITH_EXIT(rc);
@@ -354,6 +382,8 @@ SS_FEEDBACK ss_can_queue_handle_add(uint8_t channel,
 SS_FEEDBACK ss_can_queue_get(uint8_t channel, uint32_t id, struct SS_CAN_MSG_QUEUE **queue) {
     SS_FEEDBACK rc = SS_FEEDBACK_OK;
 
+    channel--;
+
 
     for (uint8_t i = 0; i < ss_can.channel[channel].msg_queues.insert_pos; i++) {
         if (ss_can.channel[channel].msg_queues.queues[i].id == id) {
@@ -395,7 +425,7 @@ SS_FEEDBACK ss_can_filter_init(uint8_t channel) {
 
     ss_can.channel[channel].filters.insert_pos = 0;
     ss_can.channel[channel].filters.free_id_group = 0;
-    ss_can.channel[channel].filters.free_ide_group = 0;
+    ss_can.channel[channel].filters.free_ide_group = SS_FILTER_BANKS - 1;
 
     for (uint8_t i = 0; i < SS_FILTER_IDS; i++) {
         struct SS_CAN_ID *id = &ss_can.channel[channel].filters.ids[i];
@@ -431,10 +461,11 @@ SS_FEEDBACK ss_can_filter_add_msg_11(uint8_t channel, uint16_t id) {
         if (filters->ids[i].is_ide) continue;
 
         if (filters->ids[i].group_number == filters->free_id_group) {
-            tmp[cnt++] = filters->ids[i].id;
+            tmp[cnt++] = (filters->ids[i].id << 5);
         }
     }
 
+    
     can_filter_id_list_16bit_init(  filters->free_id_group,
                                     tmp[0],
                                     tmp[1],
@@ -442,6 +473,7 @@ SS_FEEDBACK ss_can_filter_add_msg_11(uint8_t channel, uint16_t id) {
                                     tmp[3],
                                     channel,
                                     true);
+    
 
     if (cnt == 4) {
         filters->free_id_group++;
@@ -461,13 +493,14 @@ SS_FEEDBACK ss_can_filter_add_msg_28(uint8_t channel, uint32_t ide) {
 
     channel--;
 
+
     if (channel != 0 && channel != 1) {
         rc = SS_FEEDBACK_CAN_PERIPH_ERROR;
         SS_HANDLE_ERROR_WITH_EXIT(rc);
     }
 
     struct SS_CAN_ID_FILTERS *filters = &ss_can.channel[channel].filters;
-    uint16_t tmp[2] = {};
+    uint32_t tmp[2] = {};
 
     filters->ids[filters->insert_pos].id = ide;
 
@@ -483,7 +516,7 @@ SS_FEEDBACK ss_can_filter_add_msg_28(uint8_t channel, uint32_t ide) {
         if (!filters->ids[i].is_ide) continue;
 
         if (filters->ids[i].group_number == filters->free_ide_group) {
-            tmp[cnt++] = filters->ids[i].id;
+            tmp[cnt++] = (filters->ids[i].id << 3) | CAN_TIxR_IDE;
         }
     }
 
@@ -492,12 +525,12 @@ SS_FEEDBACK ss_can_filter_add_msg_28(uint8_t channel, uint32_t ide) {
                                     tmp[0],
                                     tmp[1],
                                     channel,
-                                    1);
+                                    true);
 
 
     if (cnt == 2) {
-        filters->free_ide_group++;
-        if ((filters->free_ide_group + filters->free_id_group) >= SS_FILTER_BANKS) {
+        filters->free_ide_group--;
+        if ((filters->free_ide_group == filters->free_id_group)) {
             return 2;
         }
     }
@@ -509,7 +542,13 @@ SS_FEEDBACK ss_can_filter_add_msg_28(uint8_t channel, uint32_t ide) {
 SS_FEEDBACK ss_can_filter_add_msg(uint8_t channel, uint32_t id) {
     SS_FEEDBACK rc = SS_FEEDBACK_OK;
 
-    if (id & ~((uint32_t)(0b11111111111))) {
+
+    rc = ss_can_get_id_type_from_id(id);
+    if (rc == SS_FEEDBACK_CAN_MSG_IDE_INVALID) {
+        return rc;
+    }
+
+    if (rc == SS_FEEDBACK_CAN_MSG_IDE) {
         rc = ss_can_filter_add_msg_28(channel, id);
     } else {
         rc = ss_can_filter_add_msg_11(channel, id);
