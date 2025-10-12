@@ -389,6 +389,8 @@ SS_FEEDBACK ss_can_queue_handle_add(uint8_t channel,
                                     void *const params, 
                                     uint8_t prio) 
 {
+    channel--;
+
     SS_FEEDBACK rc = SS_FEEDBACK_OK;
     struct SS_CAN_MSG_QUEUES* queue = &ss_can.channel[channel].msg_queues;
     QueueHandle_t tmp = NULL;
@@ -423,6 +425,8 @@ SS_FEEDBACK ss_can_queue_handle_add(uint8_t channel,
 
     queue->insert_pos++;
 
+    rc = ss_can_filter_add_msg(++channel, id);
+
     return rc;
 }
 
@@ -435,7 +439,7 @@ SS_FEEDBACK ss_can_queue_get(uint8_t channel, uint32_t id, struct SS_CAN_MSG_QUE
 
     for (uint8_t i = 0; i < ss_can.channel[channel].msg_queues.insert_pos; i++) {
         if (ss_can.channel[channel].msg_queues.queues[i].id == id) {
-            queue = &ss_can.channel[channel].msg_queues.queues[i];
+            *queue = &ss_can.channel[channel].msg_queues.queues[i];
             return rc;
         }
     }
