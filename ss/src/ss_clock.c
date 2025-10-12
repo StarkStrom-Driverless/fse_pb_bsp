@@ -1,4 +1,6 @@
 #include "ss_clock.h"
+#include "ss_gpio.h"
+#include "ss_makros.h"
 
 #include <libopencm3/stm32/rcc.h>
 #include <libopencm3/stm32/flash.h>
@@ -123,3 +125,43 @@ SS_FEEDBACK ss_clock_spi(uint32_t* prescaler, uint32_t baudrate, uint8_t interfa
     return SS_FEEDBACK_OK;
 }
 
+SS_FEEDBACK ss_clock_fm(uint16_t pin_id, uint32_t *frequency) {
+    SS_FEEDBACK rc = SS_FEEDBACK_OK;
+
+    switch (pin_id) {
+        case PIN('A', 8):
+        case PIN('A', 9):
+        case PIN('A', 10):
+        case PIN('A', 11): 
+        case PIN('C', 6):
+        case PIN('C', 7):
+        case PIN('C', 8):
+        case PIN('C', 9): 
+
+            *frequency = ss_clock.apb2 * 2;
+            break;
+
+        case PIN('A', 5):
+        case PIN('A', 15):
+        case PIN('B', 10):
+        case PIN('B', 11): 
+        case PIN('A', 6):
+        case PIN('A', 7):
+        case PIN('B', 0):
+        case PIN('B', 1): 
+        case PIN('A', 0):
+        case PIN('A', 1):
+        case PIN('A', 2):
+        case PIN('A', 3):
+        case PIN('B', 14):
+        case PIN('B', 15): 
+            *frequency = ss_clock.apb1 * 2;
+            break;
+
+        default: 
+            rc = SS_FEEDBACK_FM_PIN_ID_ERROR;
+            break;
+    }
+
+    return rc;
+}

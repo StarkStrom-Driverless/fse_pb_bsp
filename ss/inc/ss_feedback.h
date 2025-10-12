@@ -59,6 +59,10 @@ typedef uint32_t SS_FEEDBACK;
 #define SS_FEEDBACK_ADC_FAILED_NEXT_MPOS            (SS_FEEDBACK)0x83
 #define SS_FEEDBACK_ADC_FAILED_START                (SS_FEEDBACK)0x84
 
+#define SS_FEEDBACK_FM_INIT_ERROR                   (SS_FEEDBACK)0x91
+#define SS_FEEDBACK_FM_PIN_ID_ERROR                 (SS_FEEDBACK)0x92
+#define SS_FEEDBACK_FM_PIN_NOT_ENABLED              (SS_FEEDBACK)0x93
+
 #define SS_FEEDBACK_BASE                            SS_FEEDBACK_BASE_NOT_SET
 
 #define SS_HANDLE_INIT(func)                        if (func != SS_FEEDBACK_OK) ss_init_error(func)

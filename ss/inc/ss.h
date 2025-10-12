@@ -13,6 +13,6 @@
 #include "ss_spi.h"
 #include "ss_rtos.h"
 #include "ss_clock.h"
-#include "ss_freq_measure.h"
+#include "ss_fm.h"
 
 #endif
