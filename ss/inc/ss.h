@@ -14,5 +14,6 @@
 #include "ss_rtos.h"
 #include "ss_clock.h"
 #include "ss_fm.h"
+#include "ss_eth.h"
 
 #endif

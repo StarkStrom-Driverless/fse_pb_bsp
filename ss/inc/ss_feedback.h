@@ -63,6 +63,14 @@ typedef uint32_t SS_FEEDBACK;
 #define SS_FEEDBACK_FM_PIN_ID_ERROR                 (SS_FEEDBACK)0x92
 #define SS_FEEDBACK_FM_PIN_NOT_ENABLED              (SS_FEEDBACK)0x93
 
+#define SS_FEEDBACK_ETH_INIT_ERROR                  (SS_FEEDBACK)0xa0
+#define SS_FEEDBACK_ETH_MAX_PORTS                   (SS_FEEDBACK)0xa1
+#define SS_FEEDBACK_ETH_UNSUPPORTED                 (SS_FEEDBACK)0xa2
+#define SS_FEEDBACK_ETH_PORT_NOT_FOUND              (SS_FEEDBACK)0xa3
+#define SS_FEEDBACK_ETH_MSG_RECEIVED                (SS_FEEDBACK)0xa4
+#define SS_FEEDBACK_ETH_NO_MSG_RECEIVED             (SS_FEEDBACK)0xa5
+#define SS_FEEDBACK_ETH_TRANSMIT_ERROR              (SS_FEEDBACK)0xa6
+
 #define SS_FEEDBACK_BASE                            SS_FEEDBACK_BASE_NOT_SET
 
 #define SS_HANDLE_INIT(func)                        if (func != SS_FEEDBACK_OK) ss_init_error(func)
