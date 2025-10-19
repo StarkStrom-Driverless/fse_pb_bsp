@@ -288,6 +288,7 @@ SS_FEEDBACK ss_can_init(uint8_t can_interface_id, uint32_t baudrate) {
     rc = ss_can_queue_std_init(can_interface_id - 1);
     SS_HANDLE_ERROR_WITH_EXIT(rc);
 
+    ss_can.channel[can_interface_id - 1].enabled = true;
 
     return rc;
 }

@@ -64,6 +64,7 @@ struct CAN_Channel {
 	struct SS_TOD tod;
 	struct SS_CAN_ID_FILTERS filters;
 	struct SS_CAN_MSG_QUEUE std_msg_queue;
+	bool enabled;
 };
 
 
