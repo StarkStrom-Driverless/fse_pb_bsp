@@ -4,3 +4,6 @@
 *.map
 libopencm3
 
+*.pyc
+*.signed.confirmed.bin
+*.bin
