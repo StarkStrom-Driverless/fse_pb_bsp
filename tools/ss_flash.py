@@ -192,7 +192,7 @@ def send_firmware_via_can(  binary_file,
                             can_channel='can0',
                             flash_offset=0x00, 
                             delay_ms=6, 
-                            ack_timeout=1.0, 
+                            ack_timeout=3.0, 
                             max_retries=3):
 
     signed_img_name : str = get_img_sign_name(name=binary_file)
