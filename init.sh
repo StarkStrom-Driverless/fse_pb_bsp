@@ -9,12 +9,11 @@ cp test/.gitignore ..
 cp test/FreeRTOSConfig.h ../usr/inc
  
 
-
-git submodule init
-git submodule update
-cd fse_pb_bsp
-git submodule init
-git submodule update
-cd libopencm3
+cd fse_libopencm3
 make
 cd ../..
+
+
+ln -s fse_pb_bsp/tools/ss ss
+
+make
