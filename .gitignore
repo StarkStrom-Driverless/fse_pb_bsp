@@ -2,7 +2,7 @@
 *.elf
 *.o
 *.map
-libopencm3
+
 
 *.pyc
 *.signed.confirmed.bin
