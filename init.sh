@@ -9,11 +9,15 @@ cp test/.gitignore ..
 cp test/FreeRTOSConfig.h ../usr/inc
  
 
-cd fse_libopencm3
+cd libopencm3
 make
 cd ../..
 
 
 ln -s fse_pb_bsp/tools/ss ss
 
-make
+python -m venv .venv
+
+pip install -r fse_pb_bsp/tools/requirements.txt
+
+source .venv/bin/activate
