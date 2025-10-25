@@ -16,8 +16,13 @@ cd ../..
 
 ln -s fse_pb_bsp/tools/ss ss
 
-python -m venv .venv
-
-pip install -r fse_pb_bsp/tools/requirements.txt
+python3 -m venv .venv
 
 source .venv/bin/activate
+
+pip install can
+pip install click
+pip install cryptography
+pip install intelhex
+pip install cbor
+pip install pyyaml

@@ -119,9 +119,9 @@ int main(void)
     SS_HANDLE_INIT(ss_can_filter_add_msg(2, 0x234));
     SS_HANDLE_INIT(ss_can_filter_add_msg(2, 0x2345));
 
-    SS_HANDLE_INIT(ss_rtos_task_add(task1, &ss_system, 2, "task1"));
-    SS_HANDLE_INIT(ss_rtos_task_add(task2, &ss_system, 2, "task2"));
-    SS_HANDLE_INIT(ss_rtos_task_add(task3, &ss_system, 2, "task3"));
+    SS_HANDLE_INIT(ss_rtos_task_add(task1, NULL, 2, "task1"));
+    SS_HANDLE_INIT(ss_rtos_task_add(task2, NULL, 2, "task2"));
+    SS_HANDLE_INIT(ss_rtos_task_add(task3, NULL, 2, "task3"));
     //SS_HANDLE_INIT(ss_rtos_task_add(udp_recv_task, &ss_system, 3, "udp"));
 
 
