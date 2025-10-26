@@ -71,6 +71,9 @@ typedef uint32_t SS_FEEDBACK;
 #define SS_FEEDBACK_ETH_NO_MSG_RECEIVED             (SS_FEEDBACK)0xa5
 #define SS_FEEDBACK_ETH_TRANSMIT_ERROR              (SS_FEEDBACK)0xa6
 
+#define SS_FEEDBACK_PWM_INIT_ERROR                  (SS_FEEDBACK)0xb0
+#define SS_FEEDBACK_PWM_PIN_ID_ERROR                (SS_FEEDBACK)0xb1
+
 #define SS_FEEDBACK_BASE                            SS_FEEDBACK_BASE_NOT_SET
 
 #define SS_HANDLE_INIT(func)                        if (func != SS_FEEDBACK_OK) ss_init_error(func)

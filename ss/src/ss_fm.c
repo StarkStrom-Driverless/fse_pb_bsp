@@ -297,8 +297,12 @@ SS_FEEDBACK ss_fm_init(uint16_t pin_id,  uint32_t resolution) {
     ss_io_init(pin_id, SS_GPIO_MODE_AF);
     gpio_set_af(GPIO(PINBANK(pin_id)), ss_fm_get_af_from_pin_id(pin_id), BIT(PINNO(pin_id)));
     
-    uint32_t timer = ss_get_timer_from_pin_id(pin_id);
+    uint32_t timer; 
+    rc = ss_get_timer_from_pin_id(pin_id, &timer);
+    SS_HANDLE_ERROR_WITH_EXIT(rc);
+
     rc = ss_clock_fm(pin_id, &clock_frequency);
+    SS_HANDLE_ERROR_WITH_EXIT(rc);
 
     uint32_t ic = ss_fm_get_ic_from_pin_id(pin_id);
     SS_HANDLE_NULL_WITH_EXIT(ic);
