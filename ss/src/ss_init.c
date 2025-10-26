@@ -4,7 +4,7 @@
 #include <libopencm3/cm3/scb.h>
 
 inline SS_FEEDBACK ss_init() {
-    
+    SCB_VTOR = 0x08020200;
 
     ss_clock_init(SS_CLOCK_FAST);
 
