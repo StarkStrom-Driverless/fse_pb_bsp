@@ -15,5 +15,7 @@
 #include "ss_clock.h"
 #include "ss_fm.h"
 #include "ss_eth.h"
+#include "ss_canboot.h"
+#include "ss_init.h"
 
 #endif
