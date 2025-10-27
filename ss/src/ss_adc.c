@@ -79,7 +79,7 @@ SS_FEEDBACK ss_adc_init(uint16_t pin_id) {
     ss_adc.measurements[measurement_pos].pin_id = pin_id;
     ss_adc.measurement_pos = 0;
 
-    ss_adc_start();
+    rc = ss_adc_start();
 
     return rc;
 }
@@ -234,11 +234,11 @@ SS_FEEDBACK ss_adc_set_next_measurment_pos(void) {
 }
 
 SS_FEEDBACK ss_adc_start(void) {
-    SS_FEEDBACK rc = SS_FEEDBACK_OK;
+    SS_FEEDBACK rc = SS_FEEDBACK_ADC_FAILED_START;
 
     for (uint8_t i = 0; i < MAX_MEASUREMENT; i++) {
         if (ss_adc.measurements[i].enable == 1) {
-            rc = SS_FEEDBACK_ADC_FAILED_START;
+            rc = SS_FEEDBACK_OK;
         }
     }
     SS_HANDLE_ERROR_WITH_EXIT(rc);
