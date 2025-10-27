@@ -1,5 +1,7 @@
 #include "ss.h"
 
+void ss_init_error(SS_FEEDBACK feedback);
+
 uint16_t led = PIN('C', 1);
 
 static void blinky_task(void *args) {
