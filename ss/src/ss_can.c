@@ -290,6 +290,8 @@ SS_FEEDBACK ss_can_init(uint8_t can_interface_id, uint32_t baudrate) {
 
     ss_can.channel[can_interface_id - 1].enabled = true;
 
+    rc = ss_can_tod_init(can_interface_id - 1);
+
     return rc;
 }
 
