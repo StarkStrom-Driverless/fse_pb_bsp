@@ -641,6 +641,14 @@ SS_FEEDBACK ss_can_tod_init(uint8_t channel) {
 
 SS_FEEDBACK ss_can_tod_add(uint8_t channel, uint32_t id, uint16_t reset_value) {
     SS_FEEDBACK rc = SS_FEEDBACK_OK;
+
+    if (channel == 1 || channel == 2) {
+        channel--;
+    } else {
+        rc = SS_FEEDBACK_ERROR;
+        return rc;
+    }
+
     struct SS_TOD* tod = &ss_can.channel[channel].tod;
 
     tod->msgs[tod->msg_count].std_id = id;
@@ -679,6 +687,14 @@ SS_FEEDBACK ss_can_tod_check() {
 
 SS_FEEDBACK ss_can_tod_update(uint8_t channel, uint32_t id) {
     SS_FEEDBACK rc = SS_FEEDBACK_CAN_TOD_ID_NOT_FOUND;
+
+    if (channel == 1 || channel == 2) {
+        channel--;
+    } else {
+        rc = SS_FEEDBACK_ERROR;
+        return rc;
+    }
+
     struct SS_TOD* tod = &ss_can.channel[channel].tod;
 
     for (uint8_t i = 0; i < tod->msg_count; i++) {
