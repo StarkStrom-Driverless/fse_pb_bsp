@@ -33,12 +33,12 @@ extern struct SS_FREQ_MEASURE ss_fm;
  * PERIPH FUNCTIONS
  * 
  */
-uint32_t ss_fm_get_ic_from_pin_id(uint16_t pin_id);
-uint32_t ss_fm_get_iqr_cc_from_pin_id(uint16_t pin_id);
-uint32_t ss_fm_get_irq_from_pin_id(uint16_t pin_id);
-struct FREQ_PIN* ss_fm_get_pin_struct_from_pin_id(uint16_t pin_id);
+SS_FEEDBACK ss_fm_get_ic_from_pin_id(uint16_t pin_id, uint32_t* ic_channel);
+SS_FEEDBACK ss_fm_get_iqr_cc_from_pin_id(uint16_t pin_id, uint32_t* irq);
+SS_FEEDBACK ss_fm_get_irq_from_pin_id(uint16_t pin_id, uint32_t* irq);
+SS_FEEDBACK ss_fm_get_pin_struct_from_pin_id(uint16_t pin_id, struct FREQ_PIN** tmp);
 uint8_t ss_fm_get_af_from_pin_id(uint16_t pin_id);
-uint32_t ss_fm_get_ti_from_pin_id(uint16_t pin_id);
+SS_FEEDBACK ss_fm_get_ti_from_pin_id(uint16_t pin_id, uint32_t* ti);
 
 /***
  * 

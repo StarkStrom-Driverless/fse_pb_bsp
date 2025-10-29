@@ -16,8 +16,8 @@ struct SS_FREQ_MEASURE ss_fm;
  * PERIPH FUNCTIONS
  * 
  */
-uint32_t ss_fm_get_ic_from_pin_id(uint16_t pin_id) {
-    uint32_t ic_channel = 0;
+SS_FEEDBACK ss_fm_get_ic_from_pin_id(uint16_t pin_id, uint32_t* ic_channel) {
+    SS_FEEDBACK rc = SS_FEEDBACK_OK;
     switch(pin_id) {
         case PIN('A', 0):
         case PIN('A', 5):
@@ -26,7 +26,7 @@ uint32_t ss_fm_get_ic_from_pin_id(uint16_t pin_id) {
         case PIN('A', 15):
         case PIN('B', 14):
         case PIN('C', 6):  
-            ic_channel = TIM_IC1; 
+            *ic_channel = TIM_IC1; 
             break;
 
         case PIN('A', 2):
@@ -34,7 +34,7 @@ uint32_t ss_fm_get_ic_from_pin_id(uint16_t pin_id) {
         case PIN('B', 0):
         case PIN('B', 10):
         case PIN('C', 8):  
-            ic_channel = TIM_IC3; 
+            *ic_channel = TIM_IC3; 
             break;
 
         case PIN('A', 3):
@@ -42,7 +42,7 @@ uint32_t ss_fm_get_ic_from_pin_id(uint16_t pin_id) {
         case PIN('B', 1):
         case PIN('B', 11):
         case PIN('C', 9):
-            ic_channel = TIM_IC4; 
+            *ic_channel = TIM_IC4; 
             break;
 
         case PIN('A', 1):
@@ -53,14 +53,16 @@ uint32_t ss_fm_get_ic_from_pin_id(uint16_t pin_id) {
             ic_channel = TIM_IC2; 
             break;
 
-        default: break;
+        default: 
+            rc = SS_FEEDBACK_FM_PIN_ID_ERROR;
+            break;
     }
 
-    return ic_channel;
+    return rc;
 }
 
-uint32_t ss_fm_get_iqr_cc_from_pin_id(uint16_t pin_id) {
-    uint32_t irq = 0;
+SS_FEEDBACK ss_fm_get_iqr_cc_from_pin_id(uint16_t pin_id, uint32_t* irq) {
+    SS_FEEDBACK rc = SS_FEEDBACK_OK;;
 
     switch(pin_id) {
         case PIN('A', 0):
@@ -70,7 +72,7 @@ uint32_t ss_fm_get_iqr_cc_from_pin_id(uint16_t pin_id) {
         case PIN('A', 15):
         case PIN('B', 14):
         case PIN('C', 6):  
-            irq = TIM_DIER_CC1IE; 
+            *irq = TIM_DIER_CC1IE; 
             break;
 
         case PIN('A', 2):
@@ -78,7 +80,7 @@ uint32_t ss_fm_get_iqr_cc_from_pin_id(uint16_t pin_id) {
         case PIN('B', 0):
         case PIN('B', 10):
         case PIN('C', 8):  
-            irq = TIM_DIER_CC3IE; 
+            *irq = TIM_DIER_CC3IE; 
             break;
 
         case PIN('A', 3):
@@ -86,7 +88,7 @@ uint32_t ss_fm_get_iqr_cc_from_pin_id(uint16_t pin_id) {
         case PIN('B', 1):
         case PIN('B', 11):
         case PIN('C', 9):
-            irq = TIM_DIER_CC4IE; 
+            *irq = TIM_DIER_CC4IE; 
             break;
 
         case PIN('A', 1):
@@ -94,101 +96,107 @@ uint32_t ss_fm_get_iqr_cc_from_pin_id(uint16_t pin_id) {
         case PIN('A', 9):
         case PIN('B', 15):
         case PIN('C', 7):  
-            irq = TIM_DIER_CC2IE; 
+            *irq = TIM_DIER_CC2IE; 
             break;
 
-        default: break;
+        default:
+            rc =  SS_FEEDBACK_FM_PIN_ID_ERROR;
+            break;
     }
 
-    return irq;
+    return rc;
 }
 
-uint32_t ss_fm_get_irq_from_pin_id(uint16_t pin_id) {
-    uint32_t irq = 0;
+SS_FEEDBACK ss_fm_get_irq_from_pin_id(uint16_t pin_id, uint32_t* irq) {
+    SS_FEEDBACK rc = SS_FEEDBACK_OK;
 
     switch(pin_id) {
         case PIN('A', 0):
         case PIN('A', 1):
         case PIN('A', 2):
         case PIN('A', 3):
-            irq = NVIC_TIM5_IRQ; 
+            *irq = NVIC_TIM5_IRQ; 
             break; 
 
         case PIN('A', 5):
         case PIN('A', 15):
         case PIN('B', 10):
         case PIN('B', 11): 
-            irq = NVIC_TIM2_IRQ; 
+            *irq = NVIC_TIM2_IRQ; 
             break;
 
         case PIN('A', 6):
         case PIN('A', 7):
         case PIN('B', 0):
         case PIN('B', 1):  
-            irq = NVIC_TIM3_IRQ; 
+            *irq = NVIC_TIM3_IRQ; 
             break;
 
         case PIN('A', 8):
         case PIN('A', 9):
         case PIN('A', 10):
         case PIN('A', 11): 
-            irq = NVIC_TIM1_CC_IRQ; 
+            *irq = NVIC_TIM1_CC_IRQ; 
             break;
 
         case PIN('B', 14):
         case PIN('B', 15): 
-            irq = NVIC_TIM8_BRK_TIM12_IRQ; 
+            *irq = NVIC_TIM8_BRK_TIM12_IRQ; 
             break;
 
         case PIN('C', 6):
         case PIN('C', 7):
         case PIN('C', 8):
         case PIN('C', 9):  
-            irq = NVIC_TIM8_CC_IRQ; 
+            *irq = NVIC_TIM8_CC_IRQ; 
             break;
 
-        default: break;
+        default:
+            rc =  SS_FEEDBACK_FM_PIN_ID_ERROR;
+            break;
     }
 
-    return irq;
+    return rc;
 }
 
-struct FREQ_PIN* ss_fm_get_pin_struct_from_pin_id(uint16_t pin_id) {
-    struct FREQ_PIN* freq_pin_ptr = NULL;
+SS_FEEDBACK ss_fm_get_pin_struct_from_pin_id(uint16_t pin_id, struct FREQ_PIN** tmp) {
+    SS_FEEDBACK rc = SS_FEEDBACK_OK;
 
     switch(pin_id) {
-        case PIN('A', 0): freq_pin_ptr = &ss_fm.ports[3].pins[0]; break;
-        case PIN('A', 1): freq_pin_ptr = &ss_fm.ports[3].pins[1]; break;
-        case PIN('A', 2): freq_pin_ptr = &ss_fm.ports[3].pins[2]; break;
-        case PIN('A', 3): freq_pin_ptr = &ss_fm.ports[3].pins[3]; break;
+        case PIN('A', 0): *tmp = &ss_fm.ports[3].pins[0]; break;
+        case PIN('A', 1): *tmp = &ss_fm.ports[3].pins[1]; break;
+        case PIN('A', 2): *tmp = &ss_fm.ports[3].pins[2]; break;
+        case PIN('A', 3): *tmp = &ss_fm.ports[3].pins[3]; break;
 
-        case PIN('A', 5): freq_pin_ptr = &ss_fm.ports[1].pins[0]; break;
-        case PIN('A', 15): freq_pin_ptr = &ss_fm.ports[1].pins[1]; break;
-        case PIN('B', 10): freq_pin_ptr = &ss_fm.ports[1].pins[2]; break;
-        case PIN('B', 11): freq_pin_ptr = &ss_fm.ports[1].pins[3]; break;
+        case PIN('A', 5): *tmp = &ss_fm.ports[1].pins[0]; break;
+        case PIN('A', 15): *tmp = &ss_fm.ports[1].pins[1]; break;
+        case PIN('B', 10): *tmp = &ss_fm.ports[1].pins[2]; break;
+        case PIN('B', 11): *tmp = &ss_fm.ports[1].pins[3]; break;
 
-        case PIN('A', 6): freq_pin_ptr = &ss_fm.ports[2].pins[0]; break;
-        case PIN('A', 7): freq_pin_ptr = &ss_fm.ports[2].pins[1]; break;
-        case PIN('B', 0): freq_pin_ptr = &ss_fm.ports[2].pins[2]; break;
-        case PIN('B', 1): freq_pin_ptr = &ss_fm.ports[2].pins[3]; break;
+        case PIN('A', 6): *tmp = &ss_fm.ports[2].pins[0]; break;
+        case PIN('A', 7): *tmp = &ss_fm.ports[2].pins[1]; break;
+        case PIN('B', 0): *tmp = &ss_fm.ports[2].pins[2]; break;
+        case PIN('B', 1): *tmp = &ss_fm.ports[2].pins[3]; break;
 
-        case PIN('A', 8): freq_pin_ptr = &ss_fm.ports[0].pins[0]; break;
-        case PIN('A', 9): freq_pin_ptr = &ss_fm.ports[0].pins[1]; break;
-        case PIN('A', 10): freq_pin_ptr = &ss_fm.ports[0].pins[2]; break;
-        case PIN('A', 11): freq_pin_ptr = &ss_fm.ports[0].pins[3]; break;
+        case PIN('A', 8): *tmp = &ss_fm.ports[0].pins[0]; break;
+        case PIN('A', 9): *tmp = &ss_fm.ports[0].pins[1]; break;
+        case PIN('A', 10): *tmp = &ss_fm.ports[0].pins[2]; break;
+        case PIN('A', 11): *tmp = &ss_fm.ports[0].pins[3]; break;
 
-        case PIN('B', 14): freq_pin_ptr = &ss_fm.ports[5].pins[0]; break;
-        case PIN('B', 15): freq_pin_ptr = &ss_fm.ports[5].pins[1]; break;
+        case PIN('B', 14): *tmp = &ss_fm.ports[5].pins[0]; break;
+        case PIN('B', 15): *tmp = &ss_fm.ports[5].pins[1]; break;
 
-        case PIN('C', 6): freq_pin_ptr = &ss_fm.ports[4].pins[0]; break;
-        case PIN('C', 7): freq_pin_ptr = &ss_fm.ports[4].pins[1]; break;
-        case PIN('C', 8): freq_pin_ptr = &ss_fm.ports[4].pins[2]; break;
-        case PIN('C', 9): freq_pin_ptr = &ss_fm.ports[4].pins[3]; break;
+        case PIN('C', 6): *tmp = &ss_fm.ports[4].pins[0]; break;
+        case PIN('C', 7): *tmp = &ss_fm.ports[4].pins[1]; break;
+        case PIN('C', 8): *tmp = &ss_fm.ports[4].pins[2]; break;
+        case PIN('C', 9): *tmp = &ss_fm.ports[4].pins[3]; break;
 
-        default: break;
+        default:
+            rc = SS_FEEDBACK_FM_PIN_ID_ERROR;
+            break;
     }
 
-    return freq_pin_ptr;
+    return rc;
 }
 
 
@@ -239,8 +247,8 @@ uint8_t ss_fm_get_af_from_pin_id(uint16_t pin_id) {
     return af;
 }
 
-uint32_t ss_fm_get_ti_from_pin_id(uint16_t pin_id) {
-    uint32_t ti = 0;
+SS_FEEDBACK ss_fm_get_ti_from_pin_id(uint16_t pin_id, uint32_t* ti) {
+    SS_FEEDBACK rc = SS_FEEDBACK_OK;
 
     switch(pin_id) {
         case PIN('A', 0):
@@ -250,7 +258,7 @@ uint32_t ss_fm_get_ti_from_pin_id(uint16_t pin_id) {
         case PIN('A', 15):
         case PIN('B', 14):
         case PIN('C', 6):  
-            ti = TIM_IC_IN_TI1; 
+            *ti = TIM_IC_IN_TI1; 
             break;
 
         case PIN('A', 2):
@@ -258,7 +266,7 @@ uint32_t ss_fm_get_ti_from_pin_id(uint16_t pin_id) {
         case PIN('B', 0):
         case PIN('B', 10):
         case PIN('C', 8):  
-            ti = TIM_IC_IN_TI3; 
+            *ti = TIM_IC_IN_TI3; 
             break;
 
         case PIN('A', 3):
@@ -266,7 +274,7 @@ uint32_t ss_fm_get_ti_from_pin_id(uint16_t pin_id) {
         case PIN('B', 1):
         case PIN('B', 11):
         case PIN('C', 9):
-            ti = TIM_IC_IN_TI4; 
+            *ti = TIM_IC_IN_TI4; 
             break;
 
         case PIN('A', 1):
@@ -274,13 +282,15 @@ uint32_t ss_fm_get_ti_from_pin_id(uint16_t pin_id) {
         case PIN('A', 9):
         case PIN('B', 15):
         case PIN('C', 7):  
-            ti = TIM_IC_IN_TI2; 
+            *ti = TIM_IC_IN_TI2; 
             break;
 
-        default: break;
+        default:
+            rc =  SS_FEEDBACK_FM_PIN_ID_ERROR;
+            break;
     }
 
-    return ti;
+    return rc;
 }
 
 
@@ -290,9 +300,15 @@ uint32_t ss_fm_get_ti_from_pin_id(uint16_t pin_id) {
  * 
  */
 SS_FEEDBACK ss_fm_init(uint16_t pin_id,  uint32_t resolution) {
+    // TODO: Check all timer channel (even extended timer) for functionality
     SS_FEEDBACK rc = SS_FEEDBACK_OK;
 
     uint32_t clock_frequency = 0;
+    uint32_t ic;
+    uint32_t irq;
+    uint32_t nvic_irq;
+    uint32_t ti;
+    struct FREQ_PIN* channel;
     
     ss_io_init(pin_id, SS_GPIO_MODE_AF);
     gpio_set_af(GPIO(PINBANK(pin_id)), ss_fm_get_af_from_pin_id(pin_id), BIT(PINNO(pin_id)));
@@ -304,25 +320,26 @@ SS_FEEDBACK ss_fm_init(uint16_t pin_id,  uint32_t resolution) {
     rc = ss_clock_fm(pin_id, &clock_frequency);
     SS_HANDLE_ERROR_WITH_EXIT(rc);
 
-    uint32_t ic = ss_fm_get_ic_from_pin_id(pin_id);
-    SS_HANDLE_NULL_WITH_EXIT(ic);
+    rc = ss_fm_get_ic_from_pin_id(pin_id, &ic);
+    SS_HANDLE_ERROR_WITH_EXIT(rc);
 
-    uint32_t irq = ss_fm_get_iqr_cc_from_pin_id(pin_id);
-    SS_HANDLE_NULL_WITH_EXIT(irq);
+    rc = ss_fm_get_iqr_cc_from_pin_id(pin_id, &irq);
+    SS_HANDLE_ERROR_WITH_EXIT(rc);
 
-    uint32_t nvic_irq = ss_fm_get_irq_from_pin_id(pin_id);
-    SS_HANDLE_NULL_WITH_EXIT(nvic_irq);
+    rc = ss_fm_get_irq_from_pin_id(pin_id, &nvic_irq);
+    SS_HANDLE_ERROR_WITH_EXIT(rc);
 
-    uint32_t ti = ss_fm_get_ti_from_pin_id(pin_id);
-    SS_HANDLE_NULL_WITH_EXIT(ti);
+    rc = ss_fm_get_ti_from_pin_id(pin_id, &ti);
+    SS_HANDLE_ERROR_WITH_EXIT(rc);
 
     uint32_t prescaler = (clock_frequency * 1000000 / resolution) - 1;
 
-    struct FREQ_PIN* channel = ss_fm_get_pin_struct_from_pin_id(pin_id);
-    SS_HANDLE_NULL_WITH_EXIT(channel);
+    rc = ss_fm_get_pin_struct_from_pin_id(pin_id, &channel);
+    SS_HANDLE_ERROR_WITH_EXIT(rc);
 
 
-    ss_enable_timer_clock_from_pin_id(pin_id);
+    rc = ss_enable_timer_clock_from_pin_id(pin_id);
+    SS_HANDLE_ERROR_WITH_EXIT(rc);
 
     timer_disable_counter(timer);
 
@@ -367,8 +384,10 @@ SS_FEEDBACK ss_fm_init(uint16_t pin_id,  uint32_t resolution) {
 SS_FEEDBACK ss_fm_read(uint16_t pin_id, float *value) {
     SS_FEEDBACK rc = SS_FEEDBACK_OK;
 
-    struct FREQ_PIN* channel = ss_fm_get_pin_struct_from_pin_id(pin_id);
-    SS_HANDLE_NULL_WITH_EXIT(channel);
+    struct FREQ_PIN* channel;
+
+    rc = ss_fm_get_pin_struct_from_pin_id(pin_id, &channel);
+    SS_HANDLE_ERROR_WITH_EXIT(rc);
 
     if (!channel->enabled) {
         rc = SS_FEEDBACK_FM_PIN_NOT_ENABLED;
@@ -394,7 +413,7 @@ SS_FEEDBACK ss_fm_read(uint16_t pin_id, float *value) {
 
         
             diff = now - channel->last_capture;
-            if (diff >= 0) {
+            if (diff > 0) {
                 float freq = channel->resolution / diff;
                 channel->frequency = freq;
             }
