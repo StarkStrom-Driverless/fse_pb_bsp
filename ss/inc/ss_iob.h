@@ -21,13 +21,13 @@ struct IOB {
 
 extern struct IOB ss_iob;
 
-SS_FEEDBACK ss_iob_init();
 
 SS_FEEDBACK ss_iob_add(uint16_t pin_id, uint8_t polarity);
+SS_FEEDBACK get_port_from_pin_id(uint16_t pin_id, uint32_t* cm3_port);
+SS_FEEDBACK get_nvic_exit_from_pin_id(uint16_t pin_id, uint32_t* nvic_exti);
+SS_FEEDBACK get_exti_from_pin_id(uint16_t pin_id, uint32_t* exti);
 
 uint8_t ss_iob_get(uint16_t pin_id);
-
-uint32_t get_exti_from_pin_id(uint16_t pin_id);
 
 uint8_t exti_get_pending(uint8_t line);
 

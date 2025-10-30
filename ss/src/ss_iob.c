@@ -10,73 +10,76 @@
 
 #define SS_FEEDBACK_BASE SS_FEEDBACK_IO_IOB_ERROR
 
-struct IOB ss_iob;
+struct IOB ss_iob = {0};
 
-SS_FEEDBACK ss_iob_init() {
-    for (int i = 0; i < MAX_INPUT_OBSERVATIONS; i++) {
-        ss_iob.iobs[i].enabled = 0;
-    }
 
-    return SS_FEEDBACK_OK;
-}
-
-uint32_t get_exti_from_pin_id(uint16_t pin_id) {
+SS_FEEDBACK get_exti_from_pin_id(uint16_t pin_id, uint32_t* exti) {
     uint8_t id = PINNO(pin_id);
-    uint32_t exti = 0;
+    SS_FEEDBACK rc = SS_FEEDBACK_OK;
+    
     switch (id)
     {
-        case 0: exti = EXTI0; break;
-        case 1: exti = EXTI1; break;
-        case 2: exti = EXTI2; break;
-        case 3: exti = EXTI3; break;
-        case 4: exti = EXTI4; break;
-        case 5: exti = EXTI5; break;
-        case 6: exti = EXTI6; break;
-        case 7: exti = EXTI7; break;
-        case 8: exti = EXTI8; break;
-        case 9: exti = EXTI9; break;
-        case 10: exti = EXTI10; break;
-        case 11: exti = EXTI11; break;
-        case 12: exti = EXTI12; break;
-        case 13: exti = EXTI13; break;
-        case 14: exti = EXTI14; break;
-        case 15: exti = EXTI15; break;
+        case 0: *exti = EXTI0; break;
+        case 1: *exti = EXTI1; break;
+        case 2: *exti = EXTI2; break;
+        case 3: *exti = EXTI3; break;
+        case 4: *exti = EXTI4; break;
+        case 5: *exti = EXTI5; break;
+        case 6: *exti = EXTI6; break;
+        case 7: *exti = EXTI7; break;
+        case 8: *exti = EXTI8; break;
+        case 9: *exti = EXTI9; break;
+        case 10: *exti = EXTI10; break;
+        case 11: *exti = EXTI11; break;
+        case 12: *exti = EXTI12; break;
+        case 13: *exti = EXTI13; break;
+        case 14: *exti = EXTI14; break;
+        case 15: *exti = EXTI15; break;
     
-        default: break;
+        default: 
+            rc = SS_FEEDBACK_IO_IOB_PINID_OFR;
+            break;
     }
 
-    return exti;
+    return rc;
 }
 
-uint32_t get_port_from_pin_id(uint16_t pin_id) {
+SS_FEEDBACK get_port_from_pin_id(uint16_t pin_id, uint32_t* cm3_port) {
+    SS_FEEDBACK rc = SS_FEEDBACK_OK;;
+
     uint8_t port = PINBANK(pin_id);
-    uint32_t cm3_port = 0;
+
     switch(port) {
-        case 0: cm3_port = GPIOA; break;
-        case 1: cm3_port = GPIOB; break;
-        case 2: cm3_port = GPIOC; break;
-        case 3: cm3_port = GPIOD; break;
-        default: break;
+        case 0: *cm3_port = GPIOA; break;
+        case 1: *cm3_port = GPIOB; break;
+        case 2: *cm3_port = GPIOC; break;
+        case 3: *cm3_port = GPIOD; break;
+        default: 
+            rc = SS_FEEDBACK_IO_IOB_PINID_OFR;
+            break;
     }
-    return cm3_port;
+
+    return rc;
 }
 
-uint8_t get_nvic_exit_from_pin_id(uint16_t pin_id) {
-    uint8_t nvic_exti = 0;
+SS_FEEDBACK get_nvic_exit_from_pin_id(uint16_t pin_id, uint32_t* nvic_exti) {
+    SS_FEEDBACK rc = SS_FEEDBACK_OK;
+    
+    uint8_t id = PINNO(pin_id);
 
-    switch(pin_id) {
-        case 0: nvic_exti = NVIC_EXTI0_IRQ; break;
-        case 1: nvic_exti = NVIC_EXTI1_IRQ; break;
-        case 2: nvic_exti = NVIC_EXTI2_IRQ; break;
-        case 3: nvic_exti = NVIC_EXTI3_IRQ; break;
-        case 4: nvic_exti = NVIC_EXTI4_IRQ; break;
+    switch(id) {
+        case 0: *nvic_exti = NVIC_EXTI0_IRQ; break;
+        case 1: *nvic_exti = NVIC_EXTI1_IRQ; break;
+        case 2: *nvic_exti = NVIC_EXTI2_IRQ; break;
+        case 3: *nvic_exti = NVIC_EXTI3_IRQ; break;
+        case 4: *nvic_exti = NVIC_EXTI4_IRQ; break;
 
         case 5:
         case 6:
         case 7:
         case 8:
         case 9:
-            nvic_exti = NVIC_EXTI9_5_IRQ ; break;
+            *nvic_exti = NVIC_EXTI9_5_IRQ ; break;
 
         case 10:
         case 11:
@@ -84,34 +87,38 @@ uint8_t get_nvic_exit_from_pin_id(uint16_t pin_id) {
         case 13:
         case 14:
         case 15:
-            nvic_exti = NVIC_EXTI15_10_IRQ ; break;
+            *nvic_exti = NVIC_EXTI15_10_IRQ ; break;
 
-        default: break;
+        default:
+            rc = SS_FEEDBACK_IO_IOB_PINID_OFR; 
+            break;
     }
 
-    return nvic_exti;
+    return rc;
 }
 
 SS_FEEDBACK ss_iob_add(uint16_t pin_id, uint8_t polarity) {
     SS_FEEDBACK rc;
 
+    uint32_t exti;
+    uint32_t port;
+    uint32_t nvic_exti;
+
     if (PINNO(pin_id) > MAX_INPUT_OBSERVATIONS) {
         return SS_SET_TOPLEVEL_ERROR(SS_FEEDBACK_BASE, SS_FEEDBACK_IO_IOB_PINID_OFR);
     }
 
-    rc = ss_io_init(pin_id, SS_GPIO_MODE_INPUT);
-    SS_HANDLE_ERROR_WITH_EXIT(rc);
 
     rcc_periph_clock_enable(RCC_SYSCFG);
 
-    uint32_t exti = get_exti_from_pin_id(pin_id);
-    SS_HANDLE_NULL_WITH_EXIT(exti);
+    rc = get_exti_from_pin_id(pin_id, &exti);
+    SS_HANDLE_ERROR_WITH_EXIT(rc);
 
-    uint32_t port = get_port_from_pin_id(pin_id);
-    SS_HANDLE_NULL_WITH_EXIT(port);
+    rc = get_port_from_pin_id(pin_id, &port);
+    SS_HANDLE_ERROR_WITH_EXIT(rc);
 
-    uint8_t nvic_exti = get_nvic_exit_from_pin_id(pin_id);
-    SS_HANDLE_NULL_WITH_EXIT(nvic_exti);
+    rc = get_nvic_exit_from_pin_id(pin_id, &nvic_exti);
+    SS_HANDLE_ERROR_WITH_EXIT(rc);
 
     ss_iob.iobs[PINNO(pin_id)].enabled = 1;
     ss_iob.iobs[PINNO(pin_id)].pin_id = pin_id;
@@ -159,7 +166,7 @@ uint8_t ss_iob_get(uint16_t pin_id) {
             ss_iob.iobs[PINNO(pin_id)].value = 0;
             return 1;
         } else {
-            if (ss_io_read(pin_id)) {
+            if (ss_io_read(pin_id) == 0) {
                 return 1;
             } else {
                 return 0;
