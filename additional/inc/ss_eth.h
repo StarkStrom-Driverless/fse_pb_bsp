@@ -28,7 +28,7 @@ struct SS_ETH_SENDER {
 
 struct SS_ETH_ID {
     uint8_t ip[4];
-    uint32_t port;
+    uint16_t port;
 };
 
 struct SS_ETH_PAYLOAD {
@@ -49,7 +49,7 @@ struct SS_ETH_INTF {
     uint32_t intf_number;
     uint8_t intf_type;
     uint8_t intf_flags;
-    uint32_t port;
+    uint16_t port;
     struct SS_ETH_PAYLOAD* payload;
 };
 

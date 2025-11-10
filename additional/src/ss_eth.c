@@ -8,6 +8,8 @@
 #include "wizchip_conf.h"
 #include "socket.h"
 
+#define SS_FEEDBACK_BASE  SS_FEEDBACK_ETH_INIT_ERROR
+
 
 static uint8_t mem_tx[8] = {2,2,2,2,2,2,2,2};
 static uint8_t mem_rx[8] = {2,2,2,2,2,2,2,2};
@@ -229,9 +231,9 @@ SS_FEEDBACK ss_eth_read(struct SS_ETH_INTF* tmp, struct SS_ETH_PAYLOAD** payload
                                 tmp->payload->buffer,
                                 tmp->payload->buffer_len,
                                 tmp->payload->id.ip,
-                                tmp->payload->id.port);
+                                &tmp->payload->id.port);
 
-    *payload = &tmp->payload;
+    *payload = tmp->payload;
 
     if (len <= 0) {
         rc = SS_FEEDBACK_ETH_MSG_RECEIVED;

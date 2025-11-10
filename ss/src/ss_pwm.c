@@ -249,40 +249,40 @@ SS_FEEDBACK ss_pwm_get_frequenzy_from_clock_config(uint16_t pin_id, uint16_t* fr
         case PIN('A', 1):
         case PIN('A', 2):
         case PIN('A', 3):
-            frequency = ss_clock.apb1;
+            *frequency = ss_clock.apb1;
             break; 
 
         case PIN('A', 5):
         case PIN('A', 15):
         case PIN('B', 10):
         case PIN('B', 11): 
-            frequency = ss_clock.apb1;
+            *frequency = ss_clock.apb1;
             break;
 
         case PIN('A', 6):
         case PIN('A', 7):
         case PIN('B', 0):
         case PIN('B', 1):  
-            frequency = ss_clock.apb1;
+            *frequency = ss_clock.apb1;
             break;
 
         case PIN('A', 8):
         case PIN('A', 9):
         case PIN('A', 10):
         case PIN('A', 11): 
-            frequency = ss_clock.apb2;
+            *frequency = ss_clock.apb2;
             break;
 
         case PIN('B', 14):
         case PIN('B', 15): 
-            frequency = ss_clock.apb1;
+            *frequency = ss_clock.apb1;
             break;
 
         case PIN('C', 6):
         case PIN('C', 7):
         case PIN('C', 8):
         case PIN('C', 9):  
-            frequency = ss_clock.apb2;
+            *frequency = ss_clock.apb2;
             break;
 
         default:
@@ -366,7 +366,7 @@ SS_FEEDBACK ss_pwm_init_highres(uint16_t pin_id, uint32_t frequency)  {
     rc = ss_get_timer_from_pin_id(pin_id, &timer_id);
     SS_HANDLE_ERROR_WITH_EXIT(rc);
 
-    uint8_t channel;
+    uint32_t channel;
     rc = ss_get_timer_channel_from_pin_id(pin_id, &channel);
     SS_HANDLE_ERROR_WITH_EXIT(rc);
 
@@ -409,7 +409,7 @@ SS_FEEDBACK ss_pwm_write(uint16_t pin_id, uint32_t value) {
     rc = ss_get_timer_from_pin_id(pin_id, &timer_id);
     SS_HANDLE_ERROR_WITH_EXIT(rc);
 
-    uint8_t channel;
+    uint32_t channel;
     rc = ss_get_timer_channel_from_pin_id(pin_id, &channel);
     SS_HANDLE_ERROR_WITH_EXIT(rc);
 
@@ -425,7 +425,7 @@ SS_FEEDBACK ss_pwm_write_highres(uint16_t pin_id, uint32_t value) {
     rc = ss_get_timer_from_pin_id(pin_id, &timer_id);
     SS_HANDLE_ERROR_WITH_EXIT(timer_id);
 
-    uint8_t channel;
+    uint32_t channel;
     rc = ss_get_timer_channel_from_pin_id(pin_id, &channel);
     SS_HANDLE_ERROR_WITH_EXIT(rc);
 

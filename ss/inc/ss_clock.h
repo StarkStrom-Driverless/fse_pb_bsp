@@ -33,5 +33,5 @@ SS_FEEDBACK ss_clock_init(uint8_t config);
 SS_FEEDBACK ss_clock_can(struct SS_CLOCK_CAN* config, uint32_t baudrate);
 
 SS_FEEDBACK ss_clock_spi(uint32_t* prescaler, uint32_t baudrate, uint8_t interface);
-
+SS_FEEDBACK ss_clock_fm(uint16_t pin_id, uint32_t *frequency);
 #endif

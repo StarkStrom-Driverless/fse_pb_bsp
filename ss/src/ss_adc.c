@@ -262,7 +262,7 @@ SS_FEEDBACK ss_adc_start_channel(uint16_t pin_id) {
     uint32_t adc_channel = ss_adc_get_channel_from_pin_id(pin_id);
     SS_HANDLE_NULL_WITH_EXIT(adc_channel);
 
-    adc_set_regular_sequence(adc, 1, &adc_channel);
+    adc_set_regular_sequence(adc, 1, (uint8_t*)(&adc_channel));
 
     adc_start_conversion_regular(adc);
 

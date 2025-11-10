@@ -2,6 +2,8 @@
 #include "ss_can.h"
 #include <libopencm3/stm32/flash.h>
 
+#define SS_FEEDBACK_BASE SS_FEEDBACK_CANBOOT_INIT_ERROR
+
 struct SS_CANBOOT ss_canboot;
 
 void canboot_task(void *args) {
@@ -87,7 +89,7 @@ SS_FEEDBACK ss_canboot_init(uint32_t id, uint32_t offset) {
     rc = ss_can_filter_add_msg(1, id);
     SS_HANDLE_ERROR_WITH_EXIT(rc);
 
-    rc = ss_rtos_task_add(canboot_task, NULL, 3, canboot_task);
+    rc = ss_rtos_task_add(canboot_task, NULL, 3, "canboot_task");
 
     return rc;
 }

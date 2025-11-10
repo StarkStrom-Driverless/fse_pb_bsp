@@ -4,6 +4,7 @@
 #include <stddef.h>
 #include <libopencm3/stm32/timer.h>
 #include <libopencm3/cm3/nvic.h>
+#include <libopencm3/stm32/gpio.h>
 #include "ss_clock.h"
 
 #define SS_FEEDBACK_BASE SS_FEEDBACK_FM_INIT_ERROR
@@ -50,7 +51,7 @@ SS_FEEDBACK ss_fm_get_ic_from_pin_id(uint16_t pin_id, uint32_t* ic_channel) {
         case PIN('A', 9):
         case PIN('B', 15):
         case PIN('C', 7):  
-            ic_channel = TIM_IC2; 
+            *ic_channel = TIM_IC2; 
             break;
 
         default: 
