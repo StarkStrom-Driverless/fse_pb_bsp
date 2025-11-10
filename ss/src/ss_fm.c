@@ -1,3 +1,12 @@
+/**
+ * @author  Maximilian Hoffmann <m.hoffmann@startstrom.de>
+ * @company Startstrom Augsburg
+ * @mail    <maximilian.hoffmann@startstrom-augsburg.de>
+ * 
+ * Copyright (c) 2025 Startstrom Augsburg
+ * All rights reserved.
+ */
+
 #include "ss_fm.h"
 #include "ss_pwm.h"
 #include "ss_gpio.h"

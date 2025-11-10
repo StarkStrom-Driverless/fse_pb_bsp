@@ -1,7 +1,13 @@
+/**
+ * @author  Maximilian Hoffmann <m.hoffmann@startstrom.de>
+ * @company Startstrom Augsburg
+ * @mail    <maximilian.hoffmann@startstrom-augsburg.de>
+ * 
+ * Copyright (c) 2025 Startstrom Augsburg
+ * All rights reserved.
+ */
+
 #include "ss_rtos.h"
-
-
-
 
 
 SS_FEEDBACK ss_rtos_task_add(TaskFunction_t task_ptr, void *const params, UBaseType_t prio, const char* name) {

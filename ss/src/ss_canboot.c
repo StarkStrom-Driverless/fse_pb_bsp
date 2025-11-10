@@ -1,3 +1,12 @@
+/**
+ * @author  Maximilian Hoffmann <m.hoffmann@startstrom.de>
+ * @company Startstrom Augsburg
+ * @mail    <maximilian.hoffmann@startstrom-augsburg.de>
+ * 
+ * Copyright (c) 2025 Startstrom Augsburg
+ * All rights reserved.
+ */
+
 #include "ss_canboot.h"
 #include "ss_can.h"
 #include <libopencm3/stm32/flash.h>

@@ -1,3 +1,12 @@
+/**
+ * @author  Maximilian Hoffmann <m.hoffmann@startstrom.de>
+ * @company Startstrom Augsburg
+ * @mail    <maximilian.hoffmann@startstrom-augsburg.de>
+ * 
+ * Copyright (c) 2025 Startstrom Augsburg
+ * All rights reserved.
+ */
+
 #include "ss_gpio.h"
 #include <libopencm3/stm32/rcc.h>
 #include <libopencm3/stm32/gpio.h>
