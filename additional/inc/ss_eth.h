@@ -17,8 +17,14 @@
 
 #define SS_ETH_PAYLOAD_BUFFER_SIZE 1500
 
-#define SS_ETH_IP(a, b, c, d)           (uint32_t)((a << 24) | (b << 16) | (c << 8) | d)
-#define SS_ETH_MAC(a, b, c, d, e, f)    (uint64_t)((a << 40) | (b << 32) | (c << 24) | (d << 16) | (e << 8) | f)
+#define SS_ETH_IP(a, b, c, d)           (uint32_t)((d << 24) | (c << 16) | (b << 8) | a)
+#define SS_ETH_MAC(a, b, c, d, e, f) \
+    ((uint64_t)(f) << 40) | \
+    ((uint64_t)(e) << 32) | \
+    ((uint64_t)(d) << 24) | \
+    ((uint64_t)(c) << 16) | \
+    ((uint64_t)(b) << 8)  | \
+    ((uint64_t)(a))
 #define SS_ETH_IP_GET_POS(ip, pos)      (0xFF & (a >> pos * 8))
 
 struct SS_ETH_SENDER {
@@ -85,7 +91,7 @@ SS_FEEDBACK ss_eth_init_wiz();
  * USER FUNCTIONS FOR INIT
  * 
  */
-SS_FEEDBACK ss_eth_init(uint32_t ip, uint32_t sn);
+SS_FEEDBACK ss_eth_init(uint32_t ip, uint32_t sn, uint64_t mac, uint32_t gw);
 SS_FEEDBACK ss_eth_set_gw(uint32_t gw);
 SS_FEEDBACK ss_eth_set_nm(uint32_t nm);
 SS_FEEDBACK ss_eth_set_dns(uint32_t dns);

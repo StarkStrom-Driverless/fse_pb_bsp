@@ -105,7 +105,7 @@ SS_FEEDBACK ss_eth_set_mac(uint64_t mac) {
 }
 
 
-SS_FEEDBACK ss_eth_init(uint32_t ip, uint32_t sn) {
+SS_FEEDBACK ss_eth_init(uint32_t ip, uint32_t sn, uint64_t mac, uint32_t gw) {
     SS_FEEDBACK rc = SS_FEEDBACK_OK;
 
     ss_eth.cs_pin_id = PIN('A', 4);
@@ -114,7 +114,7 @@ SS_FEEDBACK ss_eth_init(uint32_t ip, uint32_t sn) {
     ss_eth.baudrate = 1312500;
 
     ss_eth_cpy_ip_style(    ss_eth.intf_conf.gw,
-                            SS_ETH_IP(192, 168, 10, 1),
+                            gw,
                             4);
 
     ss_eth_cpy_ip_style(    ss_eth.intf_conf.nm,
@@ -123,7 +123,13 @@ SS_FEEDBACK ss_eth_init(uint32_t ip, uint32_t sn) {
 
     ss_eth_cpy_ip_style(    ss_eth.intf_conf.ip,
                             ip,
-                            4);         
+                            4);
+
+    ss_eth_cpy_ip_style(    ss_eth.intf_conf.mac,
+                            mac,
+                            6);
+                            
+    
 
     ss_eth.ports.insert_pos = 0;
     
