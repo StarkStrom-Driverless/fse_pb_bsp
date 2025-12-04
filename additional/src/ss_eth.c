@@ -108,10 +108,10 @@ SS_FEEDBACK ss_eth_set_mac(uint64_t mac) {
 SS_FEEDBACK ss_eth_init(uint32_t ip, uint32_t sn, uint64_t mac, uint32_t gw) {
     SS_FEEDBACK rc = SS_FEEDBACK_OK;
 
-    ss_eth.cs_pin_id = PIN('A', 4);
+    ss_eth.cs_pin_id = PIN('A', 10);
     ss_eth.rst_pin_id = PIN('B', 10);
 
-    ss_eth.baudrate = 1312500;
+    ss_eth.baudrate = 656250;
 
     ss_eth_cpy_ip_style(    ss_eth.intf_conf.gw,
                             gw,
@@ -177,8 +177,8 @@ SS_FEEDBACK ss_eth_init_wiz() {
 
     static wiz_PhyConf pc = { 
         .by = PHY_CONFBY_SW, 
-        .mode = PHY_MODE_MANUAL,
-        .speed = PHY_SPEED_10, 
+    .mode   = PHY_MODE_MANUAL,
+    .speed  = PHY_SPEED_10,
         .duplex = PHY_DUPLEX_FULL 
     };
     ctlwizchip(CW_SET_PHYCONF, &pc);
@@ -205,6 +205,8 @@ SS_FEEDBACK ss_eth_socket_udp_add(uint32_t port, struct SS_ETH_PAYLOAD* payload)
     port_ptr->intf_flags = SF_IO_NONBLOCK;
     port_ptr->port = port;
     port_ptr->payload = payload;
+
+    payload->buffer_len = SS_ETH_PAYLOAD_BUFFER_SIZE;
 
     if (ss_eth.ports.insert_pos++ == SS_ETH_MAX_PORTS) {
         rc = SS_FEEDBACK_ETH_MAX_PORTS;
@@ -233,16 +235,23 @@ SS_FEEDBACK ss_eth_get(uint32_t port, struct SS_ETH_INTF** tmp) {
 SS_FEEDBACK ss_eth_read(struct SS_ETH_INTF* tmp, struct SS_ETH_PAYLOAD** payload) {
     SS_FEEDBACK rc = SS_FEEDBACK_ETH_NO_MSG_RECEIVED;
 
-    uint32_t len = recvfrom(    tmp->intf_number,
-                                tmp->payload->buffer,
-                                tmp->payload->buffer_len,
-                                tmp->payload->id.ip,
-                                &tmp->payload->id.port);
+    uint16_t rx_size = getSn_RX_RSR(tmp->intf_number);
+    if (rx_size == 0) {
+        return rc;
+    }
+
+    int len = recvfrom(tmp->intf_number,
+                       tmp->payload->buffer,
+                       tmp->payload->buffer_len,
+                       tmp->payload->id.ip,
+                       &tmp->payload->id.port);
 
     *payload = tmp->payload;
 
-    if (len <= 0) {
+    if (len > 0) {
         rc = SS_FEEDBACK_ETH_MSG_RECEIVED;
+    } else if (len < 0) {
+        rc = SS_FEEDBACK_ETH_INIT_ERROR;
     }
 
     return rc;
