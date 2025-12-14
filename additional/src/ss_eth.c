@@ -7,6 +7,7 @@
 #include "ss_delay.h"
 #include "wizchip_conf.h"
 #include "socket.h"
+#include <libopencm3/stm32/gpio.h>
 
 #define SS_FEEDBACK_BASE  SS_FEEDBACK_ETH_INIT_ERROR
 
@@ -111,6 +112,7 @@ SS_FEEDBACK ss_eth_init(uint32_t ip, uint32_t sn, uint64_t mac, uint32_t gw) {
     ss_eth.rst_pin_id = PIN('C', 3);
     ss_eth.cs_pin_id = PIN('A', 10);
 
+    
     ss_eth.baudrate = 2625000;
 
     ss_eth_cpy_ip_style(    ss_eth.intf_conf.gw,
@@ -139,6 +141,10 @@ SS_FEEDBACK ss_eth_init(uint32_t ip, uint32_t sn, uint64_t mac, uint32_t gw) {
     rc = ss_io_init(ss_eth.rst_pin_id, SS_GPIO_MODE_OUTPUT);
     SS_HANDLE_ERROR_WITH_EXIT(rc);
 
+    gpio_set_output_options(GPIO(PINBANK(ss_eth.cs_pin_id)), GPIO_OTYPE_PP, GPIO_OSPEED_100MHZ, BIT(PINNO(ss_eth.cs_pin_id)));
+    gpio_set_output_options(GPIO(PINBANK(ss_eth.rst_pin_id)), GPIO_OTYPE_PP, GPIO_OSPEED_100MHZ, BIT(PINNO(ss_eth.rst_pin_id)));
+
+
     ss_io_write(ss_eth.cs_pin_id, SS_GPIO_ON);
 
     if (ss_spi_init(W5500_SPI_ID, ss_eth.baudrate) != SS_FEEDBACK_OK) {
@@ -154,7 +160,7 @@ SS_FEEDBACK ss_eth_init_wiz() {
     SS_FEEDBACK rc = SS_FEEDBACK_OK;
 
     ss_io_write(ss_eth.rst_pin_id, SS_GPIO_OFF);
-    ss_delay(100);
+    ss_delay(1000);
     ss_io_write(ss_eth.rst_pin_id, SS_GPIO_ON);
 
     reg_wizchip_cs_cbfunc(wizchip_cs_select, wizchip_cs_deselect);
@@ -175,19 +181,25 @@ SS_FEEDBACK ss_eth_init_wiz() {
 
     ctlnetwork(CN_SET_NETINFO, (void*)&netinfo);
 
-    static wiz_PhyConf pc = {
-        .by = PHY_CONFBY_SW,
-    .mode   = PHY_MODE_MANUAL,
-    .speed  = PHY_SPEED_10,
+    wiz_PhyConf pc = {
+        .by     = PHY_CONFBY_SW,
+        .mode   = PHY_MODE_AUTONEGO,   // Auto-Negotiation
+        .speed  = PHY_SPEED_100,       // bevorzugt 100M
         .duplex = PHY_DUPLEX_FULL
     };
     ctlwizchip(CW_SET_PHYCONF, &pc);
     ctlwizchip(CW_RESET_PHY, 0);
-    ss_delay(100);
+    ss_delay(1000);
 
     uint8_t ver = getVERSIONR();
     if (getVERSIONR() != 0x04) {
         rc = SS_FEEDBACK_ETHERNET_WIZ_INIT_ERROR;
+    }
+
+
+    ss_eth.baudrate = 10500000;
+    if (ss_spi_init(W5500_SPI_ID, ss_eth.baudrate) != SS_FEEDBACK_OK) {
+        return SS_SET_TOPLEVEL_ERROR(SS_FEEDBACK_ETHERNET_INIT_ERROR, SS_FEEDBACK_SPI_INIT_ERROR);
     }
 
     return rc;

@@ -15,7 +15,7 @@
 
 #define SS_ETH_MAX_PORTS 8
 
-#define SS_ETH_PAYLOAD_BUFFER_SIZE 1500
+#define SS_ETH_PAYLOAD_BUFFER_SIZE 500
 
 #define SS_ETH_IP(a, b, c, d)           (uint32_t)((d << 24) | (c << 16) | (b << 8) | a)
 #define SS_ETH_MAC(a, b, c, d, e, f) \

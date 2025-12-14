@@ -84,6 +84,10 @@ SS_FEEDBACK ss_enable_spi_gpios(uint8_t spi_interface_id) {
     gpio_set_af(GPIO(PINBANK(mosi)), af, BIT(PINNO(mosi)));
     gpio_set_af(GPIO(PINBANK(sck)), af, BIT(PINNO(sck)));
 
+    gpio_set_output_options(GPIO(PINBANK(miso)), GPIO_OTYPE_PP, GPIO_OSPEED_100MHZ, BIT(PINNO(miso)));
+    gpio_set_output_options(GPIO(PINBANK(mosi)), GPIO_OTYPE_PP, GPIO_OSPEED_100MHZ, BIT(PINNO(mosi)));
+    gpio_set_output_options(GPIO(PINBANK(sck)), GPIO_OTYPE_PP, GPIO_OSPEED_100MHZ, BIT(PINNO(sck)));
+
 
     return rc;
 }
