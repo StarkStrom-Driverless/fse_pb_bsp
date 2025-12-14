@@ -67,8 +67,8 @@ SS_FEEDBACK ss_eth_cpy_ip_style(uint8_t* dest, uint64_t source, uint8_t len) {
 SS_FEEDBACK ss_eth_set_gw(uint32_t gw) {
     SS_FEEDBACK rc = SS_FEEDBACK_OK;
 
-    ss_eth_cpy_ip_style(    ss_eth.intf_conf.gw, 
-                            gw, 
+    ss_eth_cpy_ip_style(    ss_eth.intf_conf.gw,
+                            gw,
                             4);
 
     return rc;
@@ -77,8 +77,8 @@ SS_FEEDBACK ss_eth_set_gw(uint32_t gw) {
 SS_FEEDBACK ss_eth_set_nm(uint32_t nm) {
     SS_FEEDBACK rc = SS_FEEDBACK_OK;
 
-    ss_eth_cpy_ip_style(    ss_eth.intf_conf.nm, 
-                            nm, 
+    ss_eth_cpy_ip_style(    ss_eth.intf_conf.nm,
+                            nm,
                             4);
 
     return rc;
@@ -87,8 +87,8 @@ SS_FEEDBACK ss_eth_set_nm(uint32_t nm) {
 SS_FEEDBACK ss_eth_set_dns(uint32_t dns) {
     SS_FEEDBACK rc = SS_FEEDBACK_OK;
 
-    ss_eth_cpy_ip_style(    ss_eth.intf_conf.dns, 
-                            dns, 
+    ss_eth_cpy_ip_style(    ss_eth.intf_conf.dns,
+                            dns,
                             4);
 
     return rc;
@@ -97,8 +97,8 @@ SS_FEEDBACK ss_eth_set_dns(uint32_t dns) {
 SS_FEEDBACK ss_eth_set_mac(uint64_t mac) {
     SS_FEEDBACK rc = SS_FEEDBACK_OK;
 
-    ss_eth_cpy_ip_style(    ss_eth.intf_conf.mac, 
-                            mac, 
+    ss_eth_cpy_ip_style(    ss_eth.intf_conf.mac,
+                            mac,
                             6);
 
     return rc;
@@ -108,10 +108,10 @@ SS_FEEDBACK ss_eth_set_mac(uint64_t mac) {
 SS_FEEDBACK ss_eth_init(uint32_t ip, uint32_t sn, uint64_t mac, uint32_t gw) {
     SS_FEEDBACK rc = SS_FEEDBACK_OK;
 
+    ss_eth.rst_pin_id = PIN('C', 3);
     ss_eth.cs_pin_id = PIN('A', 10);
-    ss_eth.rst_pin_id = PIN('B', 10);
 
-    ss_eth.baudrate = 656250;
+    ss_eth.baudrate = 2625000;
 
     ss_eth_cpy_ip_style(    ss_eth.intf_conf.gw,
                             gw,
@@ -128,11 +128,11 @@ SS_FEEDBACK ss_eth_init(uint32_t ip, uint32_t sn, uint64_t mac, uint32_t gw) {
     ss_eth_cpy_ip_style(    ss_eth.intf_conf.mac,
                             mac,
                             6);
-                            
-    
+
+
 
     ss_eth.ports.insert_pos = 0;
-    
+
     rc = ss_io_init(ss_eth.cs_pin_id, SS_GPIO_MODE_OUTPUT);
     SS_HANDLE_ERROR_WITH_EXIT(rc);
 
@@ -146,7 +146,7 @@ SS_FEEDBACK ss_eth_init(uint32_t ip, uint32_t sn, uint64_t mac, uint32_t gw) {
     }
 
     rc = ss_eth_init_wiz();
-    
+
     return rc;
 }
 
@@ -154,7 +154,7 @@ SS_FEEDBACK ss_eth_init_wiz() {
     SS_FEEDBACK rc = SS_FEEDBACK_OK;
 
     ss_io_write(ss_eth.rst_pin_id, SS_GPIO_OFF);
-    ss_delay(1000);
+    ss_delay(100);
     ss_io_write(ss_eth.rst_pin_id, SS_GPIO_ON);
 
     reg_wizchip_cs_cbfunc(wizchip_cs_select, wizchip_cs_deselect);
@@ -175,15 +175,15 @@ SS_FEEDBACK ss_eth_init_wiz() {
 
     ctlnetwork(CN_SET_NETINFO, (void*)&netinfo);
 
-    static wiz_PhyConf pc = { 
-        .by = PHY_CONFBY_SW, 
+    static wiz_PhyConf pc = {
+        .by = PHY_CONFBY_SW,
     .mode   = PHY_MODE_MANUAL,
     .speed  = PHY_SPEED_10,
-        .duplex = PHY_DUPLEX_FULL 
+        .duplex = PHY_DUPLEX_FULL
     };
     ctlwizchip(CW_SET_PHYCONF, &pc);
     ctlwizchip(CW_RESET_PHY, 0);
-    ss_delay(1000);
+    ss_delay(100);
 
     uint8_t ver = getVERSIONR();
     if (getVERSIONR() != 0x04) {
@@ -270,6 +270,3 @@ SS_FEEDBACK ss_eth_send(struct SS_ETH_INTF* tmp, struct SS_ETH_PAYLOAD* payload)
     }
     return rc;
 }
-
-
-

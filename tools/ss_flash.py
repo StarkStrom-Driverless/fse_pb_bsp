@@ -10,7 +10,7 @@ All rights reserved.
 from typing import List, Dict
 import subprocess
 import argparse
-import telnetlib
+import telnetlib3 as telnetlib
 from ss_oocd import *
 import can
 import struct

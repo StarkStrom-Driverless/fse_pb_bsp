@@ -3,10 +3,10 @@
 mkdir -p ../usr/src
 mkdir -p ../usr/inc
 
-cp test/main.c ..
-cp test/Makefile ..
-cp test/.gitignore ..
-cp test/FreeRTOSConfig.h ../usr/inc
+cp -n test/main.c ..
+cp -n test/Makefile ..
+cp -n test/.gitignore ..
+cp -n test/FreeRTOSConfig.h ../usr/inc
  
 
 cd libopencm3

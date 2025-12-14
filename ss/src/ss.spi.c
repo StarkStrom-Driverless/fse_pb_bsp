@@ -2,7 +2,7 @@
  * @author  Maximilian Hoffmann <m.hoffmann@startstrom.de>
  * @company Startstrom Augsburg
  * @mail    <maximilian.hoffmann@startstrom-augsburg.de>
- * 
+ *
  * Copyright (c) 2025 Startstrom Augsburg
  * All rights reserved.
  */
@@ -25,7 +25,7 @@ SS_FEEDBACK ss_enable_spi_gpios(uint8_t spi_interface_id) {
     uint16_t miso = 0;
     uint16_t mosi = 0;
     uint16_t sck = 0;
-    
+
     switch (spi_interface_id) {
         case 1:
             miso = PIN('A', 6);
@@ -33,13 +33,13 @@ SS_FEEDBACK ss_enable_spi_gpios(uint8_t spi_interface_id) {
             sck = PIN('A', 5);
             break;
 
-        case 2: 
+        case 2:
             miso = PIN('B', 14);
             mosi = PIN('B', 15);
             sck = PIN('B', 13);
             break;
 
-        case 3: 
+        case 3:
             miso = PIN('C', 11);
             mosi = PIN('C', 12);
             sck = PIN('C', 10);
@@ -68,7 +68,7 @@ SS_FEEDBACK ss_enable_spi_gpios(uint8_t spi_interface_id) {
         case 2:
             af = GPIO_AF5;
             break;
-        
+
         case 3:
             af = GPIO_AF6;
             break;
@@ -79,7 +79,7 @@ SS_FEEDBACK ss_enable_spi_gpios(uint8_t spi_interface_id) {
     }
     SS_HANDLE_ERROR_WITH_EXIT(rc);
 
-       
+
     gpio_set_af(GPIO(PINBANK(miso)), af, BIT(PINNO(miso)));
     gpio_set_af(GPIO(PINBANK(mosi)), af, BIT(PINNO(mosi)));
     gpio_set_af(GPIO(PINBANK(sck)), af, BIT(PINNO(sck)));
@@ -164,7 +164,6 @@ SS_FEEDBACK ss_spi_init(uint8_t spi_interface_id, uint32_t baudrate)
     spi_set_clock_polarity_0(spi_port);   // CPOL=0
     spi_set_clock_phase_0(spi_port);      // CPHA=0
 
-    spi_disable_software_slave_management(spi_port);
     spi_enable_software_slave_management(spi_port);  // SSM=1
     spi_set_nss_high(spi_port);                       // SSI=1
 
