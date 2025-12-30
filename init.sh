@@ -20,9 +20,13 @@ python3 -m venv .venv
 
 source .venv/bin/activate
 
+pip install --upgrade pip
+
 pip install can
 pip install click
 pip install cryptography
 pip install intelhex
 pip install cbor
 pip install pyyaml
+pip install python-can
+pip install telnetlib3
