@@ -432,7 +432,7 @@ SS_FEEDBACK ss_pwm_write_highres(uint16_t pin_id, uint32_t value) {
 
     uint32_t timer_id;
     rc = ss_get_timer_from_pin_id(pin_id, &timer_id);
-    SS_HANDLE_ERROR_WITH_EXIT(timer_id);
+    SS_HANDLE_ERROR_WITH_EXIT(rc);
 
     uint32_t channel;
     rc = ss_get_timer_channel_from_pin_id(pin_id, &channel);

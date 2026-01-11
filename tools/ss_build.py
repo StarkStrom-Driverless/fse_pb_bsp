@@ -24,6 +24,8 @@ def build(  make_file : str = "../../Makefile"):
 
     directory = get_dir_of_file(make_file)
 
+    print(directory)
+
     result = subprocess.run(
         cmd,
         cwd=directory,
@@ -73,7 +75,7 @@ def create_bin( elf_file : str = "../../bp_test.elf",
 
     subprocess.run(cmd)
 
-def handle_build(args):
+def handle_build(args = None):
     clean()
     build()
     create_bin()

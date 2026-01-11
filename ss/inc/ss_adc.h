@@ -52,8 +52,8 @@ SS_FEEDBACK ss_adc_init(uint16_t pin_id);
  * 
  */
 SS_FEEDBACK ss_adc_rcc_init_from_pin_id(uint16_t pin_id);
-uint32_t ss_adc_get_adc_from_pin_id(uint16_t pin_id);
-uint32_t ss_adc_get_channel_from_pin_id(uint16_t pin_id);
+SS_FEEDBACK ss_adc_get_adc_from_pin_id(uint16_t pin_id, uint32_t *adc);
+SS_FEEDBACK ss_adc_get_channel_from_pin_id(uint16_t pin_id, uint32_t *adc_channel);
 SS_FEEDBACK ss_adc_get_measurement_pos_from_pin_id(uint16_t pin_id, uint8_t *measurement_pos);
 
 

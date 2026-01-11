@@ -315,9 +315,13 @@ def send_firmware_via_can(  binary_file,
     bus.shutdown()
     return failed_frames == 0
 
-
+def falsh_call_build():
+    from ss_build import handle_build
+    print(">> ./ss build")
+    handle_build()
 
 def telnet_flash_handle(args):
+    falsh_call_build()
     telnet_flash()
 
 def can_flash_handle(args):
@@ -336,7 +340,13 @@ def flash_add_sub(sub):
     parser_canflash.set_defaults(func=can_flash_handle)
 
 
+
+
+
 def main():
+
+    
+
     parser = argparse.ArgumentParser()
     sub = parser.add_subparsers(dest="cmd")
 
