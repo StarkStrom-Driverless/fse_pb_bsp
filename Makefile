@@ -19,6 +19,8 @@
 
 OBJS += $(patsubst %.c, %.o, $(wildcard fse_pb_bsp/ss/src/*.c))
 TGT_CPPFLAGS	+= -Ifse_pb_bsp/ss/inc
+TGT_CPPFLAGS    += -Ifse_pb_bsp/rtos/include
+TGT_CPPFLAGS    += -Ifse_pb_bsp/helpers
 
 OBJS += $(patsubst %.c, %.o, $(wildcard fse_pb_bsp/additional/src/*.c))
 TGT_CPPFLAGS	+= -Ifse_pb_bsp/additional/inc

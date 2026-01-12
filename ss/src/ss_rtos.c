@@ -8,42 +8,49 @@
  */
 
 #include "ss_rtos.h"
+#include "ss_fsm.h"
 
+#define SS_FEEDBACK_BASE SS_FEEDBACK_BASE_NOT_SET
+
+
+SS_FEEDBACK ss_rtos_add_task_generic(TaskFunction_t task_ptr, void *const params, UBaseType_t prio, const char* name, size_t stack_size) {
+    SS_FEEDBACK rc = SS_FEEDBACK_OK;
+
+    if (prio >= configMAX_PRIORITIES) {
+        rc = SS_FEEDBACK_RTOS_INIT_TASK_ERROR;
+    }
+    SS_HANDLE_ERROR_WITH_EXIT(rc);
+
+
+    BaseType_t task_created = xTaskCreate (task_ptr,name,stack_size,params,prio,NULL);
+    if (task_created != pdPASS) {
+        rc = SS_FEEDBACK_RTOS_INIT_TASK_ERROR;
+    }
+    SS_HANDLE_ERROR_WITH_EXIT(rc);
+
+
+    rc = ss_fsm_eventqueue_add(name);
+    SS_HANDLE_ERROR_WITH_EXIT(rc);
+
+    return SS_FEEDBACK_OK;
+}
 
 SS_FEEDBACK ss_rtos_task_add(TaskFunction_t task_ptr, void *const params, UBaseType_t prio, const char* name) {
-    if (prio < configMAX_PRIORITIES) {
-        BaseType_t task_created = xTaskCreate (task_ptr,name,1024,params,prio,NULL);
-        if (task_created != pdPASS) {
-            return SS_FEEDBACK_RTOS_INIT_TASK_ERROR;
-        }
-    } else {
-        return SS_FEEDBACK_RTOS_INIT_TASK_ERROR;
-    }
-    return SS_FEEDBACK_OK;
+    SS_FEEDBACK rc = SS_FEEDBACK_OK;
+
+    rc = ss_rtos_add_task_generic(task_ptr, params, prio, name, 1024);
+
+    return rc;
 }
 
-SS_FEEDBACK ss_rtos_rx_task_add(TaskFunction_t task_ptr, void *const params, UBaseType_t prio, const char* name, TaskHandle_t* task_handle) {
-    if (prio < configMAX_PRIORITIES) {
-        BaseType_t task_created = xTaskCreate (task_ptr,name,1024,params,prio,task_handle);
-        if (task_created != pdPASS) {
-            return SS_FEEDBACK_RTOS_INIT_RX_TASK_ERROR;
-        }
-    } else {
-        return SS_FEEDBACK_RTOS_INIT_RX_TASK_ERROR;
-    }
-    return SS_FEEDBACK_OK;
-}
+
 
 SS_FEEDBACK ss_rtos_big_task_add(TaskFunction_t task_ptr, void *const params, UBaseType_t prio, const char* name) {
-    if (prio < configMAX_PRIORITIES) {
-        BaseType_t task_created = xTaskCreate (task_ptr,name,8196,params,prio,NULL);
-        if (task_created != pdPASS) {
-            return SS_FEEDBACK_RTOS_INIT_BIGTASK_ERROR;
-        }
-    } else {
-        return SS_FEEDBACK_RTOS_INIT_BIGTASK_ERROR;
-    }
-    return SS_FEEDBACK_OK;
+    SS_FEEDBACK rc = SS_FEEDBACK_OK;
+
+    rc = ss_rtos_add_task_generic(task_ptr, params, prio, name, 2048);
+
+    return rc;
 }
 
 void ss_rtos_start(void) {

@@ -85,6 +85,12 @@ typedef uint32_t SS_FEEDBACK;
 
 #define SS_FEEDBACK_CANBOOT_INIT_ERROR              (SS_FEEDBACK)0xc0
 
+#define SS_FEEDBACK_FSM_INIT_ERROR                  (SS_FEEDBACK)0xc8
+#define SS_FEEDBACK_FSM_WRONG_KEY                   (SS_FEEDBACK)0xc9
+#define SS_FEEDBACK_FSM_RECEIVED_EVENT              (SS_FEEDBACK)0xca
+#define SS_FEEDBACK_FSM_NOT_RECEIVED_EVENT          (SS_FEEDBACK)0xcb
+#define SS_FEEDBACK_FSM_EVENT_SEND_FAILED           (SS_FEEDBACK)0xcc
+
 //#define SS_FEEDBACK_BASE                            SS_FEEDBACK_BASE_NOT_SET
 
 #define SS_HANDLE_INIT(func)                        if (func != SS_FEEDBACK_OK) ss_init_error(func)
