@@ -27,12 +27,12 @@ extern SS_FSM_EVENT_HASHMAP_t* ss_fsm_event_hashmap;
 
 SS_FEEDBACK ss_fsm_eventqueue_add(char* name);
 SS_FEEDBACK ss_fsm_eventqueue_get(char* name, QueueHandle_t* handle);
-SS_FEEDBACK ss_fsm_event_receive(char *name, uint8_t* value);
+int16_t ss_fsm_event_receive(char *name);
 SS_FEEDBACK ss_fsm_event_send_to(char *name, uint8_t value);
 SS_FEEDBACK ss_fsm_event_send_core(uint8_t value);
-SS_FEEDBACK ss_fsm_event_receive_core(uint8_t* value);
+int16_t ss_fsm_event_receive_core();
 SS_FEEDBACK ss_fsm_event_get(uint8_t event_code, char** task_name);
-SS_FEEDBACK ss_fsm_event_add(uint8_t event_code, char* task_name);
+SS_FEEDBACK ss_fsm_event_add(uint8_t event_code);
 SS_FEEDBACK ss_fsm_event_send(uint8_t event);
 
 #endif

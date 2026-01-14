@@ -105,8 +105,9 @@ SS_FEEDBACK ss_can_queues_init(uint8_t channel);
 char* u32_to_str(uint32_t value, char *buffer);
 SS_FEEDBACK ss_can_queue_handle_add(uint8_t channel, 
                                     uint32_t id, 
-                                    TaskFunction_t task_ptr, 
-                                    void *const params, 
+                                    TaskFunction_t task_ptr,
+									char* task_name,
+                                    void *const params,
                                     uint8_t prio);
 SS_FEEDBACK ss_can_queue_get(	uint8_t channel, 
 								uint32_t id, 

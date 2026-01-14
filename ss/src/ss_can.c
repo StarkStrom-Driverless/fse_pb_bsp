@@ -397,7 +397,8 @@ char* u32_to_str(uint32_t value, char *buffer) {
 
 SS_FEEDBACK ss_can_queue_handle_add(uint8_t channel, 
                                     uint32_t id, 
-                                    TaskFunction_t task_ptr, 
+                                    TaskFunction_t task_ptr,
+                                    char* task_name, 
                                     void *const params, 
                                     uint8_t prio) 
 {
@@ -406,8 +407,7 @@ SS_FEEDBACK ss_can_queue_handle_add(uint8_t channel,
     SS_FEEDBACK rc = SS_FEEDBACK_OK;
     struct SS_CAN_MSG_QUEUES* queue = &ss_can.channel[channel].msg_queues;
     QueueHandle_t tmp = NULL;
-    char name[20];
-    char id_str[8];
+
 
     if (queue->insert_pos >= MAX_CAN_MSGS) {
         rc = SS_FEEDBACK_CAN_QUEUE_OVERRUN;
@@ -424,15 +424,13 @@ SS_FEEDBACK ss_can_queue_handle_add(uint8_t channel,
 
     queue->queues[queue->insert_pos].queue = tmp;
 
-    strcpy(name, "queue_");
-    u32_to_str(id, id_str);
-    strcat(name, id_str);
+
 
 
     rc = ss_rtos_task_add(  task_ptr,
                             params,
                             prio,
-                            name);
+                            task_name);
     SS_HANDLE_ERROR_WITH_EXIT(rc);
 
     queue->insert_pos++;
