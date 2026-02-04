@@ -25,25 +25,11 @@ void canboot_task(void *args) {
             received_update = 1;
             flash_unlock();
 
-            //uint32_t baseaddr = ss_can_frame_get_signal(&frame, 32, 20);
-
             uint32_t baseaddr  = frame.data[4];
             baseaddr |= (frame.data[5] << 8);
             baseaddr |= (frame.data[6] << 16);
             baseaddr |= (frame.data[7] << 24);
 
-            /*
-            if (baseaddr == 0x00) {
-                flash_unlock();
-
-                for (uint8_t i = 0; i < 3; i++) {
-                    flash_erase_sector(i + 8, 2);
-                    flash_wait_for_last_operation();
-                }
-
-                flash_lock();
-            }
-                */
 
             baseaddr += ss_canboot.flash_offset;
 
@@ -76,16 +62,19 @@ void canboot_task(void *args) {
 SS_FEEDBACK ss_canboot_init(uint32_t id, uint32_t offset) {
     SS_FEEDBACK rc = SS_FEEDBACK_OK;
 
+    uint32_t* start_address = (uint32_t*)offset;
     
-    flash_unlock();
+    if (*start_address != 0xFFFFFFFF) {
+        flash_unlock();
 
-    for (uint8_t i = 0; i < 3; i++) {
-        flash_erase_sector(i + 8, 2);
-        flash_wait_for_last_operation();
+        for (uint8_t i = 0; i < 3; i++) {
+            flash_erase_sector(i + 8, 2);
+            flash_wait_for_last_operation();
+        }
+
+        flash_lock();
     }
 
-    flash_lock();
-    
 
     ss_canboot.can_id = id;
     ss_canboot.flash_offset = offset;

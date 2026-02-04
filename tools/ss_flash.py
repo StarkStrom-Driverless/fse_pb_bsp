@@ -51,6 +51,7 @@ def sign_img(   img : str,
 
 def get_img_sign_name(name : str):
     parts : List[str] = name.split("/")
+    print(parts)
     file = parts[2]
     file_parts : List[str] = file.split(".")
 
@@ -335,7 +336,7 @@ def flash_add_sub(sub):
 
 
     parser_canflash = sub.add_parser("canflash", help="flash via can")
-    parser_canflash.add_argument("bin_file", help="signed bin file")
+    parser_canflash.add_argument("bin_file", help="signed bin file such as ../../bp_test.bin")
     parser_canflash.add_argument("id", type=str, help="can id to send image")
     parser_canflash.set_defaults(func=can_flash_handle)
 
