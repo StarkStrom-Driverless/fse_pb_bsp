@@ -228,9 +228,9 @@ int8_t socket(uint8_t sn, uint8_t protocol, uint16_t port, uint8_t flag)
             uint8_t taddr[4];
             getSIPR(taddr);
             */
-            uint32_t taddr;
-            getSIPR((uint8_t*)&taddr);
-            if(taddr == 0) return SOCKERR_SOCKINIT;
+            uint32_t tmp;
+            getSIPR((uint8_t*)&tmp);
+            if(tmp == 0) return SOCKERR_SOCKINIT;
             break;
          }
 #endif 
@@ -489,7 +489,7 @@ int8_t disconnect(uint8_t sn)
    {
       setSn_CR(sn,Sn_CR_DISCON);
       /* wait to process the command... */
-      while(getSn_CR(sn));
+      while(getSn_CR(sn)) {}
 	   sock_is_sending &= ~(1<<sn);
       if(sock_io_mode & (1<<sn)) return SOCK_BUSY;
       while(getSn_SR(sn) != SOCK_CLOSED)
@@ -752,6 +752,7 @@ static int32_t sendto_IO_6(uint8_t sn, uint8_t * buf, uint16_t len, uint8_t * ad
 {
    uint8_t tmp = 0;
    uint8_t tcmd = Sn_CR_SEND;
+   (void)tcmd;
    uint16_t freesize = 0;
    uint32_t taddr;
 

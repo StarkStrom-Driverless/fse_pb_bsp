@@ -13,7 +13,7 @@
 #define SS_FEEDBACK_BASE SS_FEEDBACK_BASE_NOT_SET
 
 
-SS_FEEDBACK ss_rtos_add_task_generic(TaskFunction_t task_ptr, void *const params, UBaseType_t prio, const char* name, size_t stack_size) {
+SS_FEEDBACK ss_rtos_add_task_generic(TaskFunction_t task_ptr, void *const params, UBaseType_t prio, char* name, size_t stack_size) {
     SS_FEEDBACK rc = SS_FEEDBACK_OK;
 
     if (prio >= configMAX_PRIORITIES) {
@@ -35,7 +35,7 @@ SS_FEEDBACK ss_rtos_add_task_generic(TaskFunction_t task_ptr, void *const params
     return SS_FEEDBACK_OK;
 }
 
-SS_FEEDBACK ss_rtos_task_add(TaskFunction_t task_ptr, void *const params, UBaseType_t prio, const char* name) {
+SS_FEEDBACK ss_rtos_task_add(TaskFunction_t task_ptr, void *const params, UBaseType_t prio, char* name) {
     SS_FEEDBACK rc = SS_FEEDBACK_OK;
 
     rc = ss_rtos_add_task_generic(task_ptr, params, prio, name, 1024);
@@ -45,7 +45,7 @@ SS_FEEDBACK ss_rtos_task_add(TaskFunction_t task_ptr, void *const params, UBaseT
 
 
 
-SS_FEEDBACK ss_rtos_big_task_add(TaskFunction_t task_ptr, void *const params, UBaseType_t prio, const char* name) {
+SS_FEEDBACK ss_rtos_big_task_add(TaskFunction_t task_ptr, void *const params, UBaseType_t prio, char* name) {
     SS_FEEDBACK rc = SS_FEEDBACK_OK;
 
     rc = ss_rtos_add_task_generic(task_ptr, params, prio, name, 2048);

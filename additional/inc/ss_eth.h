@@ -6,6 +6,7 @@
 #include "wizchip_conf.h"
 #include "socket.h"
 #include "ss_feedback.h"
+#include "ss_makros.h"
 
 #define W5500_SPI_ID 1
 
@@ -17,15 +18,7 @@
 
 #define SS_ETH_PAYLOAD_BUFFER_SIZE 500
 
-#define SS_ETH_IP(a, b, c, d)           (uint32_t)((d << 24) | (c << 16) | (b << 8) | a)
-#define SS_ETH_MAC(a, b, c, d, e, f) \
-    ((uint64_t)(f) << 40) | \
-    ((uint64_t)(e) << 32) | \
-    ((uint64_t)(d) << 24) | \
-    ((uint64_t)(c) << 16) | \
-    ((uint64_t)(b) << 8)  | \
-    ((uint64_t)(a))
-#define SS_ETH_IP_GET_POS(ip, pos)      (0xFF & (a >> pos * 8))
+
 
 struct SS_ETH_SENDER {
     uint8_t ip[4];

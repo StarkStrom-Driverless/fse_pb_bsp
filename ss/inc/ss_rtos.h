@@ -19,13 +19,13 @@
 SS_FEEDBACK ss_rtos_task_add(  TaskFunction_t task_ptr,
                         void * const params, 
                         UBaseType_t prio,
-                        const char* name);
+                        char* name);
 
 
 SS_FEEDBACK ss_rtos_big_task_add(  TaskFunction_t task_ptr,
                         void * const params, 
                         UBaseType_t prio,
-                        const char* name);                    
+                        char* name);                    
 
 void ss_rtos_start(void);
 

@@ -25,4 +25,17 @@
 #define TIM(id) (0x0FFFFFFF & id)
 #define CH(id) (id >> 28)
 
+/**
+ * Ethernet Makros
+ */
+#define SS_ETH_IP(a, b, c, d)           (uint32_t)((d << 24) | (c << 16) | (b << 8) | a)
+#define SS_ETH_MAC(a, b, c, d, e, f) \
+    ((uint64_t)(f) << 40) | \
+    ((uint64_t)(e) << 32) | \
+    ((uint64_t)(d) << 24) | \
+    ((uint64_t)(c) << 16) | \
+    ((uint64_t)(b) << 8)  | \
+    ((uint64_t)(a))
+#define SS_ETH_IP_GET_POS(ip, pos)      (0xFF & (a >> pos * 8))
+
 #endif

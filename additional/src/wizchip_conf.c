@@ -267,10 +267,10 @@ _WIZCHIP  WIZCHIP =
         {
             //M20150601 : Rename the function 
             //wizchip_bus_readbyte,
-            //wizchip_bus_writebyte
+            //wizchip_bus_writebyte,
             wizchip_bus_readdata,
             wizchip_bus_writedata
-        },
+        }
 
     }
 };

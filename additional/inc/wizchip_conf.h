@@ -428,7 +428,7 @@ typedef struct __WIZCHIP
       // To be added
       //
    }IF;
-}_WIZCHIP;
+}  _WIZCHIP;
 
 extern _WIZCHIP  WIZCHIP;
 
