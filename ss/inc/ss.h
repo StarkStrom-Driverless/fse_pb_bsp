@@ -26,5 +26,6 @@
 #include "ss_eth.h"
 #include "ss_canboot.h"
 #include "ss_init.h"
+#include "ss_pid.h"
 
 #endif
