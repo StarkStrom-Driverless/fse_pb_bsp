@@ -14,13 +14,13 @@ void ss_pid_init(struct SS_PID* pid) {
 }
 
 
-void ss_pid_update(struct SS_PID* pid, float input, float* output) {
-
+void ss_pid_update(struct SS_PID* pid, float setpoint, float measurment, float* output) {
+	pid->ss_pid_setpoint = setpoint;
 
 	/*
 	* Error signal
 	*/
-    float error = pid->ss_pid_setpoint - input;
+    float error = pid->ss_pid_setpoint - measurment;
 
 
 	/*
@@ -52,7 +52,7 @@ void ss_pid_update(struct SS_PID* pid, float input, float* output) {
 	* Derivative (band-limited ss_pid_dif)
 	*/
 		
-    pid->ss_pid_dif = -(2.0f * pid->ss_pid_kd * (input - pid->ss_pid_measurment_prev)	/* Note: derivative on measurement, therefore minus sign in front of equation! */
+    pid->ss_pid_dif = -(2.0f * pid->ss_pid_kd * (measurment - pid->ss_pid_measurment_prev)	/* Note: derivative on measurement, therefore minus sign in front of equation! */
                         
 						
 						+ (2.0f * pid->ss_pid_tau - pid->ss_pid_period) * pid->ss_pid_dif)
@@ -76,7 +76,7 @@ void ss_pid_update(struct SS_PID* pid, float input, float* output) {
 
 	/* Store error and measurement for later use */
     pid->ss_pid_error_prev       = error;
-    pid->ss_pid_measurment_prev = input;
+    pid->ss_pid_measurment_prev = measurment;
 
 	/* Return controller output */
     *output = pid->ss_pid_out;

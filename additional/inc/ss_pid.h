@@ -36,6 +36,6 @@ struct SS_PID {
 };
 
 void ss_pid_init(struct SS_PID* pid);
-void ss_pid_update(struct SS_PID* pid, float input, float* output);
+void ss_pid_update(struct SS_PID* pid, float setpoint, float measurment, float* output);
 
 #endif

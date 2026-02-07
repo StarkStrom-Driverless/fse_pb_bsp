@@ -27,7 +27,7 @@ SS_FEEDBACK ss_fsm_eventqueue_add(char* name) {
         SS_HANDLE_ERROR_WITH_EXIT(rc);
     }
 
-    queue = xQueueCreate(3, sizeof(uint8_t));
+    queue = xQueueCreate(3, sizeof(int16_t));
     if (queue == NULL) {
         rc = SS_FEEDBACK_FSM_INIT_ERROR;
     }
@@ -57,7 +57,7 @@ int16_t ss_fsm_event_receive(char *name) {
     SS_FEEDBACK rc = SS_FEEDBACK_OK;
     QueueHandle_t queue;
     char *callback_name = NULL;
-    uint8_t value;
+    int16_t value;
 
     if (name == NULL) {
         callback_name = pcTaskGetName(NULL);
@@ -68,7 +68,7 @@ int16_t ss_fsm_event_receive(char *name) {
     rc = ss_fsm_eventqueue_get(callback_name, &queue);
     SS_HANDLE_ERROR_WITH_EXIT(rc);
 
-    BaseType_t tmp = xQueueReceive(queue, &value, ( TickType_t ) 10 ); 
+    BaseType_t tmp = xQueueReceive(queue, &value, ( TickType_t ) 0 ); 
 
     if (tmp != pdPASS) {
         value = -1;
@@ -80,7 +80,7 @@ int16_t ss_fsm_event_receive(char *name) {
 SS_FEEDBACK ss_fsm_event_send_to(char *name, uint8_t value) {
     SS_FEEDBACK rc = SS_FEEDBACK_OK;
     QueueHandle_t queue;
-    uint8_t send_value = value;
+    int16_t send_value = (uint16_t)value;
 
     rc = ss_fsm_eventqueue_get(name, &queue);
     SS_HANDLE_ERROR_WITH_EXIT(rc);
