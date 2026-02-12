@@ -426,11 +426,7 @@ SS_FEEDBACK ss_can_queue_handle_add(uint8_t channel,
 
 
 
-
-    rc = ss_rtos_task_add(  task_ptr,
-                            params,
-                            prio,
-                            task_name);
+    rc = ss_rtos_add_task_generic(task_ptr, params, prio, task_name, 1024);
     SS_HANDLE_ERROR_WITH_EXIT(rc);
 
     queue->insert_pos++;
@@ -465,6 +461,17 @@ SS_FEEDBACK ss_can_queue_read(struct SS_CAN_MSG_QUEUE *queue, struct SS_CAN_FRAM
     SS_FEEDBACK rc = SS_FEEDBACK_CAN_NO_MSG_RECEIVED;
 
     if (xQueueReceive(queue->queue, frame, (TickType_t) 0 ) == pdPASS) {
+        rc = SS_FEEDBACK_CAN_MSG_RECEIVED;
+    }
+
+    return rc;
+}
+
+SS_FEEDBACK ss_can_queue_has_msg(struct SS_CAN_MSG_QUEUE *queue) {
+    SS_FEEDBACK rc = SS_FEEDBACK_CAN_NO_MSG_RECEIVED;
+
+    UBaseType_t tmp = uxQueueMessagesWaiting(queue->queue);
+    if (tmp > 0) {
         rc = SS_FEEDBACK_CAN_MSG_RECEIVED;
     }
 

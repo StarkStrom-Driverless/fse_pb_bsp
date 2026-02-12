@@ -114,7 +114,7 @@ SS_FEEDBACK ss_can_queue_get(	uint8_t channel,
 								struct SS_CAN_MSG_QUEUE **queue);
 
 SS_FEEDBACK ss_can_queue_read(struct SS_CAN_MSG_QUEUE *queue, struct SS_CAN_FRAME* frame);
-
+SS_FEEDBACK ss_can_queue_has_msg(struct SS_CAN_MSG_QUEUE *queue);
 
 /***
  * 
