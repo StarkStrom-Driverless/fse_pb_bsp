@@ -467,6 +467,16 @@ SS_FEEDBACK ss_can_queue_read(struct SS_CAN_MSG_QUEUE *queue, struct SS_CAN_FRAM
     return rc;
 }
 
+SS_FEEDBACK ss_can_queue_read_limited(struct SS_CAN_MSG_QUEUE *queue, struct SS_CAN_FRAME* frame, TickType_t timeout ) {
+    SS_FEEDBACK rc = SS_FEEDBACK_CAN_NO_MSG_RECEIVED;
+
+    if (xQueueReceive(queue->queue, frame, (TickType_t) timeout ) == pdPASS) {
+        rc = SS_FEEDBACK_CAN_MSG_RECEIVED;
+    }
+
+    return rc;
+}
+
 SS_FEEDBACK ss_can_queue_has_msg(struct SS_CAN_MSG_QUEUE *queue) {
     SS_FEEDBACK rc = SS_FEEDBACK_CAN_NO_MSG_RECEIVED;
 

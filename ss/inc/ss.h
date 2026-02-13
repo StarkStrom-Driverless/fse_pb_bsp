@@ -27,5 +27,6 @@
 #include "ss_canboot.h"
 #include "ss_init.h"
 #include "ss_pid.h"
+#include "ss_watchdog.h"
 
 #endif
