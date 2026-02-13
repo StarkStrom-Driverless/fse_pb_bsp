@@ -27,7 +27,7 @@ SS_FEEDBACK ss_fsm_eventqueue_add(char* name) {
         SS_HANDLE_ERROR_WITH_EXIT(rc);
     }
 
-    queue = xQueueCreate(3, sizeof(int16_t));
+    queue = xQueueCreate(1, sizeof(int16_t));
     if (queue == NULL) {
         rc = SS_FEEDBACK_FSM_INIT_ERROR;
     }
@@ -85,7 +85,7 @@ SS_FEEDBACK ss_fsm_event_send_to(char *name, uint8_t value) {
     rc = ss_fsm_eventqueue_get(name, &queue);
     SS_HANDLE_ERROR_WITH_EXIT(rc);
 
-    BaseType_t tmp = xQueueSend(queue, &send_value, ( TickType_t ) 10);
+    BaseType_t tmp = xQueueOverwrite(queue, &send_value);
     if (tmp != pdPASS) {
         rc = SS_FEEDBACK_FSM_EVENT_SEND_FAILED;
     }
