@@ -731,6 +731,45 @@ SS_FEEDBACK ss_can_tod_update(uint8_t channel, uint32_t id) {
     return rc;
 }
 
+SS_FEEDBACK ss_can_tod_get(uint8_t channel, struct SS_TOD** tod_field) {
+    SS_FEEDBACK rc = SS_FEEDBACK_OK;
+
+    if (channel != 1 && channel != 2) {
+        rc = SS_FEEDBACK_ERROR;
+    }
+    SS_HANDLE_ERROR_WITH_EXIT(rc);
+
+    channel--;
+
+    *tod_field = &ss_can.channel[channel].tod;
+
+    return rc;
+}
+
+SS_FEEDBACK ss_can_tod_check_field(struct SS_TOD* tod_field, uint8_t cnt, uint32_t* id, bool* tod_detected) {
+    SS_FEEDBACK rc = SS_FEEDBACK_OK;
+
+    if (tod_field == NULL) {
+        rc = SS_FEEDBACK_ERROR;
+    }
+    return rc;
+
+    if (cnt > tod_field->msg_count) {
+        rc = SS_FEEDBACK_ERROR;
+    }
+    return rc;
+
+    if(id == NULL) {
+        *id = tod_field->msgs[cnt].std_id;
+    }
+    
+    if(tod_detected) {
+        *tod_detected = (tod_field->msgs[cnt].timeout_detected) ? true : false;
+    }
+    
+
+    return rc;
+}
 
 
 /***

@@ -147,6 +147,8 @@ SS_FEEDBACK ss_can_tod_init(uint8_t channel);
 SS_FEEDBACK ss_can_tod_add(uint8_t channel, uint32_t id, uint16_t reset_value);
 SS_FEEDBACK ss_can_tod_check();
 SS_FEEDBACK ss_can_tod_update(uint8_t channel, uint32_t id);
+SS_FEEDBACK ss_can_tod_get(uint8_t channel, struct SS_TOD** tod_field);
+SS_FEEDBACK ss_can_tod_check_field(struct SS_TOD* tod_field, uint8_t cnt, uint32_t* id, bool* tod_detected);
 
 
 /***
