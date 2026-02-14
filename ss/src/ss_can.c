@@ -752,18 +752,18 @@ SS_FEEDBACK ss_can_tod_check_field(struct SS_TOD* tod_field, uint8_t cnt, uint32
     if (tod_field == NULL) {
         rc = SS_FEEDBACK_ERROR;
     }
-    return rc;
+    SS_HANDLE_ERROR_WITH_EXIT(rc);
 
     if (cnt > tod_field->msg_count) {
         rc = SS_FEEDBACK_ERROR;
     }
-    return rc;
+    SS_HANDLE_ERROR_WITH_EXIT(rc);
 
-    if(id == NULL) {
+    if(id != NULL) {
         *id = tod_field->msgs[cnt].std_id;
     }
     
-    if(tod_detected) {
+    if(tod_detected != NULL) {
         *tod_detected = (tod_field->msgs[cnt].timeout_detected) ? true : false;
     }
     

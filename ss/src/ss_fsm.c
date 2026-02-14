@@ -30,7 +30,7 @@ SS_FEEDBACK ss_fsm_eventqueue_add(char* name) {
         SS_HANDLE_ERROR_WITH_EXIT(rc);
     }
 
-    queue = xQueueCreate(3, sizeof(int32_t));
+    queue = xQueueCreate(20, sizeof(int32_t));
     if (queue == NULL) {
         rc = SS_FEEDBACK_FSM_INIT_ERROR;
     }
@@ -39,7 +39,7 @@ SS_FEEDBACK ss_fsm_eventqueue_add(char* name) {
     shput(ss_fsm_eventqueue_hashmap, name, queue);
 
 
-    queue_prio = xQueueCreate(3, sizeof(int32_t));
+    queue_prio = xQueueCreate(20, sizeof(int32_t));
     if(queue_prio == NULL) {
         rc = SS_FEEDBACK_FSM_INIT_ERROR;
     }
