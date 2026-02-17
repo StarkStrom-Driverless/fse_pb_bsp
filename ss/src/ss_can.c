@@ -17,6 +17,13 @@
 #include "ss_can.h"
 #include "ss_feedback.h"
 
+
+#ifndef typeof
+#define typeof __typeof__
+#endif
+#include "stb_ds.h"
+
+
 #include "string.h"
 
 
@@ -294,8 +301,6 @@ SS_FEEDBACK ss_can_init(uint8_t can_interface_id, uint32_t baudrate) {
     rc = ss_can_filter_init(can_interface_id - 1);
     SS_HANDLE_ERROR_WITH_EXIT(rc);
 
-    rc = ss_can_queue_std_init(can_interface_id - 1);
-    SS_HANDLE_ERROR_WITH_EXIT(rc);
 
     ss_can.channel[can_interface_id - 1].enabled = true;
 
@@ -348,53 +353,6 @@ SS_FEEDBACK ss_can_send(uint8_t can_interface_id, struct SS_CAN_FRAME* can_frame
  * 
  */
 
-SS_FEEDBACK ss_can_queue_std_init(uint8_t channel) {
-    SS_FEEDBACK rc = SS_FEEDBACK_OK;
-
-    QueueHandle_t queue = xQueueCreate(10, sizeof(struct SS_CAN_FRAME));
-    if (queue == NULL) {
-        rc = SS_FEEDBACK_CAN_QUEUE_CREATE_ERROR;
-    }
-    ss_can.channel[channel].std_msg_queue.queue = queue;
-
-    return rc;
-}
-
-SS_FEEDBACK ss_can_queues_init(uint8_t channel) {
-    SS_FEEDBACK rc = SS_FEEDBACK_OK;
-
-    ss_can.channel[channel].msg_queues.insert_pos = 0;
-
-    return rc;
-}
-
-char* u32_to_str(uint32_t value, char *buffer) {
-    char *p = buffer;
-    // Sonderfall 0
-    if (value == 0) {
-        *p++ = '0';
-        *p = '\0';
-        return buffer;
-    }
-
-    // Ziffern rückwärts ins Bufferende schreiben
-    char *start = p;
-    while (value > 0) {
-        *p++ = '0' + (value % 10);
-        value /= 10;
-    }
-
-    // String umdrehen
-    *p = '\0';
-    for (char *q = start, *r = p - 1; q < r; q++, r--) {
-        char tmp = *q;
-        *q = *r;
-        *r = tmp;
-    }
-
-    return buffer;
-}
-
 SS_FEEDBACK ss_can_queue_handle_add(uint8_t channel, 
                                     uint32_t id, 
                                     TaskFunction_t task_ptr,
@@ -402,55 +360,85 @@ SS_FEEDBACK ss_can_queue_handle_add(uint8_t channel,
                                     void *const params, 
                                     uint8_t prio) 
 {
-    channel--;
-
     SS_FEEDBACK rc = SS_FEEDBACK_OK;
-    struct SS_CAN_MSG_QUEUES* queue = &ss_can.channel[channel].msg_queues;
-    QueueHandle_t tmp = NULL;
 
-
-    if (queue->insert_pos >= MAX_CAN_MSGS) {
-        rc = SS_FEEDBACK_CAN_QUEUE_OVERRUN;
-    }
+    SS_CAN_ADAPT_CHANNEL(channel, rc)
     SS_HANDLE_ERROR_WITH_EXIT(rc);
 
-    queue->queues[queue->insert_pos].id = id;
-
-    tmp = xQueueCreate(10, sizeof(struct SS_CAN_FRAME));
-    if (tmp == NULL) {
-        rc = SS_FEEDBACK_CAN_QUEUE_CREATE_ERROR;
-    }
+    rc = ss_can_queue_add(channel + 1, id);
     SS_HANDLE_ERROR_WITH_EXIT(rc);
-
-    queue->queues[queue->insert_pos].queue = tmp;
-
-
 
     rc = ss_rtos_add_task_generic(task_ptr, params, prio, task_name, 1024);
     SS_HANDLE_ERROR_WITH_EXIT(rc);
 
-    queue->insert_pos++;
+    return rc;
+}
 
-    rc = ss_can_filter_add_msg(++channel, id);
+SS_FEEDBACK ss_can_queue_add(uint8_t channel, uint32_t id) {
+    SS_FEEDBACK rc = SS_FEEDBACK_OK;
+    static bool init = false;
+
+    SS_CAN_ADAPT_CHANNEL(channel, rc)
+    SS_HANDLE_ERROR_WITH_EXIT(rc);
+
+    if (init == false) {
+        ss_can.channel[channel].msg_queues.map = NULL;
+        init = true;
+    }
+
+    QueueHandle_t queue = xQueueCreate(3, sizeof(struct SS_CAN_FRAME));
+    if (queue == NULL) {
+        rc = SS_FEEDBACK_CAN_QUEUE_CREATE_ERROR;
+    }
+    SS_HANDLE_ERROR_WITH_EXIT(rc);
+
+    struct SS_CAN_MSG_QUEUE value = {
+        .queue = queue
+    };
+    hmput(ss_can.channel[channel].msg_queues.map, id, value);
+
+    rc = ss_can_filter_add_msg(channel + 1, id);
+    SS_HANDLE_ERROR_WITH_EXIT(rc);
 
     return rc;
 }
 
+SS_FEEDBACK ss_can_queue_add_combined(uint8_t channel, uint32_t* ids, uint8_t len) {
+    SS_FEEDBACK rc = SS_FEEDBACK_OK;
+    uint32_t first_id;
+    QueueHandle_t queue;
+
+    SS_CAN_ADAPT_CHANNEL(channel, rc);
+    SS_HANDLE_ERROR_WITH_EXIT(rc);
+
+    if (len < 2) {
+        rc = SS_FEEDBACK_ERROR;
+    }
+    SS_HANDLE_ERROR_WITH_EXIT(rc);
+
+    first_id = ids[0];
+    rc = ss_can_queue_add(channel + 1, first_id);
+    SS_HANDLE_ERROR_WITH_EXIT(rc);
+    struct SS_CAN_MSG_QUEUE value = {
+        .queue = hmgetp(ss_can.channel[channel].msg_queues.map, first_id)->value.queue
+    };
+
+    for (int i = 1; i < len; i++) {
+        hmput(ss_can.channel[channel].msg_queues.map, ids[i], value);
+        ss_can_filter_add_msg(channel + 1, ids[i]);
+    }
+
+    return rc;
+}
 
 SS_FEEDBACK ss_can_queue_get(uint8_t channel, uint32_t id, struct SS_CAN_MSG_QUEUE **queue) {
     SS_FEEDBACK rc = SS_FEEDBACK_OK;
 
-    channel--;
+    SS_CAN_ADAPT_CHANNEL(channel, rc)
+    SS_HANDLE_ERROR_WITH_EXIT(rc);
 
-
-    for (uint8_t i = 0; i < ss_can.channel[channel].msg_queues.insert_pos; i++) {
-        if (ss_can.channel[channel].msg_queues.queues[i].id == id) {
-            *queue = &ss_can.channel[channel].msg_queues.queues[i];
-            return rc;
-        }
-    }
-
-    *queue = &ss_can.channel[channel].std_msg_queue;
+    struct SS_CAN_MSG_QUEUE* tmp_queue = &hmgetp(ss_can.channel[channel].msg_queues.map, id)->value;
+    *queue = tmp_queue;
 
     return rc;    
 }
@@ -461,16 +449,6 @@ SS_FEEDBACK ss_can_queue_read(struct SS_CAN_MSG_QUEUE *queue, struct SS_CAN_FRAM
     SS_FEEDBACK rc = SS_FEEDBACK_CAN_NO_MSG_RECEIVED;
 
     if (xQueueReceive(queue->queue, frame, (TickType_t) 0 ) == pdPASS) {
-        rc = SS_FEEDBACK_CAN_MSG_RECEIVED;
-    }
-
-    return rc;
-}
-
-SS_FEEDBACK ss_can_queue_read_limited(struct SS_CAN_MSG_QUEUE *queue, struct SS_CAN_FRAME* frame, TickType_t timeout ) {
-    SS_FEEDBACK rc = SS_FEEDBACK_CAN_NO_MSG_RECEIVED;
-
-    if (xQueueReceive(queue->queue, frame, (TickType_t) timeout ) == pdPASS) {
         rc = SS_FEEDBACK_CAN_MSG_RECEIVED;
     }
 

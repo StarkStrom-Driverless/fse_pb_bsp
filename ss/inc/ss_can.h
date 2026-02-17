@@ -22,6 +22,13 @@
 #define SS_FILTER_BANKS 14
 #define SS_FILTER_IDS (SS_FILTER_BANKS * 4)
 
+#define SS_CAN_ADAPT_CHANNEL(channel, rc) 	\
+	if (channel == 1 || channel == 2) { 	\
+		channel--;							\
+	} else 	{								\
+		rc = SS_FEEDBACK_ERROR;				\
+	}										\
+
 struct SS_CAN_FRAME {
 	uint32_t std_id;
 	uint32_t ext_id;
@@ -59,13 +66,15 @@ struct SS_TOD {
 
 struct SS_CAN_MSG_QUEUE {
 	QueueHandle_t queue;
-	TaskHandle_t task_handle;
-	uint32_t id;
+};
+
+struct SS_CAN_MSG_QUEUE_MAP {
+	uint32_t key;
+	struct SS_CAN_MSG_QUEUE value;
 };
 
 struct SS_CAN_MSG_QUEUES {
-	struct SS_CAN_MSG_QUEUE queues[MAX_CAN_MSGS];
-	uint8_t insert_pos;
+	struct SS_CAN_MSG_QUEUE_MAP* map;
 };
 
 struct CAN_Channel {
@@ -100,9 +109,8 @@ SS_FEEDBACK ss_can_send(uint8_t can_interface_id, struct SS_CAN_FRAME* can_frame
  *   CAN QUEUE FUNCTIONS
  * 
  */
-SS_FEEDBACK ss_can_queue_std_init(uint8_t channel);
-SS_FEEDBACK ss_can_queues_init(uint8_t channel);
-char* u32_to_str(uint32_t value, char *buffer);
+
+
 SS_FEEDBACK ss_can_queue_handle_add(uint8_t channel, 
                                     uint32_t id, 
                                     TaskFunction_t task_ptr,
@@ -115,7 +123,8 @@ SS_FEEDBACK ss_can_queue_get(	uint8_t channel,
 
 SS_FEEDBACK ss_can_queue_read(struct SS_CAN_MSG_QUEUE *queue, struct SS_CAN_FRAME* frame);
 SS_FEEDBACK ss_can_queue_has_msg(struct SS_CAN_MSG_QUEUE *queue);
-SS_FEEDBACK ss_can_queue_read_limited(struct SS_CAN_MSG_QUEUE *queue, struct SS_CAN_FRAME* frame, TickType_t timeout ) ;
+SS_FEEDBACK ss_can_queue_add(uint8_t channel, uint32_t id);
+SS_FEEDBACK ss_can_queue_add_combined(uint8_t channel, uint32_t* ids, uint8_t len);
 
 /***
  * 

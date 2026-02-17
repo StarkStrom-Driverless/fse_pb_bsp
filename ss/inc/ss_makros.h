@@ -38,4 +38,13 @@
     ((uint64_t)(a))
 #define SS_ETH_IP_GET_POS(ip, pos)      (0xFF & (a >> pos * 8))
 
+
+
+/**
+ * Arrays
+ */
+#define ARRAY_SIZE(a) sizeof(a)/sizeof(a[0])
+
+
+
 #endif
