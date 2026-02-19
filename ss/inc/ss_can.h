@@ -17,10 +17,14 @@
 #include "ss_clock.h"
 #include "ss_rtos.h"
 
+#define MAX_PARALLEL_QUEUE 2
 #define FIFO_SIZE 10
 #define MAX_CAN_MSGS 10
 #define SS_FILTER_BANKS 14
 #define SS_FILTER_IDS (SS_FILTER_BANKS * 4)
+
+#define SS_CAN_ID_PARALLEL(id, num) id | (num << 28)
+#define SS_CAN_ID_RAW(id) id & 0xFFFFFFF
 
 #define SS_CAN_ADAPT_CHANNEL(channel, rc) 	\
 	if (channel == 1 || channel == 2) { 	\
@@ -66,6 +70,7 @@ struct SS_TOD {
 
 struct SS_CAN_MSG_QUEUE {
 	QueueHandle_t queue;
+	int16_t parallel_queue_id;
 };
 
 struct SS_CAN_MSG_QUEUE_MAP {

@@ -53,6 +53,14 @@ void can_isr(uint8_t channel) {
             
             if (ss_can_queue_get(channel, can_frame.std_id, &queue) == SS_FEEDBACK_OK) {
                 xQueueSendFromISR(queue->queue, &can_frame, &xHigherPriorityTaskWoken);
+
+                for (uint16_t i = 1; i <= queue->parallel_queue_id; i++) {
+                    uint32_t id = SS_CAN_ID_PARALLEL(can_frame.std_id, i);
+
+                    if (ss_can_queue_get(channel, id, &queue) == SS_FEEDBACK_OK) {
+                        xQueueSendFromISR(queue->queue, &can_frame, &xHigherPriorityTaskWoken);
+                    }
+                }
             }
         }
         
@@ -286,7 +294,8 @@ SS_FEEDBACK ss_can_init(uint8_t can_interface_id, uint32_t baudrate) {
                             config.prescaler,
                             false,
                             false);
-    if (ret) return SS_FEEDBACK_CAN_INIT_ERROR;
+
+    if (ret) return ret;
 
     
 
@@ -377,6 +386,8 @@ SS_FEEDBACK ss_can_queue_handle_add(uint8_t channel,
 SS_FEEDBACK ss_can_queue_add(uint8_t channel, uint32_t id) {
     SS_FEEDBACK rc = SS_FEEDBACK_OK;
     static bool init = false;
+    struct SS_CAN_MSG_QUEUE* msg_queue;
+    int16_t parallel_queue_id = 0;
 
     SS_CAN_ADAPT_CHANNEL(channel, rc)
     SS_HANDLE_ERROR_WITH_EXIT(rc);
@@ -384,6 +395,17 @@ SS_FEEDBACK ss_can_queue_add(uint8_t channel, uint32_t id) {
     if (init == false) {
         ss_can.channel[channel].msg_queues.map = NULL;
         init = true;
+    } else {
+        rc = ss_can_queue_get(channel + 1, id, &msg_queue);
+        if (rc == SS_FEEDBACK_OK) {
+            if (msg_queue->parallel_queue_id < 15) {
+                msg_queue->parallel_queue_id++;
+                parallel_queue_id = msg_queue->parallel_queue_id;
+                id = (parallel_queue_id << 28) | id;
+            } else {
+                rc = SS_FEEDBACK_ERROR;
+            }
+        }
     }
 
     QueueHandle_t queue = xQueueCreate(3, sizeof(struct SS_CAN_FRAME));
@@ -393,11 +415,12 @@ SS_FEEDBACK ss_can_queue_add(uint8_t channel, uint32_t id) {
     SS_HANDLE_ERROR_WITH_EXIT(rc);
 
     struct SS_CAN_MSG_QUEUE value = {
-        .queue = queue
+        .queue = queue,
+        .parallel_queue_id = parallel_queue_id
     };
     hmput(ss_can.channel[channel].msg_queues.map, id, value);
 
-    rc = ss_can_filter_add_msg(channel + 1, id);
+    rc = ss_can_filter_add_msg(channel + 1, SS_CAN_ID_RAW(id));
     SS_HANDLE_ERROR_WITH_EXIT(rc);
 
     return rc;
@@ -420,7 +443,8 @@ SS_FEEDBACK ss_can_queue_add_combined(uint8_t channel, uint32_t* ids, uint8_t le
     rc = ss_can_queue_add(channel + 1, first_id);
     SS_HANDLE_ERROR_WITH_EXIT(rc);
     struct SS_CAN_MSG_QUEUE value = {
-        .queue = hmgetp(ss_can.channel[channel].msg_queues.map, first_id)->value.queue
+        .queue = hmgetp(ss_can.channel[channel].msg_queues.map, first_id)->value.queue,
+        .parallel_queue_id = 0
     };
 
     for (int i = 1; i < len; i++) {
@@ -439,6 +463,10 @@ SS_FEEDBACK ss_can_queue_get(uint8_t channel, uint32_t id, struct SS_CAN_MSG_QUE
 
     struct SS_CAN_MSG_QUEUE* tmp_queue = &hmgetp(ss_can.channel[channel].msg_queues.map, id)->value;
     *queue = tmp_queue;
+
+    if (tmp_queue == NULL) {
+        rc = SS_FEEDBACK_ERROR;
+    }
 
     return rc;    
 }

@@ -244,11 +244,22 @@ SS_FEEDBACK ss_eth_get(uint32_t port, struct SS_ETH_INTF** tmp) {
     return rc;
 }
 
-SS_FEEDBACK ss_eth_read(struct SS_ETH_INTF* tmp, struct SS_ETH_PAYLOAD** payload) {
+SS_FEEDBACK ss_eth_received_frame(struct SS_ETH_INTF* tmp) {
     SS_FEEDBACK rc = SS_FEEDBACK_ETH_NO_MSG_RECEIVED;
 
     uint16_t rx_size = getSn_RX_RSR(tmp->intf_number);
-    if (rx_size == 0) {
+    if (rx_size > 0) {
+        rc = SS_FEEDBACK_ETH_MSG_RECEIVED;
+    }
+
+    return rc;
+}
+
+SS_FEEDBACK ss_eth_read(struct SS_ETH_INTF* tmp, struct SS_ETH_PAYLOAD** payload) {
+    SS_FEEDBACK rc = SS_FEEDBACK_ETH_NO_MSG_RECEIVED;
+
+
+    if (getSn_RX_RSR(tmp->intf_number) == 0) {
         return rc;
     }
 
@@ -257,6 +268,8 @@ SS_FEEDBACK ss_eth_read(struct SS_ETH_INTF* tmp, struct SS_ETH_PAYLOAD** payload
                        tmp->payload->buffer_len,
                        tmp->payload->id.ip,
                        &tmp->payload->id.port);
+
+    tmp->payload->received_len = len;
 
     *payload = tmp->payload;
 
