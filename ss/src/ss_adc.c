@@ -35,7 +35,7 @@ void adc_isr(void) {
     else if (adc_eoc(ADC3)) {
         ss_adc.measurements[ss_adc.measurement_pos].measurement = adc_read_regular(ADC3);
     }
-    if (ss_adc_set_next_measurment_pos()) {
+    if (ss_adc_set_next_measurment_pos() == SS_FEEDBACK_OK) {
         ss_adc_start_channel(ss_adc.measurements[ss_adc.measurement_pos].pin_id);
     }
 }
