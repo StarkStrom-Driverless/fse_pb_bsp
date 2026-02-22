@@ -116,20 +116,14 @@ SS_FEEDBACK ss_can_send(uint8_t can_interface_id, struct SS_CAN_FRAME* can_frame
  */
 
 
-SS_FEEDBACK ss_can_queue_handle_add(uint8_t channel, 
-                                    uint32_t id, 
-                                    TaskFunction_t task_ptr,
-									char* task_name,
-                                    void *const params,
-                                    uint8_t prio);
 SS_FEEDBACK ss_can_queue_get(	uint8_t channel, 
 								uint32_t id, 
 								struct SS_CAN_MSG_QUEUE **queue);
 
 SS_FEEDBACK ss_can_queue_read(struct SS_CAN_MSG_QUEUE *queue, struct SS_CAN_FRAME* frame);
 SS_FEEDBACK ss_can_queue_has_msg(struct SS_CAN_MSG_QUEUE *queue);
-SS_FEEDBACK ss_can_queue_add(uint8_t channel, uint32_t id);
-SS_FEEDBACK ss_can_queue_add_combined(uint8_t channel, uint32_t* ids, uint8_t len);
+SS_FEEDBACK ss_can_queue_add(uint8_t channel, uint32_t id, struct SS_CAN_MSG_QUEUE **queue);
+SS_FEEDBACK ss_can_queue_add_combined(uint8_t channel, uint32_t* ids, uint8_t len, struct SS_CAN_MSG_QUEUE **queue);
 
 /***
  * 
