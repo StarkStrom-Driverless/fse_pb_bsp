@@ -19,7 +19,7 @@ void canboot_task(void *args) {
     struct SS_CAN_FRAME frame;
     struct SS_CAN_MSG_QUEUE* queue;
     uint8_t received_update = 0;
-    ss_can_queue_get(1, ss_canboot.can_id, &queue);
+    ss_can_queue_add(1, ss_canboot.can_id, &queue);
     for(;;) {
         if (ss_can_queue_read(queue, &frame) == SS_FEEDBACK_CAN_MSG_RECEIVED) {
             received_update = 1;
@@ -59,10 +59,10 @@ void canboot_task(void *args) {
     }
 }
 
-SS_FEEDBACK ss_canboot_init(uint32_t id, uint32_t offset) {
+SS_FEEDBACK ss_canboot_init(uint32_t id) {
     SS_FEEDBACK rc = SS_FEEDBACK_OK;
 
-    uint32_t* start_address = (uint32_t*)offset;
+    uint32_t* start_address = (uint32_t*)CAN_BOOT_OFFSET;
     
     if (*start_address != 0xFFFFFFFF) {
         flash_unlock();
@@ -77,7 +77,7 @@ SS_FEEDBACK ss_canboot_init(uint32_t id, uint32_t offset) {
 
 
     ss_canboot.can_id = id;
-    ss_canboot.flash_offset = offset;
+    ss_canboot.flash_offset = CAN_BOOT_OFFSET;
 
     if (ss_can.channel[0].enabled == false) {
         rc = ss_can_init(1, 1000000);
@@ -87,7 +87,7 @@ SS_FEEDBACK ss_canboot_init(uint32_t id, uint32_t offset) {
     rc = ss_can_filter_add_msg(1, id);
     SS_HANDLE_ERROR_WITH_EXIT(rc);
 
-    rc = ss_rtos_task_add(canboot_task, NULL, 3, "canboot_task");
+    rc = ss_rtos_task_add(canboot_task, NULL, 0, "canboot_task");
 
     return rc;
 }
