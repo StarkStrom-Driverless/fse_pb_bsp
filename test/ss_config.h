@@ -31,5 +31,6 @@
 #define COMPILE_SS_PWM          1
 #define COMPILE_SS_SPI          1
 #define COMPILE_SS_WATCHDOG     1
+#define COMPILE_SS_UART         1
 
 #endif
