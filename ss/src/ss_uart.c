@@ -23,10 +23,13 @@
 #include <libopencm3/stm32/usart.h>
 #include <libopencm3/cm3/nvic.h>
 
+
+
 #define SS_FEEDBACK_BASE                            SS_FEEDBACK_BASE_NOT_SET
 
 #if COMPILE_SS_UART
 
+struct SS_UART ss_uart = {0};
 
 /*
 *   UART ISR's
@@ -56,15 +59,34 @@ void usart6_isr(void) {
 
 
 void ss_usart_irq_generic(uint8_t interface) {
+    BaseType_t xHigherPriorityTaskWoken = pdFALSE;
     uint32_t uart_addr = 0;
 
     ss_uart_get_uart_addr_from_interface(interface, &uart_addr);
 
+    struct SS_UART_CHANNEL* channel;
+
     if (usart_get_flag(uart_addr, USART_SR_RXNE)) {
         uint8_t byte = usart_recv(uart_addr);
 
-        ss_led_dbg2_toggle();
+        if (ss_uart_queue_channel_get(interface, &channel) == SS_FEEDBACK_OK) {
+            xQueueSendFromISR(channel->rx.queue, &byte, &xHigherPriorityTaskWoken);
+        }
     }
+
+    if (usart_get_flag(uart_addr, USART_SR_TC)) {
+        if (ss_uart_queue_channel_get(interface, &channel) == SS_FEEDBACK_OK) {
+            uint8_t byte;
+            if (xQueueReceiveFromISR(channel->tx.queue, &byte, &xHigherPriorityTaskWoken) == pdPASS) {
+                usart_send(uart_addr, byte);
+            } else {
+                channel->tx.tx_busy = false;
+                usart_disable_tx_complete_interrupt(uart_addr);
+            }
+        }
+    }
+
+    portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
 }
 
 /**
@@ -150,6 +172,59 @@ SS_FEEDBACK ss_uart_get_nvic_irq_from_interface(uint8_t interface, uint32_t* irq
 }
 
 /**
+ * Free RTOS Stuff
+ */
+
+void ss_uart_queue_init() {
+    static uint8_t init = 0;
+    if (init == 1) {
+        return; 
+    }
+
+    for (int i = 0; i < SS_UART_CHANNEL_CNT; i++) {
+        ss_uart.channels[i].rx.enabled = false;
+        ss_uart.channels[i].tx.enabled = false;
+    }
+
+    init = 1;
+}
+
+SS_FEEDBACK ss_uart_queue_channel_get(uint8_t interface, struct SS_UART_CHANNEL** queue) {
+    SS_FEEDBACK rc = SS_FEEDBACK_OK;
+
+    if (interface == 0 || interface >= 7) {
+        rc = SS_FEEDBACK_ERROR;
+    } 
+    SS_HANDLE_ERROR_WITH_EXIT(rc);
+
+    *queue = &ss_uart.channels[interface-1];
+
+    return rc;
+}
+
+SS_FEEDBACK ss_uart_queue_add(uint8_t interface, uint32_t depth) {
+    SS_FEEDBACK rc = SS_FEEDBACK_OK;
+
+    struct SS_UART_CHANNEL* channel;
+
+    rc = ss_uart_queue_channel_get(interface, &channel);
+    SS_HANDLE_ERROR_WITH_EXIT(rc);
+
+
+    channel->tx.queue = xQueueCreate(depth, sizeof(uint8_t));
+    channel->tx.enabled = true;
+
+    channel->rx.queue = xQueueCreate(depth, sizeof(uint8_t));
+    channel->rx.enabled = true;
+
+     
+    return rc;
+}
+
+
+
+
+/**
  * USER FUNCTION
  */
 
@@ -206,6 +281,9 @@ SS_FEEDBACK ss_uart_init(uint8_t interface, uint32_t baudrate) {
 
     usart_enable(uart_addr);
 
+    ss_uart_queue_init();
+    ss_uart_queue_add(interface, 20);
+
     return rc;
 }
 
@@ -221,12 +299,45 @@ SS_FEEDBACK ss_uart_send(uint8_t interface, uint8_t* value, uint32_t len) {
     SS_FEEDBACK rc = SS_FEEDBACK_OK;
 
     uint32_t uart_addr = 0;
+    struct SS_UART_CHANNEL* channel;
 
     rc = ss_uart_get_uart_addr_from_interface(interface, &uart_addr);
     SS_HANDLE_ERROR_WITH_EXIT(rc);
 
+    rc = ss_uart_queue_channel_get(interface, &channel);
+    SS_HANDLE_ERROR_WITH_EXIT(rc);
+
     for (uint32_t i = 0; i < len; i++) {
-        usart_send_blocking(uart_addr, value[i]);
+        xQueueSend(channel->tx.queue, &value[i], portMAX_DELAY);
+    }
+
+    if (!channel->tx.tx_busy) {
+        uint8_t byte;
+        if (xQueueReceive(channel->tx.queue, &byte, 0) == pdPASS) {
+            channel->tx.tx_busy = true;
+            usart_send(uart_addr, byte);
+            usart_enable_tx_complete_interrupt(uart_addr);
+        }
+    }
+
+    return rc;
+}
+
+SS_FEEDBACK ss_uart_read(uint8_t interface, uint8_t* data) {
+    SS_FEEDBACK rc = SS_FEEDBACK_OK;
+
+    struct SS_UART_CHANNEL* channel;
+
+    rc = ss_uart_queue_channel_get(interface, &channel);
+    SS_HANDLE_ERROR_WITH_EXIT(rc);
+
+    if (channel->rx.enabled == false) {
+        return rc;
+    }
+
+    rc = SS_FEEDBACK_UART_MSG_RECEIVED;
+    if (xQueueReceive(channel->rx.queue, data, (TickType_t) 0) != pdPASS) {
+        rc = SS_FEEDBACK_CAN_NO_MSG_RECEIVED;
     }
 
     return rc;

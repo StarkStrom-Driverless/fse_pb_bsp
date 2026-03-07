@@ -17,6 +17,29 @@
 #include "ss_feedback.h"
 
 #include <inttypes.h>
+#include <stdbool.h>
+
+#include <FreeRTOS.h>
+#include <queue.h>
+
+#define SS_UART_CHANNEL_CNT 6
+
+struct SS_UART_CHANNEL_QUEUE {
+    QueueHandle_t queue;
+    bool enabled;
+    volatile bool tx_busy;
+};
+
+struct SS_UART_CHANNEL {
+    struct SS_UART_CHANNEL_QUEUE rx;
+    struct SS_UART_CHANNEL_QUEUE tx;
+};
+
+struct SS_UART {
+    struct SS_UART_CHANNEL channels[SS_UART_CHANNEL_CNT];
+};
+extern struct SS_UART ss_uart;
+
 
 #ifdef USE_PRIVATE
 void ss_usart_irq_generic(uint8_t interface);
@@ -42,10 +65,23 @@ SS_FEEDBACK ss_uart_get_uart_addr_from_interface(uint8_t interface, uint32_t* ua
 SS_FEEDBACK ss_uart_get_nvic_irq_from_interface(uint8_t interface, uint32_t* irq);
 #endif
 
+#ifdef USE_PRIVATE
+void ss_uart_queue_init();
+#endif
+
+#ifdef USE_PRIVATE
+SS_FEEDBACK ss_uart_queue_channel_get(uint8_t interface, struct SS_UART_CHANNEL** queue);
+#endif
+
+#ifdef USE_PRIVATE
+SS_FEEDBACK ss_uart_queue_add(uint8_t interface, uint32_t depth);
+#endif
+
 
 SS_FEEDBACK ss_uart_init(uint8_t interface, uint32_t baudrate);
 SS_FEEDBACK ss_uart_send_str(uint8_t interface, char* str);
 SS_FEEDBACK ss_uart_send(uint8_t interface, uint8_t* value, uint32_t len);
+SS_FEEDBACK ss_uart_read(uint8_t interface, uint8_t* data);
 
 #endif
 

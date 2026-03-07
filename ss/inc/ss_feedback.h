@@ -91,6 +91,10 @@ typedef uint32_t SS_FEEDBACK;
 #define SS_FEEDBACK_FSM_NOT_RECEIVED_EVENT          (SS_FEEDBACK)0xcb
 #define SS_FEEDBACK_FSM_EVENT_SEND_FAILED           (SS_FEEDBACK)0xcc
 
+#define SS_FEEDBACK_UART_INIT_ERROR                 (SS_FEEDBACK)0xd0
+#define SS_FEEDBACK_UART_MSG_RECEIVED               (SS_FEEDBACK)0xd1
+#define SS_FEEDBACK_UART_MSG_NOT_RECEIVED           (SS_FEEDBACK)0xd2
+
 //#define SS_FEEDBACK_BASE                            SS_FEEDBACK_BASE_NOT_SET
 
 #define SS_HANDLE_INIT(func)                        if (func != SS_FEEDBACK_OK) ss_init_error(func)
