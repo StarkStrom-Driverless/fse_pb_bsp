@@ -53,6 +53,9 @@
 //! THE POSSIBILITY OF SUCH DAMAGE.
 //
 //*****************************************************************************
+#include "ss_config.h"
+
+#if COMPILE_SS_ETH
 #include "socket.h"
 
 //M20150401 : Typing Error
@@ -1409,3 +1412,5 @@ int16_t peeksockmsg(uint8_t sn, uint8_t* submsg, uint16_t subsize)
 
 #endif 
 
+
+#endif // COMPILE_SS_ETH

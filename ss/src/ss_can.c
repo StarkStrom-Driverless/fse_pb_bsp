@@ -7,6 +7,10 @@
  * All rights reserved.
  */
 
+#define USE_PRIVATE
+#include "ss_config.h"
+
+#if COMPILE_SS_CAN
 #include <libopencm3/stm32/can.h>
 #include <libopencm3/cm3/nvic.h>
 #include <libopencm3/stm32/gpio.h>
@@ -834,3 +838,4 @@ void ss_can_frame_reset(struct SS_CAN_FRAME *msg) {
     msg->data[6] = 0;
     msg->data[7] = 0;
 }
+#endif // COMPILE_SS_CAN

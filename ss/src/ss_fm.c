@@ -7,6 +7,10 @@
  * All rights reserved.
  */
 
+#define USE_PRIVATE
+#include "ss_config.h"
+
+#if COMPILE_SS_FM
 #include "ss_fm.h"
 #include "ss_pwm.h"
 #include "ss_gpio.h"
@@ -524,3 +528,4 @@ void tim2_isr(void) {
 void tim1_cc_isr(void) {
     ss_fm_isr(TIM1, 0);
 }
+#endif // COMPILE_SS_FM

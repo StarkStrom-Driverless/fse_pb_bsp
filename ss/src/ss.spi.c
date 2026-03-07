@@ -7,6 +7,10 @@
  * All rights reserved.
  */
 
+#define USE_PRIVATE
+#include "ss_config.h"
+
+#if COMPILE_SS_SPI
 #include <inttypes.h>
 #include <libopencm3/stm32/gpio.h>
 #include <libopencm3/stm32/rcc.h>
@@ -189,3 +193,5 @@ int8_t ss_spi_rxtx(uint8_t spi_interface_id, uint8_t* rx, uint8_t* tx, uint16_t 
 
     return 0;
 }
+
+#endif // COMPILE_SS_SPI

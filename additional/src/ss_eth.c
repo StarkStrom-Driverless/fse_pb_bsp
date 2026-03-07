@@ -1,3 +1,7 @@
+#define USE_PRIVATE
+#include "ss_config.h"
+
+#if COMPILE_SS_ETH
 #include "ss_eth.h"
 
 #include <stddef.h>
@@ -335,3 +339,5 @@ SS_FEEDBACK ss_eth_send(struct SS_ETH_INTF* tmp, struct SS_ETH_PAYLOAD* payload)
     }
     return rc;
 }
+
+#endif // COMPILE_SS_ETH

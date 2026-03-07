@@ -1,3 +1,7 @@
+#include "ss_config.h"
+
+#if COMPILE_SS_ETH
+
 #ifndef _WZ5500_WRAPPER_H_
 #define _WZ5500_WRAPPER_H_
 
@@ -17,8 +21,6 @@
 #define SS_ETH_MAX_PORTS 8
 
 #define SS_ETH_PAYLOAD_BUFFER_SIZE 500
-
-
 
 struct SS_ETH_SENDER {
     uint8_t ip[4];
@@ -53,8 +55,6 @@ struct SS_ETH_INTF {
     struct SS_ETH_PAYLOAD* payload;
 };
 
-
-
 struct SS_ETH_PORTS {
     struct SS_ETH_INTF port[SS_ETH_MAX_PORTS];
     uint8_t insert_pos;
@@ -65,7 +65,7 @@ struct WZ5500 {
     uint16_t rst_pin_id;
     uint32_t baudrate;
 
-    struct SS_ETH_INTF_CONF intf_conf; 
+    struct SS_ETH_INTF_CONF intf_conf;
 
     struct SS_ETH_PORTS ports;
 };
@@ -73,29 +73,42 @@ struct WZ5500 {
 extern struct WZ5500 ss_eth;
 
 /***
- * 
+ *
  * SUPPORT FUNCTIONS
- * 
+ *
  */
+#ifdef USE_PRIVATE
 SS_FEEDBACK ss_eth_cpy_ip_style(uint8_t* dest, uint64_t source, uint8_t len);
+#endif
+#ifdef USE_PRIVATE
 SS_FEEDBACK ss_eth_init_wiz();
+#endif
 
 /***
- * 
+ *
  * USER FUNCTIONS FOR INIT
- * 
+ *
  */
 SS_FEEDBACK ss_eth_init(uint32_t ip, uint32_t sn, uint64_t mac, uint32_t gw);
+
+#ifdef USE_PRIVATE
 SS_FEEDBACK ss_eth_set_gw(uint32_t gw);
+#endif
+#ifdef USE_PRIVATE
 SS_FEEDBACK ss_eth_set_nm(uint32_t nm);
+#endif
+#ifdef USE_PRIVATE
 SS_FEEDBACK ss_eth_set_dns(uint32_t dns);
+#endif
+#ifdef USE_PRIVATE
 SS_FEEDBACK ss_eth_set_mac(uint64_t mac);
+#endif
 SS_FEEDBACK ss_eth_socket_udp_add(uint32_t port, struct SS_ETH_PAYLOAD* payload);
 
 /***
- * 
+ *
  * USER FUNCTIONS FOR PROCESS
- * 
+ *
  */
 SS_FEEDBACK ss_eth_get(uint32_t port, struct SS_ETH_INTF** tmp);
 SS_FEEDBACK ss_eth_read(struct SS_ETH_INTF* tmp, struct SS_ETH_PAYLOAD** payload);
@@ -103,4 +116,6 @@ SS_FEEDBACK ss_eth_read_filtered(struct SS_ETH_INTF* tmp, struct SS_ETH_PAYLOAD*
 SS_FEEDBACK ss_eth_send(struct SS_ETH_INTF* tmp, struct SS_ETH_PAYLOAD* payload);
 SS_FEEDBACK ss_eth_received_frame(struct SS_ETH_INTF* tmp);
 
-#endif
+#endif // _WZ5500_WRAPPER_H_
+
+#endif // COMPILE_SS_ETH

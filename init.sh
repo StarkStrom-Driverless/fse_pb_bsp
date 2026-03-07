@@ -7,6 +7,7 @@ cp -n test/main.c ..
 cp -n test/Makefile ..
 cp -n test/.gitignore ..
 cp -n test/FreeRTOSConfig.h ../usr/inc
+cp -n test/ss_config ../usr/inc
  
 
 cd libopencm3

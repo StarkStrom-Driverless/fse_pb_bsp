@@ -7,6 +7,10 @@
  * All rights reserved.
  */
 
+#define USE_PRIVATE
+#include "ss_config.h"
+
+#if COMPILE_SS_RTOS
 #include "ss_rtos.h"
 #include "ss_fsm.h"
 
@@ -64,3 +68,4 @@ void ss_rtos_delay_ms(const uint32_t delay_ms) {
 void ss_rtos_delay_s(const uint32_t delay_s) {
     vTaskDelay(pdMS_TO_TICKS(delay_s * 1000));
 }
+#endif // COMPILE_SS_RTOS

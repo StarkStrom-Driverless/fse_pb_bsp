@@ -7,6 +7,10 @@
  * All rights reserved.
  */
 
+#define USE_PRIVATE
+#include "ss_config.h"
+
+#if COMPILE_SS_CLOCK
 #include "ss_clock.h"
 #include "ss_gpio.h"
 #include "ss_makros.h"
@@ -174,3 +178,5 @@ SS_FEEDBACK ss_clock_fm(uint16_t pin_id, uint32_t *frequency) {
 
     return rc;
 }
+
+#endif // COMPILE_SS_CLOCK

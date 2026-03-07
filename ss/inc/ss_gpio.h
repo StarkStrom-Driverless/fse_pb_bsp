@@ -2,10 +2,14 @@
  * @author  Maximilian Hoffmann <m.hoffmann@startstrom.de>
  * @company Startstrom Augsburg
  * @mail    <maximilian.hoffmann@startstrom-augsburg.de>
- * 
+ *
  * Copyright (c) 2025 Startstrom Augsburg
  * All rights reserved.
  */
+
+#include "ss_config.h"
+
+#if COMPILE_SS_GPIO
 
 #ifndef __SS_GPIO_H__
 #define __SS_GPIO_H__
@@ -19,7 +23,9 @@
 enum { SS_GPIO_MODE_INPUT, SS_GPIO_MODE_OUTPUT, SS_GPIO_MODE_AF, SS_GPIO_MODE_ANALOG, SS_GPIO_MODE_PWM, SS_GPIO_MODE_INPUT_PU, SS_GPIO_MODE_INPUT_PD};
 enum {SS_GPIO_OFF, SS_GPIO_ON, SS_GPIO_TOGGLE};
 
+#ifdef USE_PRIVATE
 SS_FEEDBACK ss_enable_rcc_from_id(uint16_t pin_id);
+#endif
 
 SS_FEEDBACK ss_io_init(uint16_t pin_id, uint8_t mode);
 
@@ -27,7 +33,6 @@ void ss_io_write(uint16_t pin_id, uint8_t value);
 
 uint16_t ss_io_read(uint16_t pin_id);
 
+#endif // __SS_GPIO_H__
 
-
-#endif
-
+#endif // COMPILE_SS_GPIO

@@ -7,6 +7,10 @@
  * All rights reserved.
  */
 
+#define USE_PRIVATE
+#include "ss_config.h"
+
+#if COMPILE_SS_PWM
 #include <libopencm3/stm32/rcc.h>
 #include <libopencm3/stm32/gpio.h>
 #include <libopencm3/stm32/timer.h>
@@ -442,3 +446,4 @@ SS_FEEDBACK ss_pwm_write_highres(uint16_t pin_id, uint32_t value) {
     
     return SS_FEEDBACK_OK;
 }
+#endif // COMPILE_SS_PWM

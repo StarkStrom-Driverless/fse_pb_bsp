@@ -2,10 +2,14 @@
  * @author  Maximilian Hoffmann <m.hoffmann@startstrom.de>
  * @company Startstrom Augsburg
  * @mail    <maximilian.hoffmann@startstrom-augsburg.de>
- * 
+ *
  * Copyright (c) 2025 Startstrom Augsburg
  * All rights reserved.
  */
+
+#include "ss_config.h"
+
+#if COMPILE_SS_CAN
 
 #ifndef _SS_CAN_H_
 #define _SS_CAN_H_
@@ -92,7 +96,7 @@ struct CAN_Channel {
 
 
 struct SS_CAN {
-	struct CAN_Channel channel[2]; 
+	struct CAN_Channel channel[2];
 };
 
 extern struct SS_CAN ss_can;
@@ -100,73 +104,126 @@ extern struct SS_CAN ss_can;
 
 
 /***
- * 
+ *
  *  CAN USERSPACE FUNCTIONS
- * 
+ *
  */
+
 SS_FEEDBACK ss_can_init(uint8_t can_interface_id, uint32_t baudrate);
+
 SS_FEEDBACK ss_can_read(uint8_t can_interface_id, struct SS_CAN_FRAME* can_frame);
+
 SS_FEEDBACK ss_can_send(uint8_t can_interface_id, struct SS_CAN_FRAME* can_frame);
 
 
+
 /***
- * 
+ *
  *   CAN QUEUE FUNCTIONS
- * 
+ *
  */
 
-
-SS_FEEDBACK ss_can_queue_get(	uint8_t channel, 
-								uint32_t id, 
+#ifdef USE_PRIVATE
+SS_FEEDBACK ss_can_queue_get(	uint8_t channel,
+								uint32_t id,
 								struct SS_CAN_MSG_QUEUE **queue);
-
-SS_FEEDBACK ss_can_queue_read(struct SS_CAN_MSG_QUEUE *queue, struct SS_CAN_FRAME* frame);
-SS_FEEDBACK ss_can_queue_has_msg(struct SS_CAN_MSG_QUEUE *queue);
-SS_FEEDBACK ss_can_queue_add(uint8_t channel, uint32_t id, struct SS_CAN_MSG_QUEUE **queue);
-SS_FEEDBACK ss_can_queue_add_combined(uint8_t channel, uint32_t* ids, uint8_t len, struct SS_CAN_MSG_QUEUE **queue);
-
-/***
- * 
- *      CAN HELPER FUNCTIONS
- * 
- */
-SS_FEEDBACK ss_can_enable_rcc(uint8_t can_interface_id);
-SS_FEEDBACK ss_can_enable_gpios(uint8_t can_interface_id);
-SS_FEEDBACK ss_can_nvic_init(uint8_t can_interface_id, uint8_t prio);
-uint32_t ss_can_get_port_from_id(uint8_t can_interface_id);
-uint32_t ss_can_get_fifo_from_channel(uint8_t channel);
-
-/***
- * 
- *  CAN FRAME MANUPULATION FUNCTIONS
- * 
- */
-void ss_can_frame_set_common(struct SS_CAN_FRAME *msg, uint32_t id, uint8_t dlc);
-void ss_can_frame_set_signal(struct SS_CAN_FRAME *msg, uint8_t start_bit, uint8_t length, uint64_t value);
-uint64_t ss_can_frame_get_signal(struct SS_CAN_FRAME* msg, uint8_t start_bit, uint8_t length);
-void ss_can_frame_reset(struct SS_CAN_FRAME *msg);
-
-/***
- * 
- *  CAN FRAME TIMEOUT DETECTION FUNCTIONS
- * 
- */
-SS_FEEDBACK ss_can_tod_init(uint8_t channel);
-SS_FEEDBACK ss_can_tod_add(uint8_t channel, uint32_t id, uint16_t reset_value);
-SS_FEEDBACK ss_can_tod_check();
-SS_FEEDBACK ss_can_tod_update(uint8_t channel, uint32_t id);
-SS_FEEDBACK ss_can_tod_get(uint8_t channel, struct SS_TOD** tod_field);
-SS_FEEDBACK ss_can_tod_check_field(struct SS_TOD* tod_field, uint8_t cnt, uint32_t* id, bool* tod_detected);
-
-
-/***
- * 
- *  CAN FILTER ID HANDLING
- * 
- */
-SS_FEEDBACK ss_can_filter_init(uint8_t channel);
-SS_FEEDBACK ss_can_filter_add_msg_11(uint8_t channel, uint16_t id);
-SS_FEEDBACK ss_can_filter_add_msg_28(uint8_t channel, uint32_t ide);
-SS_FEEDBACK ss_can_filter_add_msg(uint8_t channel, uint32_t id);
-
 #endif
+
+#ifdef USE_PRIVATE
+SS_FEEDBACK ss_can_queue_read(struct SS_CAN_MSG_QUEUE *queue, struct SS_CAN_FRAME* frame);
+#endif
+#ifdef USE_PRIVATE
+SS_FEEDBACK ss_can_queue_has_msg(struct SS_CAN_MSG_QUEUE *queue);
+#endif
+
+SS_FEEDBACK ss_can_queue_add(uint8_t channel, uint32_t id, struct SS_CAN_MSG_QUEUE **queue);
+
+#ifdef USE_PRIVATE
+SS_FEEDBACK ss_can_queue_add_combined(uint8_t channel, uint32_t* ids, uint8_t len, struct SS_CAN_MSG_QUEUE **queue);
+#endif
+
+/***
+ *
+ *      CAN HELPER FUNCTIONS
+ *
+ */
+#ifdef USE_PRIVATE
+SS_FEEDBACK ss_can_enable_rcc(uint8_t can_interface_id);
+#endif
+#ifdef USE_PRIVATE
+SS_FEEDBACK ss_can_enable_gpios(uint8_t can_interface_id);
+#endif
+#ifdef USE_PRIVATE
+SS_FEEDBACK ss_can_nvic_init(uint8_t can_interface_id, uint8_t prio);
+#endif
+#ifdef USE_PRIVATE
+uint32_t ss_can_get_port_from_id(uint8_t can_interface_id);
+#endif
+#ifdef USE_PRIVATE
+uint32_t ss_can_get_fifo_from_channel(uint8_t channel);
+#endif
+
+/***
+ *
+ *  CAN FRAME MANUPULATION FUNCTIONS
+ *
+ */
+#ifdef USE_PRIVATE
+void ss_can_frame_set_common(struct SS_CAN_FRAME *msg, uint32_t id, uint8_t dlc);
+#endif
+#ifdef USE_PRIVATE
+void ss_can_frame_set_signal(struct SS_CAN_FRAME *msg, uint8_t start_bit, uint8_t length, uint64_t value);
+#endif
+#ifdef USE_PRIVATE
+uint64_t ss_can_frame_get_signal(struct SS_CAN_FRAME* msg, uint8_t start_bit, uint8_t length);
+#endif
+#ifdef USE_PRIVATE
+void ss_can_frame_reset(struct SS_CAN_FRAME *msg);
+#endif
+
+/***
+ *
+ *  CAN FRAME TIMEOUT DETECTION FUNCTIONS
+ *
+ */
+#ifdef USE_PRIVATE
+SS_FEEDBACK ss_can_tod_init(uint8_t channel);
+#endif
+#ifdef USE_PRIVATE
+SS_FEEDBACK ss_can_tod_add(uint8_t channel, uint32_t id, uint16_t reset_value);
+#endif
+#ifdef USE_PRIVATE
+SS_FEEDBACK ss_can_tod_check();
+#endif
+#ifdef USE_PRIVATE
+SS_FEEDBACK ss_can_tod_update(uint8_t channel, uint32_t id);
+#endif
+#ifdef USE_PRIVATE
+SS_FEEDBACK ss_can_tod_get(uint8_t channel, struct SS_TOD** tod_field);
+#endif
+#ifdef USE_PRIVATE
+SS_FEEDBACK ss_can_tod_check_field(struct SS_TOD* tod_field, uint8_t cnt, uint32_t* id, bool* tod_detected);
+#endif
+
+
+/***
+ *
+ *  CAN FILTER ID HANDLING
+ *
+ */
+#ifdef USE_PRIVATE
+SS_FEEDBACK ss_can_filter_init(uint8_t channel);
+#endif
+#ifdef USE_PRIVATE
+SS_FEEDBACK ss_can_filter_add_msg_11(uint8_t channel, uint16_t id);
+#endif
+#ifdef USE_PRIVATE
+SS_FEEDBACK ss_can_filter_add_msg_28(uint8_t channel, uint32_t ide);
+#endif
+#ifdef USE_PRIVATE
+SS_FEEDBACK ss_can_filter_add_msg(uint8_t channel, uint32_t id);
+#endif
+
+#endif // _SS_CAN_H_
+
+#endif // COMPILE_SS_CAN

@@ -7,6 +7,10 @@
  * All rights reserved.
  */
 
+#define USE_PRIVATE
+#include "ss_config.h"
+
+#if COMPILE_SS_GPIO
 #include "ss_gpio.h"
 #include <libopencm3/stm32/rcc.h>
 #include <libopencm3/stm32/gpio.h>
@@ -61,3 +65,4 @@ void ss_io_write(uint16_t pin_id, uint8_t value) {
 uint16_t ss_io_read(uint16_t pin_id) {
     return gpio_get(GPIO(PINBANK(pin_id)), BIT(PINNO(pin_id)));
 }
+#endif // COMPILE_SS_GPIO

@@ -1,3 +1,7 @@
+#include "ss_config.h"
+
+#if COMPILE_SS_WATCHDOG
+
 #ifndef _SS_WATCHDOG_H_
 #define _SS_WATCHDOG_H_
 
@@ -5,6 +9,8 @@
 #include <inttypes.h>
 
 SS_FEEDBACK ss_watchdog_init(uint16_t period_ms);
-SS_FEEDBACK ss_watchdog_feed() ;
+SS_FEEDBACK ss_watchdog_feed();
 
-#endif
+#endif // _SS_WATCHDOG_H_
+
+#endif // COMPILE_SS_WATCHDOG

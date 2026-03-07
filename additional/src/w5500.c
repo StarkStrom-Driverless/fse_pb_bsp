@@ -51,6 +51,9 @@
 //! THE POSSIBILITY OF SUCH DAMAGE.
 //
 //*****************************************************************************
+#include "ss_config.h"
+
+#if COMPILE_SS_ETH
 //#include <stdio.h>
 #include "W5500/w5500.h"
 
@@ -265,3 +268,5 @@ void wiz_recv_ignore(uint8_t sn, uint16_t len)
 }
 
 #endif
+
+#endif // COMPILE_SS_ETH

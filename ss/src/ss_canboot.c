@@ -7,6 +7,10 @@
  * All rights reserved.
  */
 
+#define USE_PRIVATE
+#include "ss_config.h"
+
+#if COMPILE_SS_CANBOOT
 #include "ss_canboot.h"
 #include "ss_can.h"
 #include <libopencm3/stm32/flash.h>
@@ -93,3 +97,4 @@ SS_FEEDBACK ss_canboot_init(uint32_t id) {
 
     return rc;
 }
+#endif // COMPILE_SS_CANBOOT

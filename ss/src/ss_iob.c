@@ -7,6 +7,10 @@
  * All rights reserved.
  */
 
+#define USE_PRIVATE
+#include "ss_config.h"
+
+#if COMPILE_SS_IOB
 #include <libopencm3/stm32/gpio.h>
 #include <libopencm3/stm32/rcc.h>
 #include <libopencm3/stm32/exti.h>
@@ -273,3 +277,4 @@ void exti15_10_isr(void) {
         ss_iob.iobs[exti].value = 1;
     }
 }
+#endif // COMPILE_SS_IOB

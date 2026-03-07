@@ -7,6 +7,10 @@
  * All rights reserved.
  */
 
+#define USE_PRIVATE
+#include "ss_config.h"
+
+#if COMPILE_SS_LEDS
 #include "ss_gpio.h"
 #include "ss_leds.h"
 
@@ -86,3 +90,4 @@ void ss_led_dbg2_off(void) {
 void ss_led_dbg2_toggle(void) {
     ss_io_write(PIN('C',5), SS_GPIO_TOGGLE);
 }
+#endif // COMPILE_SS_LEDS

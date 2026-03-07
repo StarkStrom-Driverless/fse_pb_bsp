@@ -1,3 +1,7 @@
+#define USE_PRIVATE
+#include "ss_config.h"
+
+#if COMPILE_SS_FSM
 #include "ss_fsm.h"
 
 #ifndef typeof
@@ -181,3 +185,5 @@ SS_FEEDBACK ss_fsm_event_add(int32_t event_code) {
     return rc;
 }
 
+
+#endif // COMPILE_SS_FSM

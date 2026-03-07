@@ -7,6 +7,10 @@
  * All rights reserved.
  */
 
+#define USE_PRIVATE
+#include "ss_config.h"
+
+#if COMPILE_SS_ADC
 #include <libopencm3/stm32/rcc.h>
 #include <libopencm3/stm32/gpio.h>
 #include <libopencm3/stm32/adc.h>
@@ -295,3 +299,5 @@ SS_FEEDBACK ss_adc_start_channel(uint16_t pin_id) {
 
 
 
+
+#endif // COMPILE_SS_ADC

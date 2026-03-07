@@ -1,3 +1,7 @@
+#define USE_PRIVATE
+#include "ss_config.h"
+
+#if COMPILE_SS_WATCHDOG
 #include "ss_watchdog.h"
 #include <libopencm3/stm32/iwdg.h>
 
@@ -20,3 +24,4 @@ SS_FEEDBACK ss_watchdog_feed() {
 
     return rc;
 }
+#endif // COMPILE_SS_WATCHDOG

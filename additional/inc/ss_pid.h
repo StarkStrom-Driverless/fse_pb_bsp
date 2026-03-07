@@ -1,3 +1,7 @@
+#include "ss_config.h"
+
+#if COMPILE_SS_PID
+
 #ifndef _SS_PID_H_
 #define _SS_PID_H_
 
@@ -14,7 +18,7 @@ struct SS_PID {
 	/* Output limits */
 	float ss_pid_out_min;
 	float ss_pid_out_max;
-	
+
 	/* Integrator limits */
 	float ss_pid_integrator_min;
 	float ss_pid_integrator_max;
@@ -36,6 +40,9 @@ struct SS_PID {
 };
 
 void ss_pid_init(struct SS_PID* pid);
+
 void ss_pid_update(struct SS_PID* pid, float setpoint, float measurment, float* output);
 
-#endif
+#endif // _SS_PID_H_
+
+#endif // COMPILE_SS_PID

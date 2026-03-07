@@ -1,3 +1,7 @@
+#define USE_PRIVATE
+#include "ss_config.h"
+
+#if COMPILE_SS_PID
 #include "ss_pid.h"
 
 void ss_pid_init(struct SS_PID* pid) {
@@ -81,3 +85,4 @@ void ss_pid_update(struct SS_PID* pid, float setpoint, float measurment, float* 
 	/* Return controller output */
     *output = pid->ss_pid_out;
 }
+#endif // COMPILE_SS_PID

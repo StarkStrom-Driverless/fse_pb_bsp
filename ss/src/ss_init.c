@@ -7,6 +7,10 @@
  * All rights reserved.
  */
 
+#define USE_PRIVATE
+#include "ss_config.h"
+
+#if COMPILE_SS_INIT
 #include "ss_init.h"
 #include "ss_leds.h"
 #include "ss_clock.h"
@@ -23,3 +27,4 @@ inline SS_FEEDBACK ss_init() {
 
     return SS_FEEDBACK_OK;
 }
+#endif // COMPILE_SS_INIT

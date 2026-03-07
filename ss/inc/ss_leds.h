@@ -2,16 +2,21 @@
  * @author  Maximilian Hoffmann <m.hoffmann@startstrom.de>
  * @company Startstrom Augsburg
  * @mail    <maximilian.hoffmann@startstrom-augsburg.de>
- * 
+ *
  * Copyright (c) 2025 Startstrom Augsburg
  * All rights reserved.
  */
 
+#include "ss_config.h"
+
+#if COMPILE_SS_LEDS
+
 #ifndef _SS_LEDS_H_
 #define _SS_LEDS_H_
 
-
+#ifdef USE_PRIVATE
 int8_t ss_leds_init(void);
+#endif
 
 void ss_led_error_on(void);
 void ss_led_error_off(void);
@@ -29,5 +34,6 @@ void ss_led_dbg2_on(void);
 void ss_led_dbg2_off(void);
 void ss_led_dbg2_toggle(void);
 
+#endif // _SS_LEDS_H_
 
-#endif
+#endif // COMPILE_SS_LEDS

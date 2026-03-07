@@ -49,6 +49,9 @@
 //
 //*****************************************************************************/
 //A20140501 : for use the type - ptrdiff_t
+#include "ss_config.h"
+
+#if COMPILE_SS_ETH
 #include <stddef.h>
 //
 
@@ -1500,3 +1503,5 @@ void wizchip_gettimeout(wiz_NetTimeout* nettime)
 }
 #endif
 
+
+#endif // COMPILE_SS_ETH

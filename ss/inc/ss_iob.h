@@ -2,10 +2,14 @@
  * @author  Maximilian Hoffmann <m.hoffmann@startstrom.de>
  * @company Startstrom Augsburg
  * @mail    <maximilian.hoffmann@startstrom-augsburg.de>
- * 
+ *
  * Copyright (c) 2025 Startstrom Augsburg
  * All rights reserved.
  */
+
+#include "ss_config.h"
+
+#if COMPILE_SS_IOB
 
 #ifndef _SS_IOB_H_
 #define _SS_IOB_H_
@@ -30,23 +34,46 @@ struct IOB {
 
 extern struct IOB ss_iob;
 
-
 SS_FEEDBACK ss_iob_add(uint16_t pin_id, uint8_t polarity);
+
+#ifdef USE_PRIVATE
 SS_FEEDBACK get_port_from_pin_id(uint16_t pin_id, uint32_t* cm3_port);
+#endif
+#ifdef USE_PRIVATE
 SS_FEEDBACK get_nvic_exit_from_pin_id(uint16_t pin_id, uint32_t* nvic_exti);
+#endif
+#ifdef USE_PRIVATE
 SS_FEEDBACK get_exti_from_pin_id(uint16_t pin_id, uint32_t* exti);
+#endif
 
 uint8_t ss_iob_get(uint16_t pin_id);
 
+#ifdef USE_PRIVATE
 uint8_t exti_get_pending(uint8_t line);
-
-
-void exti0_isr(void);
-void exti1_isr(void);
-void exti2_isr(void);
-void exti3_isr(void);
-void exti4_isr(void);
-void exti9_5_isr(void);
-void exti15_10_isr(void);
-
 #endif
+
+#ifdef USE_PRIVATE
+void exti0_isr(void);
+#endif
+#ifdef USE_PRIVATE
+void exti1_isr(void);
+#endif
+#ifdef USE_PRIVATE
+void exti2_isr(void);
+#endif
+#ifdef USE_PRIVATE
+void exti3_isr(void);
+#endif
+#ifdef USE_PRIVATE
+void exti4_isr(void);
+#endif
+#ifdef USE_PRIVATE
+void exti9_5_isr(void);
+#endif
+#ifdef USE_PRIVATE
+void exti15_10_isr(void);
+#endif
+
+#endif // _SS_IOB_H_
+
+#endif // COMPILE_SS_IOB
