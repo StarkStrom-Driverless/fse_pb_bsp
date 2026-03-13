@@ -173,12 +173,12 @@ uint8_t ss_iob_get(uint16_t pin_id) {
     } else {
         if (ss_iob.iobs[PINNO(pin_id)].value) {
             ss_iob.iobs[PINNO(pin_id)].value = 0;
-            return 1;
+            return 0;
         } else {
             if (ss_io_read(pin_id) == 0) {
-                return 1;
-            } else {
                 return 0;
+            } else {
+                return 1;
             }
         }
     }
