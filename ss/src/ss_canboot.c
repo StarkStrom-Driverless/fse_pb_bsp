@@ -84,9 +84,11 @@ SS_FEEDBACK ss_canboot_init(uint32_t id) {
     }
     SS_HANDLE_ERROR_WITH_EXIT(rc);
 
+    /*
     rc = ss_can_filter_add_msg(1, id);
     SS_HANDLE_ERROR_WITH_EXIT(rc);
-
+    */
+   
     rc = ss_rtos_task_add(canboot_task, NULL, 0, "canboot_task");
 
     return rc;
