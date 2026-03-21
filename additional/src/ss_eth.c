@@ -197,7 +197,8 @@ SS_FEEDBACK ss_eth_init_wiz() {
     }
 
 
-    ss_eth.baudrate = 10500000;
+    //ss_eth.baudrate = 10500000;
+    ss_eth.baudrate = 42000000;
     if (ss_spi_init(W5500_SPI_ID, ss_eth.baudrate) != SS_FEEDBACK_OK) {
         return SS_SET_TOPLEVEL_ERROR(SS_FEEDBACK_ETHERNET_INIT_ERROR, SS_FEEDBACK_SPI_INIT_ERROR);
     }
