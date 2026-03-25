@@ -283,6 +283,45 @@ SS_FEEDBACK ss_eth_read(struct SS_ETH_INTF* tmp, struct SS_ETH_PAYLOAD** payload
     return rc;
 }
 
+SS_FEEDBACK ss_eth_read_filtered(struct SS_ETH_INTF* tmp, struct SS_ETH_PAYLOAD** payload, uint16_t expected_len) {
+    SS_FEEDBACK rc = SS_FEEDBACK_ETH_NO_MSG_RECEIVED;
+    uint8_t sn = tmp->intf_number;
+
+    if (getSn_RX_RSR(sn) == 0) {
+        return rc;
+    }
+
+    // Read 8-byte W5500 UDP header: [IP:4][Port:2][Len:2]
+    uint8_t head[8];
+    wiz_recv_data(sn, head, 8);
+    setSn_CR(sn, Sn_CR_RECV);
+    while (getSn_CR(sn));
+
+    uint16_t pack_len = ((uint16_t)head[6] << 8) | head[7];
+
+    if (pack_len != expected_len) {
+        // Discard payload — no SPI data transfer for the actual content
+        wiz_recv_ignore(sn, pack_len);
+        setSn_CR(sn, Sn_CR_RECV);
+        while (getSn_CR(sn));
+        return rc;
+    }
+
+    wiz_recv_data(sn, tmp->payload->buffer, pack_len);
+    setSn_CR(sn, Sn_CR_RECV);
+    while (getSn_CR(sn));
+
+    tmp->payload->id.ip[0] = head[0];
+    tmp->payload->id.ip[1] = head[1];
+    tmp->payload->id.ip[2] = head[2];
+    tmp->payload->id.ip[3] = head[3];
+    tmp->payload->id.port  = ((uint16_t)head[4] << 8) | head[5];
+    tmp->payload->received_len = pack_len;
+    *payload = tmp->payload;
+
+    return SS_FEEDBACK_ETH_MSG_RECEIVED;
+}
+
 SS_FEEDBACK ss_eth_send(struct SS_ETH_INTF* tmp, struct SS_ETH_PAYLOAD* payload) {
     SS_FEEDBACK rc = SS_FEEDBACK_OK;
 
