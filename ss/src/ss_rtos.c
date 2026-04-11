@@ -57,6 +57,15 @@ SS_FEEDBACK ss_rtos_big_task_add(TaskFunction_t task_ptr, void *const params, UB
     return rc;
 }
 
+SS_FEEDBACK ss_rtos_task_delete(char* name) {
+    TaskHandle_t h = xTaskGetHandle(name);
+    if (h == NULL) {
+        return SS_FEEDBACK_ERROR;
+    }
+    vTaskDelete(h);
+    return SS_FEEDBACK_OK;
+}
+
 void ss_rtos_start(void) {
     vTaskStartScheduler();
 }

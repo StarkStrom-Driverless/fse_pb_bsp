@@ -22,6 +22,8 @@
 
 #define SS_RTOS_TASK_ADD(func, prio) ss_rtos_add_task_generic(func, NULL, prio, #func, configMINIMAL_STACK_SIZE)
 
+SS_FEEDBACK ss_rtos_task_delete(char* name);
+
 SS_FEEDBACK ss_rtos_task_add(  TaskFunction_t task_ptr,
                         void * const params,
                         UBaseType_t prio,

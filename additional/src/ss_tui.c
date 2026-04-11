@@ -7,24 +7,17 @@
 
 #include "ss_tui.h"
 
-/* ─────────────────────────────────────────────────────────────
- * Passe diese Zeile an dein Projekt an.
- * Das Header muss SS_FEEDBACK und ss_uart_send deklarieren.
- * ───────────────────────────────────────────────────────────── */
+
 #include "ss_uart.h"
 #include "ss_rtos.h"
 
-/* ════════════════════════════════════════════════════════════
- * Interne Hilfsfunktionen
- * ════════════════════════════════════════════════════════════ */
+
 
 static uint8_t _iface = 0;
 
-/* ════════════════════════════════════════════════════════════
- * Widget System – private types
- * ════════════════════════════════════════════════════════════ */
 
-/* ── Common base ──────────────────────────────────────────── */
+
+
 typedef struct {
     ss_tui_etype_t type;
     uint8_t        slide_id;
@@ -32,7 +25,7 @@ typedef struct {
     ss_tui_pos_t   pos;
 } _elem_base_t;
 
-/* ── Concrete element types ───────────────────────────────── */
+
 typedef struct {
     _elem_base_t base;
     char text[SS_TUI_TEXT_MAX_LEN];
@@ -43,7 +36,7 @@ typedef struct {
     ss_tui_pos_t end;
 } _elem_line_t;
 
-/* Key-value: always owned by a text box */
+
 typedef struct {
     _elem_base_t base;
     char  key[SS_TUI_KEY_MAX_LEN];
@@ -51,19 +44,19 @@ typedef struct {
     int   parent_box_id;
 } _elem_kv_t;
 
-/* Text box: auto-sized, holds KV rows */
+
 typedef struct {
     _elem_base_t base;
     char     name[SS_TUI_NAME_MAX_LEN];
-    uint16_t inner_width;                    /* recalculated on each add  */
-    uint8_t  max_key_len;                    /* longest key seen so far   */
+    uint16_t inner_width;                    
+    uint8_t  max_key_len;                    
     int      kv_ids[SS_TUI_MAX_KV_PER_BOX];
     uint8_t  kv_count;
 } _elem_box_t;
 
-/* ── Union slot ───────────────────────────────────────────── */
+
 typedef union {
-    _elem_base_t base; /* safe to read type/slide/dirty via any member */
+    _elem_base_t base; 
     _elem_text_t text;
     _elem_line_t line;
     _elem_kv_t   kv;
@@ -75,15 +68,13 @@ typedef struct {
     _slot_data_t d;
 } _slot_t;
 
-/* ── Static pool & global colours ────────────────────────── */
+
 static _slot_t  _pool[SS_TUI_MAX_ELEMENTS];
 static uint8_t  _g_font_color = SS_TUI_FG_WHITE;
 static uint8_t  _g_bg_color   = SS_TUI_BG_BLUE;
 static uint8_t  _g_line_color = SS_TUI_FG_RED;
 
-/* ── Pool helpers ─────────────────────────────────────────── */
 
-/* Allocate a slot; returns 1-based ID or SS_TUI_INVALID_ID */
 static int _alloc_slot(void)
 {
     for (int i = 0; i < SS_TUI_MAX_ELEMENTS; i++) {
@@ -95,7 +86,7 @@ static int _alloc_slot(void)
     return SS_TUI_INVALID_ID;
 }
 
-/* Lookup by 1-based ID; returns NULL if invalid or not in use */
+
 static _slot_data_t *_get_slot(int id)
 {
     if (id < 1 || id > SS_TUI_MAX_ELEMENTS) return 0;
@@ -103,7 +94,7 @@ static _slot_data_t *_get_slot(int id)
     return &_pool[id - 1].d;
 }
 
-/* ── String helpers (no stdlib) ───────────────────────────── */
+
 static uint8_t _slen(const char *s)
 {
     uint8_t n = 0;
@@ -118,14 +109,14 @@ static void _scopy(char *dst, const char *src, uint8_t max)
     dst[i] = '\0';
 }
 
-/* Rohe Bytes senden */
+
 static void _send(const uint8_t *data, uint32_t len)
 {
     ss_uart_send(_iface, (uint8_t *)data, len);
 }
 
 
-/* Null-terminierten String senden */
+
 static void _send_str(const char *s)
 {
     uint32_t len = 0;
@@ -133,15 +124,12 @@ static void _send_str(const char *s)
     _send((const uint8_t *)s, len);
 }
 
-/* Einzelnes Zeichen senden */
 static void _send_char(char c)
 {
     _send((const uint8_t *)&c, 1);
 }
 
-/* ── Hilfsfunktion: uint32_t → ASCII-Ziffern in Puffer schreiben.
- *    Gibt Anzahl geschriebener Zeichen zurück.
- *    buf muss mindestens 10 Bytes groß sein.                    */
+
 static uint8_t _uint_to_str(uint32_t value, char *buf)
 {
     if (value == 0) {
@@ -154,7 +142,7 @@ static uint8_t _uint_to_str(uint32_t value, char *buf)
         tmp[i++] = (char)('0' + (value % 10));
         value /= 10;
     }
-    /* Umkehren */
+
     uint8_t len = i;
     for (uint8_t j = 0; j < len; j++) {
         buf[j] = tmp[len - 1 - j];
@@ -162,10 +150,7 @@ static uint8_t _uint_to_str(uint32_t value, char *buf)
     return len;
 }
 
-/* ── ESC-Sequenz senden die eine oder zwei Zahlen enthält.
- *
- *   Aufbau:  ESC [ <n1> <suffix>          (two_nums = 0)
- *            ESC [ <n1> ; <n2> <suffix>   (two_nums = 1)     */
+
 static void _esc1(uint8_t n1, char suffix)
 {
     char buf[8];
@@ -194,9 +179,6 @@ static void _esc2(uint16_t n1, uint16_t n2, char suffix)
 }
 
 
-/* ════════════════════════════════════════════════════════════
- * Initialisierung
- * ════════════════════════════════════════════════════════════ */
 
 void ss_tui_init(uint8_t uart_interface)
 {
@@ -212,9 +194,6 @@ void ss_tui_init(uint8_t uart_interface)
 }
 
 
-/* ════════════════════════════════════════════════════════════
- * Low-level Primitives
- * ════════════════════════════════════════════════════════════ */
 
 void ss_tui_goto(uint16_t row, uint16_t col)
 {
@@ -279,9 +258,7 @@ void ss_tui_cursor_show(void)
 }
 
 
-/* ════════════════════════════════════════════════════════════
- * Zeichen & String Ausgabe
- * ════════════════════════════════════════════════════════════ */
+
 
 void ss_tui_putc(char c)
 {
@@ -340,9 +317,7 @@ void ss_tui_puts_colored_bg(uint16_t row, uint16_t col,
 }
 
 
-/* ════════════════════════════════════════════════════════════
- * Zahlen-Ausgabe  (kein printf)
- * ════════════════════════════════════════════════════════════ */
+
 
 void ss_tui_put_uint(uint32_t value)
 {
@@ -355,7 +330,7 @@ void ss_tui_put_int(int32_t value)
 {
     if (value < 0) {
         _send_char('-');
-        /* Sonderfall INT32_MIN vermeiden */
+
         uint32_t uval = (value == -2147483647 - 1)
                         ? 2147483648u
                         : (uint32_t)(-value);
@@ -367,25 +342,25 @@ void ss_tui_put_int(int32_t value)
 
 void ss_tui_put_fixed(int32_t value, uint8_t decimals)
 {
-    /* Vorzeichen */
+
     if (value < 0) {
         _send_char('-');
         value = -value;
     }
 
-    /* Divisor berechnen: 10^decimals */
+
     uint32_t divisor = 1;
     for (uint8_t i = 0; i < decimals; i++) divisor *= 10;
 
     uint32_t integer_part  = (uint32_t)value / divisor;
     uint32_t fraction_part = (uint32_t)value % divisor;
 
-    /* Ganzzahlanteil */
+
     ss_tui_put_uint(integer_part);
 
     if (decimals > 0) {
         _send_char('.');
-        /* Führende Nullen im Nachkommaanteil */
+
         uint32_t leading = divisor / 10;
         while (leading > 1 && fraction_part < leading) {
             _send_char('0');
@@ -401,24 +376,21 @@ void ss_tui_put_hex(uint32_t value, uint8_t min_digits)
     char buf[8];
     uint8_t i = 0;
 
-    /* Ziffern von hinten befüllen */
+
     do {
         buf[i++] = hex_chars[value & 0xF];
         value >>= 4;
     } while (value > 0);
 
-    /* Auffüllen auf min_digits */
+
     while (i < min_digits && i < 8) {
         buf[i++] = '0';
     }
 
-    /* Umgekehrt ausgeben */
     for (int8_t j = (int8_t)i - 1; j >= 0; j--) {
         _send_char(buf[j]);
     }
 }
-
-/* ── Kombinierte Helfer ── */
 
 void ss_tui_put_uint_colored(uint16_t row, uint16_t col,
                           uint8_t fg, uint32_t value)
@@ -457,17 +429,13 @@ void ss_tui_put_hex_colored(uint16_t row, uint16_t col,
 }
 
 
-/* ════════════════════════════════════════════════════════════
- * Box & Tabellen-Zeichnen
- * ════════════════════════════════════════════════════════════ */
-
 void ss_tui_box(uint16_t row, uint16_t col,
              uint16_t width, uint16_t height,
              uint8_t fg, const char *title)
 {
     ss_tui_fg(fg);
 
-    /* ── Obere Linie ── */
+
     ss_tui_goto(row, col);
     _send_str(SS_TUI_BOX_TL);
 
@@ -475,21 +443,21 @@ void ss_tui_box(uint16_t row, uint16_t col,
         uint16_t tlen = 0;
         while (title[tlen]) tlen++;
 
-        /* Format:  ─ Titel ─────  */
+
         _send_str(SS_TUI_BOX_H);
         _send_char(' ');
         _send_str(title);
         _send_char(' ');
 
-        /* Restliche Striche auffüllen */
-        uint16_t used = tlen + 3; /* " title " + linke ─ */
+
+        uint16_t used = tlen + 3;
         for (uint16_t i = used; i < width; i++) _send_str(SS_TUI_BOX_H);
     } else {
         for (uint16_t i = 0; i < width; i++) _send_str(SS_TUI_BOX_H);
     }
     _send_str(SS_TUI_BOX_TR);
 
-    /* ── Seitenlinien ── */
+
     for (uint16_t r = 1; r <= height; r++) {
         ss_tui_goto(row + r, col);
         _send_str(SS_TUI_BOX_V);
@@ -497,7 +465,7 @@ void ss_tui_box(uint16_t row, uint16_t col,
         _send_str(SS_TUI_BOX_V);
     }
 
-    /* ── Untere Linie ── */
+
     ss_tui_goto(row + height + 1, col);
     _send_str(SS_TUI_BOX_BL);
     for (uint16_t i = 0; i < width; i++) _send_str(SS_TUI_BOX_H);
@@ -518,14 +486,6 @@ void ss_tui_box_separator(uint16_t row, uint16_t col,
 }
 
 
-
-/* ════════════════════════════════════════════════════════════
- * Widget System – private draw helpers
- * ════════════════════════════════════════════════════════════ */
-
-/* ── Float formatter ────────────────────────────────────────
- * Outputs exactly 9 chars:  sign(1) + int(5,space-pad) + '.' + dec(2)
- * Range clamped to ±99999.99.  Always 2 decimal places.        */
 static void _put_float_value(float value)
 {
     if (value < 0.0f) {
@@ -537,18 +497,17 @@ static void _put_float_value(float value)
 
     if (value > 99999.99f) value = 99999.99f;
 
-    /* Round to 2 decimal places to avoid float drift */
+
     uint32_t scaled   = (uint32_t)(value * 100.0f + 0.5f);
     uint32_t int_part = scaled / 100u;
     uint32_t dec_part = scaled % 100u;
 
-    /* Integer part – space-padded, right-aligned in 5 columns */
+
     char ibuf[5];
     uint8_t ilen = _uint_to_str(int_part, ibuf);
     for (uint8_t i = ilen; i < 5; i++) _send_char(' ');
     _send((const uint8_t *)ibuf, ilen);
 
-    /* Decimal part – always 2 digits, zero-padded */
     _send_char('.');
     if (dec_part < 10) _send_char('0');
     char dbuf[3];
@@ -556,8 +515,7 @@ static void _put_float_value(float value)
     _send((const uint8_t *)dbuf, dlen);
 }
 
-/* ── Key formatter ──────────────────────────────────────────
- * Left-aligned, padded with spaces to max_key_len.            */
+
 static void _put_key_padded(const char *key, uint8_t max_key_len)
 {
     uint8_t len = _slen(key);
@@ -565,7 +523,6 @@ static void _put_key_padded(const char *key, uint8_t max_key_len)
     for (uint8_t i = len; i < max_key_len; i++) _send_char(' ');
 }
 
-/* ── Element draw functions ─────────────────────────────── */
 
 static void _draw_text_elem(const _elem_text_t *e)
 {
@@ -596,7 +553,6 @@ static void _draw_line_elem(const _elem_line_t *e)
             _send_str(SS_TUI_BOX_V);
         }
     }
-    /* Diagonal lines are not supported in a terminal grid */
 
     ss_tui_reset();
 }
@@ -610,8 +566,6 @@ static void _draw_kv_elem(const _elem_kv_t *kv)
         max_kl = bs->box.max_key_len;
     }
 
-    /* Format:  │ key_padded : ±XXXXX.XX │
-     * We write the inner content only (border drawn by box).  */
     ss_tui_goto(kv->base.pos.row, kv->base.pos.col);
     ss_tui_color(_g_font_color, _g_bg_color);
     _send_char(' ');
@@ -631,15 +585,14 @@ static void _draw_box_elem(const _elem_box_t *box)
 
     
 
-    //ss_tui_fg(_g_line_color);
+    ss_tui_fg(_g_line_color);
 
-    /* ── Top border with centered title ─────────────────── */
     ss_tui_goto(row, col);
     _send_str(SS_TUI_BOX_TL);
 
     uint8_t nlen = _slen(box->name);
     if (nlen > 0 && (uint16_t)(nlen + 4u) <= w) {
-        /* Available dash space: w minus the two spaces flanking the name */
+
         uint16_t dash_total  = w - (uint16_t)nlen - 2u;
         uint16_t left_dashes = dash_total / 2u;
         uint16_t right_dashes = dash_total - left_dashes;
@@ -653,7 +606,6 @@ static void _draw_box_elem(const _elem_box_t *box)
     }
     _send_str(SS_TUI_BOX_TR);
 
-    /* ── Side borders (one per KV row) ─────────────────── */
     for (uint8_t r = 1; r <= h; r++) {
         ss_tui_goto(row + r, col);
         _send_str(SS_TUI_BOX_V);
@@ -661,7 +613,6 @@ static void _draw_box_elem(const _elem_box_t *box)
         _send_str(SS_TUI_BOX_V);
     }
 
-    /* ── Bottom border ──────────────────────────────────── */
     ss_tui_goto(row + h + 1u, col);
     _send_str(SS_TUI_BOX_BL);
     for (uint16_t i = 0; i < w; i++) _send_str(SS_TUI_BOX_H);
@@ -671,17 +622,12 @@ static void _draw_box_elem(const _elem_box_t *box)
 }
 
 
-/* ════════════════════════════════════════════════════════════
- * Widget System – public API
- * ════════════════════════════════════════════════════════════ */
-
-/* ── Global colour setters ─────────────────────────────── */
 
 void ss_tui_set_font_color(uint8_t fg)       { _g_font_color = fg; }
 void ss_tui_set_background_color(uint8_t bg) { _g_bg_color   = bg; }
 void ss_tui_set_line_color(uint8_t fg)       { _g_line_color = fg; }
 
-/* ── Text box ──────────────────────────────────────────── */
+
 
 int ss_tui_text_box_create(uint8_t slide_id,
                            ss_tui_pos_t pos,
@@ -699,9 +645,7 @@ int ss_tui_text_box_create(uint8_t slide_id,
     b->kv_count    = 0;
     b->max_key_len = 0;
 
-    /* Minimum width: title must fit with at least one dash on each side
-     * inner_width >= nlen + 4  ( "─ title ─" )
-     * We start at 14 (fits the value field on its own).             */
+
     uint8_t  nlen    = _slen(name);
     uint16_t title_w = (uint16_t)nlen + 4u;
     b->inner_width   = (title_w > 14u) ? title_w : 14u;
@@ -722,41 +666,36 @@ int ss_tui_text_box_add_key_value(int box_id,
     int kv_id = _alloc_slot();
     if (kv_id == SS_TUI_INVALID_ID)                     return SS_TUI_INVALID_ID;
 
-    /* Fill the new KV slot */
+
     _elem_kv_t *kv        = &_pool[kv_id - 1].d.kv;
     kv->base.type          = SS_TUI_ETYPE_KV;
     kv->base.slide_id      = box->base.slide_id;
     kv->base.update_needed = 0;
-    /* Absolute position: first row inside the box + row index */
+
     kv->base.pos.row = box->base.pos.row + 1u + box->kv_count;
     kv->base.pos.col = box->base.pos.col + 1u;
     _scopy(kv->key, key, SS_TUI_KEY_MAX_LEN);
     kv->value         = value;
     kv->parent_box_id = box_id;
 
-    /* Register KV in the box */
     box->kv_ids[box->kv_count++] = kv_id;
 
-    /* Recalculate box dimensions if this key is the longest seen */
     uint8_t klen = _slen(key);
     if (klen > box->max_key_len) {
         box->max_key_len = klen;
 
-        /* inner_width = 1 (left pad) + max_key_len + 3 (" : ")
-         *             + 9 (±XXXXX.XX) + 1 (right pad) = max_key_len + 14 */
+
         uint16_t content_w = (uint16_t)klen + 14u;
         uint8_t  nlen      = _slen(box->name);
         uint16_t title_w   = (uint16_t)nlen + 4u;
         box->inner_width   = (content_w > title_w) ? content_w : title_w;
 
-        /* Existing KV rows need redrawing – padding width changed */
         for (uint8_t i = 0; i < box->kv_count - 1u; i++) {
             _slot_data_t *s = _get_slot(box->kv_ids[i]);
             if (s) s->base.update_needed = 0;
         }
     }
 
-    /* Box itself is always dirty: height (and possibly width) changed */
     box->base.update_needed = 0;
 
     return kv_id;
@@ -767,10 +706,8 @@ void ss_tui_text_box_set_value(int kv_id, float value)
     _slot_data_t *s = _get_slot(kv_id);
     if (!s || s->base.type != SS_TUI_ETYPE_KV) return;
     s->kv.value           = value;
-    s->base.update_needed = 0;   /* mark this KV dirty; box stays clean */
+    s->base.update_needed = 0;
 }
-
-/* ── Standalone text ────────────────────────────────────── */
 
 int ss_tui_text_create(uint8_t slide_id,
                        ss_tui_pos_t pos,
@@ -796,7 +733,6 @@ void ss_tui_text_set(int text_id, const char *text)
     s->base.update_needed = 0;
 }
 
-/* ── Standalone line ────────────────────────────────────── */
 
 int ss_tui_line_create(uint8_t slide_id,
                        ss_tui_pos_t start,
@@ -814,12 +750,10 @@ int ss_tui_line_create(uint8_t slide_id,
     return id;
 }
 
-/* ── Slide control ──────────────────────────────────────── */
 
 void ss_tui_update(uint8_t slide_id)
 {
-    /* Iterate pool in allocation order so boxes are always drawn
-     * before their child KV entries (box_id < kv_id guaranteed). */
+
     for (int i = 0; i < SS_TUI_MAX_ELEMENTS; i++) {
         if (!_pool[i].in_use)              continue;
         _slot_data_t *s = &_pool[i].d;
@@ -834,7 +768,7 @@ void ss_tui_update(uint8_t slide_id)
             case SS_TUI_ETYPE_TEXT_BOX: _draw_box_elem(&s->box);   break;
             default: break;
         }
-        s->base.update_needed = 1; /* mark clean */
+        s->base.update_needed = 1;
     }
     ss_uart_flush(_iface);
 }
@@ -843,8 +777,6 @@ void ss_tui_erase(void)
 {
     ss_tui_clear(); /* ESC[2J + ESC[H */
 
-    /* Mark every element on every slide as dirty so the next
-     * ss_tui_update() redraws the requested slide in full.   */
     for (int i = 0; i < SS_TUI_MAX_ELEMENTS; i++) {
         if (_pool[i].in_use) {
             _pool[i].d.base.update_needed = 0;
