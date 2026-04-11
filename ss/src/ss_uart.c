@@ -282,7 +282,7 @@ SS_FEEDBACK ss_uart_init(uint8_t interface, uint32_t baudrate) {
     usart_enable(uart_addr);
 
     ss_uart_queue_init();
-    ss_uart_queue_add(interface, 2000);
+    ss_uart_queue_add(interface, 8000);
 
     return rc;
 }

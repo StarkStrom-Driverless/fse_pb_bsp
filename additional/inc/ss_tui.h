@@ -63,6 +63,27 @@
 #define SS_TUI_ATTR_BLINK     5
 #define SS_TUI_ATTR_REVERSE   7
 
+/* ════════════════════════════════════════════
+ * Widget system – pool configuration
+ * Override any of these in ss_config.h before
+ * including this header.
+ * ════════════════════════════════════════════ */
+#ifndef SS_TUI_MAX_ELEMENTS
+#  define SS_TUI_MAX_ELEMENTS     32   /* total slots in the element pool   */
+#endif
+#ifndef SS_TUI_MAX_KV_PER_BOX
+#  define SS_TUI_MAX_KV_PER_BOX    8   /* key-value rows per text box       */
+#endif
+#ifndef SS_TUI_TEXT_MAX_LEN
+#  define SS_TUI_TEXT_MAX_LEN     32   /* max chars for a text element      */
+#endif
+#ifndef SS_TUI_KEY_MAX_LEN
+#  define SS_TUI_KEY_MAX_LEN      16   /* max chars for a key label         */
+#endif
+#ifndef SS_TUI_NAME_MAX_LEN
+#  define SS_TUI_NAME_MAX_LEN     24   /* max chars for a text-box title    */
+#endif
+
 /* ── Box-drawing characters (UTF-8) ── */
 #define SS_TUI_BOX_TL    "\xe2\x94\x8c"   /* ┌ */
 #define SS_TUI_BOX_TR    "\xe2\x94\x90"   /* ┐ */
@@ -170,6 +191,86 @@ void ss_tui_box(uint16_t row, uint16_t col,
 /* Horizontale Trennlinie innerhalb eines Rahmens */
 void ss_tui_box_separator(uint16_t row, uint16_t col,
                        uint16_t width, uint8_t fg);
+
+
+/* ════════════════════════════════════════════
+ * Widget System
+ * ════════════════════════════════════════════ */
+
+/* ── Position ── */
+typedef struct {
+    uint16_t row;
+    uint16_t col;
+} ss_tui_pos_t;
+
+/* ── Element type tag ── */
+typedef enum {
+    SS_TUI_ETYPE_NONE = 0,
+    SS_TUI_ETYPE_TEXT,
+    SS_TUI_ETYPE_LINE,
+    SS_TUI_ETYPE_KV,
+    SS_TUI_ETYPE_TEXT_BOX,
+} ss_tui_etype_t;
+
+/* Returned by create functions on failure */
+#define SS_TUI_INVALID_ID  (-1)
+
+/* ── Global colour control ──────────────────
+ * Defaults: font=WHITE  bg=BLUE  line=RED
+ * Applies to all elements when drawn.        */
+void ss_tui_set_font_color(uint8_t fg);
+void ss_tui_set_background_color(uint8_t bg);
+void ss_tui_set_line_color(uint8_t fg);
+
+/* ── Text box ───────────────────────────────
+ * A bordered box with a centered title that
+ * holds key-value rows.
+ *
+ *  ss_tui_text_box_create()        → box_id
+ *  ss_tui_text_box_add_key_value() → kv_id
+ *  ss_tui_text_box_set_value(kv_id, new_float)
+ *
+ * Width and height are calculated automatically:
+ *   inner_width  = max(key_len) + 14
+ *   inner_height = number of key-value rows
+ *
+ * Value display format: " ±XXXXX.XX"  (9 chars)
+ *   – 5 integer digits, space-padded
+ *   – always 2 decimal places                */
+int  ss_tui_text_box_create(uint8_t slide_id,
+                            ss_tui_pos_t pos,
+                            const char *name);
+
+int  ss_tui_text_box_add_key_value(int box_id,
+                                   const char *key,
+                                   float value);
+
+void ss_tui_text_box_set_value(int kv_id, float value);
+
+/* ── Standalone text element ─────────────── */
+int  ss_tui_text_create(uint8_t slide_id,
+                        ss_tui_pos_t pos,
+                        const char *text);
+
+void ss_tui_text_set(int text_id, const char *text);
+
+/* ── Standalone line element ─────────────── */
+int  ss_tui_line_create(uint8_t slide_id,
+                        ss_tui_pos_t start,
+                        ss_tui_pos_t end);
+
+/* ── Slide control ───────────────────────────
+ * ss_tui_update(slide_id)
+ *   Draws every element of that slide whose
+ *   update_needed flag is 0 (dirty), then
+ *   sets the flag to 1 (clean).
+ *
+ * ss_tui_erase()
+ *   Clears the terminal and marks every element
+ *   (all slides) as dirty so that the next
+ *   ss_tui_update() redraws everything.        */
+void ss_tui_update(uint8_t slide_id);
+void ss_tui_erase(void);
 
 
 #endif
