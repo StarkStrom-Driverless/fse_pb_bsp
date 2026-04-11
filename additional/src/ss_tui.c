@@ -118,26 +118,10 @@ static void _scopy(char *dst, const char *src, uint8_t max)
     dst[i] = '\0';
 }
 
-/* ── TX buffer: accumulate bytes, flush in one uart call ──── */
-#define _TX_BUF_SIZE 256
-static uint8_t  _tx_buf[_TX_BUF_SIZE];
-static uint16_t _tx_buf_len = 0;
-
-static void _flush(void)
-{
-    if (_tx_buf_len > 0) {
-        ss_uart_send(_iface, _tx_buf, _tx_buf_len);
-        _tx_buf_len = 0;
-    }
-}
-
 /* Rohe Bytes senden */
 static void _send(const uint8_t *data, uint32_t len)
 {
-    for (uint32_t i = 0; i < len; i++) {
-        if (_tx_buf_len >= _TX_BUF_SIZE) _flush();
-        _tx_buf[_tx_buf_len++] = data[i];
-    }
+    ss_uart_send(_iface, (uint8_t *)data, len);
 }
 
 
@@ -276,7 +260,7 @@ void ss_tui_reset(void)
 void ss_tui_clear(void)
 {
     _send_str("\033[H\033[2J");
-    _flush();
+    ss_uart_flush(_iface);
 }
 
 void ss_tui_clear_eol(void)
@@ -645,7 +629,9 @@ static void _draw_box_elem(const _elem_box_t *box)
     uint16_t w   = box->inner_width;
     uint8_t  h   = box->kv_count;
 
-    ss_tui_fg(_g_line_color);
+    
+
+    //ss_tui_fg(_g_line_color);
 
     /* ── Top border with centered title ─────────────────── */
     ss_tui_goto(row, col);
@@ -842,6 +828,7 @@ void ss_tui_update(uint8_t slide_id)
 
         switch (s->base.type) {
             case SS_TUI_ETYPE_TEXT:     _draw_text_elem(&s->text); break;
+            
             case SS_TUI_ETYPE_LINE:     _draw_line_elem(&s->line); break;
             case SS_TUI_ETYPE_KV:       _draw_kv_elem(&s->kv);    break;
             case SS_TUI_ETYPE_TEXT_BOX: _draw_box_elem(&s->box);   break;
@@ -849,7 +836,7 @@ void ss_tui_update(uint8_t slide_id)
         }
         s->base.update_needed = 1; /* mark clean */
     }
-    _flush();
+    ss_uart_flush(_iface);
 }
 
 void ss_tui_erase(void)

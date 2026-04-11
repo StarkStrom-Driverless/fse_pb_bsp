@@ -79,8 +79,9 @@ SS_FEEDBACK ss_uart_queue_add(uint8_t interface, uint32_t depth);
 
 
 SS_FEEDBACK ss_uart_init(uint8_t interface, uint32_t baudrate);
-SS_FEEDBACK ss_uart_send_str(uint8_t interface, char* str);
 SS_FEEDBACK ss_uart_send(uint8_t interface, uint8_t* value, uint32_t len);
+SS_FEEDBACK ss_uart_flush(uint8_t interface);
+SS_FEEDBACK ss_uart_send_str(uint8_t interface, char* str);
 SS_FEEDBACK ss_uart_read(uint8_t interface, uint8_t* data);
 
 #endif

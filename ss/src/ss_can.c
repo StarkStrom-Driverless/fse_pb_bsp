@@ -305,7 +305,7 @@ SS_FEEDBACK ss_can_init(uint8_t can_interface_id, uint32_t baudrate) {
 
     
 
-    rc = ss_can_nvic_init(can_interface_id, 1);
+    rc = ss_can_nvic_init(can_interface_id, configMAX_SYSCALL_INTERRUPT_PRIORITY);
     SS_HANDLE_ERROR_WITH_EXIT(rc);
                                     
     rc = ss_can_enable_pending_interrupt(can_interface_id - 1, can_port);

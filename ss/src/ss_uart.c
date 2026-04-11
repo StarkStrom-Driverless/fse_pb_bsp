@@ -277,6 +277,7 @@ SS_FEEDBACK ss_uart_init(uint8_t interface, uint32_t baudrate) {
     SS_HANDLE_ERROR_WITH_EXIT(rc);
 
     usart_enable_rx_interrupt(uart_addr);
+    nvic_set_priority(uart_nvic, configMAX_SYSCALL_INTERRUPT_PRIORITY);
     nvic_enable_irq(uart_nvic);
 
     usart_enable(uart_addr);
@@ -287,15 +288,22 @@ SS_FEEDBACK ss_uart_init(uint8_t interface, uint32_t baudrate) {
     return rc;
 }
 
-SS_FEEDBACK ss_uart_send_str(uint8_t interface, char* str) {
+SS_FEEDBACK ss_uart_send(uint8_t interface, uint8_t* value, uint32_t len) {
     SS_FEEDBACK rc = SS_FEEDBACK_OK;
 
-    rc = ss_uart_send(interface, (uint8_t*)str, strlen(str)+1);
+    struct SS_UART_CHANNEL* channel;
+
+    rc = ss_uart_queue_channel_get(interface, &channel);
+    SS_HANDLE_ERROR_WITH_EXIT(rc);
+
+    for (uint32_t i = 0; i < len; i++) {
+        xQueueSend(channel->tx.queue, &value[i], portMAX_DELAY);
+    }
 
     return rc;
 }
 
-SS_FEEDBACK ss_uart_send(uint8_t interface, uint8_t* value, uint32_t len) {
+SS_FEEDBACK ss_uart_flush(uint8_t interface) {
     SS_FEEDBACK rc = SS_FEEDBACK_OK;
 
     uint32_t uart_addr = 0;
@@ -307,10 +315,6 @@ SS_FEEDBACK ss_uart_send(uint8_t interface, uint8_t* value, uint32_t len) {
     rc = ss_uart_queue_channel_get(interface, &channel);
     SS_HANDLE_ERROR_WITH_EXIT(rc);
 
-    for (uint32_t i = 0; i < len; i++) {
-        xQueueSend(channel->tx.queue, &value[i], portMAX_DELAY);
-    }
-
     if (!channel->tx.tx_busy) {
         uint8_t byte;
         if (xQueueReceive(channel->tx.queue, &byte, 0) == pdPASS) {
@@ -319,6 +323,17 @@ SS_FEEDBACK ss_uart_send(uint8_t interface, uint8_t* value, uint32_t len) {
             usart_enable_tx_complete_interrupt(uart_addr);
         }
     }
+
+    return rc;
+}
+
+SS_FEEDBACK ss_uart_send_str(uint8_t interface, char* str) {
+    SS_FEEDBACK rc = SS_FEEDBACK_OK;
+
+    rc = ss_uart_send(interface, (uint8_t*)str, strlen(str));
+    SS_HANDLE_ERROR_WITH_EXIT(rc);
+
+    rc = ss_uart_flush(interface);
 
     return rc;
 }
