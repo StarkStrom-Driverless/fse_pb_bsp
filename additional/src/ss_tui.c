@@ -55,12 +55,29 @@ typedef struct {
 } _elem_box_t;
 
 
+/* Input widget states */
+#define _INPUT_IDLE    0u
+#define _INPUT_FOCUSED 1u
+#define _INPUT_EDITING 2u
+
+typedef struct {
+    _elem_base_t base;
+    char         buf[SS_TUI_INPUT_MAX_LEN];
+    char         name[SS_TUI_NAME_MAX_LEN];
+    uint8_t      len;
+    uint16_t     width;
+    uint8_t      state;      /* _INPUT_IDLE / _INPUT_FOCUSED / _INPUT_EDITING */
+    uint8_t      activated;  /* 1 = im Tab-Zyklus der Slide */
+} _elem_input_t;
+
+
 typedef union {
-    _elem_base_t base; 
-    _elem_text_t text;
-    _elem_line_t line;
-    _elem_kv_t   kv;
-    _elem_box_t  box;
+    _elem_base_t  base;
+    _elem_text_t  text;
+    _elem_line_t  line;
+    _elem_kv_t    kv;
+    _elem_box_t   box;
+    _elem_input_t input;
 } _slot_data_t;
 
 typedef struct {
@@ -73,6 +90,7 @@ static _slot_t  _pool[SS_TUI_MAX_ELEMENTS];
 static uint8_t  _g_font_color = SS_TUI_FG_WHITE;
 static uint8_t  _g_bg_color   = SS_TUI_BG_BLUE;
 static uint8_t  _g_line_color = SS_TUI_FG_RED;
+static int      _focused_input_id = SS_TUI_INVALID_ID;
 
 
 static int _alloc_slot(void)
@@ -188,9 +206,11 @@ void ss_tui_init(uint8_t uart_interface)
     for (int i = 0; i < SS_TUI_MAX_ELEMENTS; i++) {
         _pool[i].in_use = 0;
     }
-    _g_font_color = SS_TUI_FG_WHITE;
-    _g_bg_color   = SS_TUI_BG_BLUE;
-    _g_line_color = SS_TUI_FG_RED;
+    _g_font_color     = SS_TUI_FG_WHITE;
+    _g_bg_color       = SS_TUI_BG_BLUE;
+    _g_line_color     = SS_TUI_FG_RED;
+    _focused_input_id = SS_TUI_INVALID_ID;
+    ss_tui_cursor_hide();
 }
 
 
@@ -623,6 +643,177 @@ static void _draw_box_elem(const _elem_box_t *box)
 
 
 
+/* ── Input: Tab-Zyklus (nur innerhalb derselben Slide) ─────────── */
+
+static void _cycle_focus(void)
+{
+    if (_focused_input_id == SS_TUI_INVALID_ID) return;
+    _slot_data_t *cur = _get_slot(_focused_input_id);
+    if (!cur || cur->base.type != SS_TUI_ETYPE_INPUT) return;
+
+    uint8_t slide_id    = cur->base.slide_id;
+    int     next_id     = SS_TUI_INVALID_ID;
+    int     first_id    = SS_TUI_INVALID_ID;
+    uint8_t found_cur   = 0;
+
+    for (int i = 0; i < SS_TUI_MAX_ELEMENTS; i++) {
+        if (!_pool[i].in_use)                            continue;
+        if (_pool[i].d.base.type != SS_TUI_ETYPE_INPUT)  continue;
+        if (!_pool[i].d.input.activated)                 continue;
+        if (_pool[i].d.base.slide_id != slide_id)        continue;
+        int id = i + 1;
+        if (first_id == SS_TUI_INVALID_ID) first_id = id;
+        if (found_cur && next_id == SS_TUI_INVALID_ID) next_id = id;
+        if (id == _focused_input_id) found_cur = 1;
+    }
+
+    if (next_id == SS_TUI_INVALID_ID) next_id = first_id; /* wrap */
+    if (next_id == SS_TUI_INVALID_ID || next_id == _focused_input_id) return;
+
+    /* Altes Widget defokussieren */
+    if (cur->input.state == _INPUT_EDITING) ss_tui_cursor_hide();
+    cur->input.state        = _INPUT_IDLE;
+    cur->base.update_needed = 0;
+
+    /* Neues Widget fokussieren */
+    _slot_data_t *nxt = _get_slot(next_id);
+    if (nxt) {
+        nxt->input.state        = _INPUT_FOCUSED;
+        nxt->base.update_needed = 0;
+    }
+    _focused_input_id = next_id;
+}
+
+
+/* ── Input: Zeichnen ──────────────────────── */
+
+static void _draw_input_elem(const _elem_input_t *e)
+{
+    uint16_t row     = e->base.pos.row;
+    uint16_t col     = e->base.pos.col;
+    uint16_t w       = e->width;
+    uint8_t  active  = (e->state != _INPUT_IDLE);
+    uint8_t  editing = (e->state == _INPUT_EDITING);
+    uint8_t  bcolor  = active ? SS_TUI_FG_YELLOW : _g_line_color;
+
+    /* Oberer Rahmen mit Name links, '*' ganz rechts nur im Edit-Modus */
+    ss_tui_fg(bcolor);
+    ss_tui_goto(row, col);
+    _send_str(SS_TUI_BOX_TL);
+
+    uint8_t nlen = _slen(e->name);
+    if (nlen > 0u && (uint16_t)(nlen + 4u) <= w) {
+        /* ─ Name ─ ... ─ */
+        _send_str(SS_TUI_BOX_H);
+        _send_char(' ');
+        _send_str(e->name);
+        _send_char(' ');
+        uint16_t extra = w - (uint16_t)nlen - 4u; /* verbleibende Dashes vor letztem */
+        for (uint16_t i = 0; i < extra; i++) _send_str(SS_TUI_BOX_H);
+    } else {
+        for (uint16_t i = 0; i < w - 1u; i++) _send_str(SS_TUI_BOX_H);
+    }
+    if (editing) _send_char('*');
+    else         _send_str(SS_TUI_BOX_H);
+    _send_str(SS_TUI_BOX_TR);
+
+    /* Inhaltszeile */
+    ss_tui_goto(row + 1u, col);
+    ss_tui_fg(bcolor);
+    _send_str(SS_TUI_BOX_V);
+    ss_tui_color(_g_font_color, _g_bg_color);
+    _send_char(' ');
+
+    /* Text: bei Überlänge die letzten (w-1) Zeichen anzeigen */
+    uint16_t text_area   = w > 1u ? (uint16_t)(w - 1u) : 0u;
+    uint16_t start       = e->len > text_area ? (uint16_t)(e->len - text_area) : 0u;
+    uint16_t display_len = (uint16_t)(e->len - start);
+    for (uint16_t i = 0; i < display_len; i++) _send_char(e->buf[start + i]);
+    for (uint16_t i = display_len; i < text_area; i++) _send_char(' ');
+
+    ss_tui_fg(bcolor);
+    _send_str(SS_TUI_BOX_V);
+
+    /* Unterer Rahmen */
+    ss_tui_goto(row + 2u, col);
+    _send_str(SS_TUI_BOX_BL);
+    for (uint16_t i = 0; i < w; i++) _send_str(SS_TUI_BOX_H);
+    _send_str(SS_TUI_BOX_BR);
+
+    ss_tui_reset();
+}
+
+
+/* ── Parser-Helfer (kein stdlib) ──────────── */
+
+static SS_FEEDBACK _parse_int(const char *buf, uint8_t len, int32_t *out)
+{
+    if (len == 0u) return SS_FEEDBACK_ERROR;
+
+    uint8_t  i    = 0;
+    int32_t  sign = 1;
+
+    if      (buf[i] == '-') { sign = -1; i++; }
+    else if (buf[i] == '+') {            i++; }
+
+    if (i == len) return SS_FEEDBACK_ERROR; /* nur Vorzeichen */
+
+    int32_t result = 0;
+    while (i < len) {
+        if (buf[i] < '0' || buf[i] > '9') return SS_FEEDBACK_ERROR;
+        result = result * 10 + (int32_t)(buf[i] - '0');
+        i++;
+    }
+
+    *out = sign * result;
+    return SS_FEEDBACK_OK;
+}
+
+static SS_FEEDBACK _parse_float(const char *buf, uint8_t len, float *out)
+{
+    if (len == 0u) return SS_FEEDBACK_ERROR;
+
+    uint8_t i        = 0;
+    float   sign     = 1.0f;
+
+    if      (buf[i] == '-') { sign = -1.0f; i++; }
+    else if (buf[i] == '+') {               i++; }
+
+    if (i == len) return SS_FEEDBACK_ERROR;
+
+    /* Ganzzahliger Anteil (max. 5 Stellen) */
+    float   result     = 0.0f;
+    uint8_t int_digits = 0;
+    while (i < len && buf[i] != '.') {
+        if (buf[i] < '0' || buf[i] > '9') return SS_FEEDBACK_ERROR;
+        result = result * 10.0f + (float)(buf[i] - '0');
+        int_digits++;
+        i++;
+    }
+    if (int_digits == 0u) return SS_FEEDBACK_ERROR;
+
+    /* Nachkommastellen (max. 2) */
+    if (i < len && buf[i] == '.') {
+        i++;
+        float   factor    = 0.1f;
+        uint8_t dec_count = 0u;
+        while (i < len && dec_count < 2u) {
+            if (buf[i] < '0' || buf[i] > '9') return SS_FEEDBACK_ERROR;
+            result   += (float)(buf[i] - '0') * factor;
+            factor   *= 0.1f;
+            dec_count++;
+            i++;
+        }
+        if (i < len) return SS_FEEDBACK_ERROR; /* mehr als 2 Dezimalstellen */
+    }
+
+    if (i != len) return SS_FEEDBACK_ERROR; /* unbekannte Zeichen am Ende */
+
+    *out = sign * result;
+    return SS_FEEDBACK_OK;
+}
+
+
 void ss_tui_set_font_color(uint8_t fg)       { _g_font_color = fg; }
 void ss_tui_set_background_color(uint8_t bg) { _g_bg_color   = bg; }
 void ss_tui_set_line_color(uint8_t fg)       { _g_line_color = fg; }
@@ -761,16 +952,48 @@ void ss_tui_update(uint8_t slide_id)
         if (s->base.update_needed)         continue; /* already clean */
 
         switch (s->base.type) {
-            case SS_TUI_ETYPE_TEXT:     _draw_text_elem(&s->text); break;
-            
-            case SS_TUI_ETYPE_LINE:     _draw_line_elem(&s->line); break;
-            case SS_TUI_ETYPE_KV:       _draw_kv_elem(&s->kv);    break;
-            case SS_TUI_ETYPE_TEXT_BOX: _draw_box_elem(&s->box);   break;
+            case SS_TUI_ETYPE_TEXT:     _draw_text_elem(&s->text);   break;
+            case SS_TUI_ETYPE_LINE:     _draw_line_elem(&s->line);   break;
+            case SS_TUI_ETYPE_KV:       _draw_kv_elem(&s->kv);       break;
+            case SS_TUI_ETYPE_TEXT_BOX: _draw_box_elem(&s->box);     break;
+            case SS_TUI_ETYPE_INPUT:    _draw_input_elem(&s->input); break;
             default: break;
         }
         s->base.update_needed = 1;
     }
+
+    /* Cursor positionieren wenn ein Input-Widget editiert wird */
+    if (_focused_input_id != SS_TUI_INVALID_ID) {
+        _slot_data_t *cs = _get_slot(_focused_input_id);
+        if (cs && cs->base.type == SS_TUI_ETYPE_INPUT &&
+            cs->input.state == _INPUT_EDITING) {
+            const _elem_input_t *inp = &cs->input;
+            uint16_t text_area   = inp->width > 1u ? (uint16_t)(inp->width - 1u) : 0u;
+            uint16_t display_len = inp->len < text_area ? (uint16_t)inp->len : text_area;
+            ss_tui_cursor_show();
+            ss_tui_goto(inp->base.pos.row + 1u,
+                        inp->base.pos.col + 2u + display_len);
+        } else {
+            ss_tui_cursor_hide();
+        }
+    } else {
+        ss_tui_cursor_hide();
+    }
+
     ss_uart_flush(_iface);
+}
+
+void ss_tui_slide_free(uint8_t slide_id)
+{
+    for (int i = 0; i < SS_TUI_MAX_ELEMENTS; i++) {
+        if (_pool[i].in_use && _pool[i].d.base.slide_id == slide_id) {
+            if ((i + 1) == _focused_input_id) {
+                _focused_input_id = SS_TUI_INVALID_ID;
+                ss_tui_cursor_hide();
+            }
+            _pool[i].in_use = 0;
+        }
+    }
 }
 
 void ss_tui_erase(void)
@@ -782,6 +1005,165 @@ void ss_tui_erase(void)
             _pool[i].d.base.update_needed = 0;
         }
     }
+}
+
+
+/* ════════════════════════════════════════════
+ * Input Widget
+ * ════════════════════════════════════════════ */
+
+int ss_tui_input_create(uint8_t slide_id, ss_tui_pos_t pos,
+                        uint16_t width, const char *name)
+{
+    if (width < 3u) width = 3u;
+
+    int id = _alloc_slot();
+    if (id == SS_TUI_INVALID_ID) return SS_TUI_INVALID_ID;
+
+    _elem_input_t *e      = &_pool[id - 1].d.input;
+    e->base.type          = SS_TUI_ETYPE_INPUT;
+    e->base.slide_id      = slide_id;
+    e->base.update_needed = 0;
+    e->base.pos           = pos;
+    e->width              = width;
+    e->len                = 0;
+    e->buf[0]             = '\0';
+    e->state              = _INPUT_IDLE;
+    e->activated          = 0;
+    _scopy(e->name, name ? name : "", SS_TUI_NAME_MAX_LEN);
+    return id;
+}
+
+void ss_tui_input_activate(int id)
+{
+    _slot_data_t *s = _get_slot(id);
+    if (!s || s->base.type != SS_TUI_ETYPE_INPUT) return;
+
+    /* Falls ein Widget von einer anderen Slide fokussiert ist → ablösen */
+    if (_focused_input_id != SS_TUI_INVALID_ID && _focused_input_id != id) {
+        _slot_data_t *old = _get_slot(_focused_input_id);
+        if (old && old->base.type == SS_TUI_ETYPE_INPUT &&
+            old->base.slide_id != s->base.slide_id) {
+            if (old->input.state == _INPUT_EDITING) ss_tui_cursor_hide();
+            old->input.activated    = 0;
+            old->input.state        = _INPUT_IDLE;
+            old->base.update_needed = 0;
+            _focused_input_id       = SS_TUI_INVALID_ID;
+        }
+    }
+
+    s->input.activated    = 1;
+    s->base.update_needed = 0;
+
+    /* Fokus nur setzen wenn noch kein Widget dieser Slide fokussiert ist */
+    if (_focused_input_id == SS_TUI_INVALID_ID) {
+        s->input.state    = _INPUT_FOCUSED;
+        _focused_input_id = id;
+    }
+}
+
+void ss_tui_input_deactivate(int id)
+{
+    _slot_data_t *s = _get_slot(id);
+    if (!s || s->base.type != SS_TUI_ETYPE_INPUT) return;
+
+    if (s->input.state == _INPUT_EDITING) ss_tui_cursor_hide();
+    s->input.activated    = 0;
+    s->input.state        = _INPUT_IDLE;
+    s->base.update_needed = 0;
+
+    if (_focused_input_id != id) return;
+
+    /* Fokus auf nächstes aktiviertes Widget derselben Slide übertragen */
+    _focused_input_id = SS_TUI_INVALID_ID;
+    for (int i = 0; i < SS_TUI_MAX_ELEMENTS; i++) {
+        if (!_pool[i].in_use)                            continue;
+        if (_pool[i].d.base.type != SS_TUI_ETYPE_INPUT)  continue;
+        if (!_pool[i].d.input.activated)                 continue;
+        if (_pool[i].d.base.slide_id != s->base.slide_id) continue;
+        _pool[i].d.input.state        = _INPUT_FOCUSED;
+        _pool[i].d.base.update_needed = 0;
+        _focused_input_id             = i + 1;
+        break;
+    }
+}
+
+void ss_tui_input_feed(uint8_t byte)
+{
+    /* TAB: innerhalb der Slide zum nächsten Widget springen */
+    if (byte == 0x09u) {
+        if (_focused_input_id != SS_TUI_INVALID_ID) {
+            _slot_data_t *s = _get_slot(_focused_input_id);
+            if (!s || s->input.state != _INPUT_EDITING) _cycle_focus();
+        }
+        return;
+    }
+
+    if (_focused_input_id == SS_TUI_INVALID_ID) return;
+    _slot_data_t *s = _get_slot(_focused_input_id);
+    if (!s || s->base.type != SS_TUI_ETYPE_INPUT) return;
+    _elem_input_t *inp = &s->input;
+
+    /* ENTER: Edit-Modus umschalten */
+    if (byte == 0x0Du || byte == 0x0Au) {
+        if (inp->state == _INPUT_FOCUSED) {
+            inp->state = _INPUT_EDITING;
+            ss_tui_cursor_show();
+        } else if (inp->state == _INPUT_EDITING) {
+            inp->state = _INPUT_FOCUSED;
+            ss_tui_cursor_hide();
+        }
+        s->base.update_needed = 0;
+        return;
+    }
+
+    if (inp->state != _INPUT_EDITING) return;
+
+    /* BACKSPACE (0x7F und 0x08) */
+    if (byte == 0x7Fu || byte == 0x08u) {
+        if (inp->len > 0u) {
+            inp->len--;
+            inp->buf[inp->len] = '\0';
+            s->base.update_needed = 0;
+        }
+        return;
+    }
+
+    /* Druckbare Zeichen */
+    if (byte >= 0x20u && byte <= 0x7Eu) {
+        if (inp->len < (uint8_t)(SS_TUI_INPUT_MAX_LEN - 1)) {
+            inp->buf[inp->len++] = (char)byte;
+            inp->buf[inp->len]   = '\0';
+            s->base.update_needed = 0;
+        }
+        return;
+    }
+}
+
+
+SS_FEEDBACK ss_tui_input_get_str(int id, char *buf, uint8_t max_len)
+{
+    _slot_data_t *s = _get_slot(id);
+    if (!s || s->base.type != SS_TUI_ETYPE_INPUT) return SS_FEEDBACK_ERROR;
+    if (s->input.state == _INPUT_EDITING)          return SS_FEEDBACK_ERROR;
+    _scopy(buf, s->input.buf, max_len);
+    return SS_FEEDBACK_OK;
+}
+
+SS_FEEDBACK ss_tui_input_get_int(int id, int32_t *value)
+{
+    _slot_data_t *s = _get_slot(id);
+    if (!s || s->base.type != SS_TUI_ETYPE_INPUT) return SS_FEEDBACK_ERROR;
+    if (s->input.state == _INPUT_EDITING)          return SS_FEEDBACK_ERROR;
+    return _parse_int(s->input.buf, s->input.len, value);
+}
+
+SS_FEEDBACK ss_tui_input_get_float(int id, float *value)
+{
+    _slot_data_t *s = _get_slot(id);
+    if (!s || s->base.type != SS_TUI_ETYPE_INPUT) return SS_FEEDBACK_ERROR;
+    if (s->input.state == _INPUT_EDITING)          return SS_FEEDBACK_ERROR;
+    return _parse_float(s->input.buf, s->input.len, value);
 }
 
 #endif

@@ -6,6 +6,7 @@
 #define _SS_TUI_H_
 
 #include <stdint.h>
+#include "ss_feedback.h"
 
 /* ─────────────────────────────────────────────────────────────
  * TUI – Tiny Terminal UI Library
@@ -82,6 +83,9 @@
 #endif
 #ifndef SS_TUI_NAME_MAX_LEN
 #  define SS_TUI_NAME_MAX_LEN     24   /* max chars for a text-box title    */
+#endif
+#ifndef SS_TUI_INPUT_MAX_LEN
+#  define SS_TUI_INPUT_MAX_LEN    24   /* max chars for an input widget     */
 #endif
 
 /* ── Box-drawing characters (UTF-8) ── */
@@ -210,6 +214,7 @@ typedef enum {
     SS_TUI_ETYPE_LINE,
     SS_TUI_ETYPE_KV,
     SS_TUI_ETYPE_TEXT_BOX,
+    SS_TUI_ETYPE_INPUT,
 } ss_tui_etype_t;
 
 /* Returned by create functions on failure */
@@ -259,17 +264,60 @@ int  ss_tui_line_create(uint8_t slide_id,
                         ss_tui_pos_t start,
                         ss_tui_pos_t end);
 
+/* ── Input widget ────────────────────────────
+ * Ein einzeiliges Texteingabefeld mit Rahmen und Name.
+ * Gehört zu einer Slide wie jedes andere Widget.
+ *
+ * Steuerung (aus dem RX-Task):
+ *   ss_tui_input_activate(id)    Fokus auf dieses Feld setzen.
+ *                                Das vorherige Feld wird automatisch
+ *                                deaktiviert (immer nur eines aktiv).
+ *   ss_tui_input_deactivate(id)  Feld auf IDLE zurücksetzen.
+ *   ss_tui_input_feed(byte)      Byte an das aktive Feld schicken.
+ *
+ * Tastenbelegung in ss_tui_input_feed():
+ *   ENTER      FOCUSED → EDITING (und zurück)
+ *   BACKSPACE  letztes Zeichen löschen (0x7F und 0x08)
+ *   Zeichen    werden angehängt (bei vollem Puffer ignoriert)
+ *
+ * Visuelle Rückmeldung:
+ *   FOCUSED  → gelber Rahmen
+ *   EDITING  → gelber Rahmen + '*' oben rechts + Cursor
+ *
+ * ss_tui_input_get_*() aus dem Slide-Task aufrufen.
+ * Gibt SS_FEEDBACK_ERROR zurück während editiert wird
+ * oder der Puffer nicht parsierbar ist.                             */
+int         ss_tui_input_create(uint8_t slide_id,
+                                ss_tui_pos_t pos,
+                                uint16_t width,
+                                const char *name);
+
+void        ss_tui_input_activate(int id);
+void        ss_tui_input_deactivate(int id);
+void        ss_tui_input_feed(uint8_t byte);
+
+SS_FEEDBACK ss_tui_input_get_str(int id, char *buf, uint8_t max_len);
+SS_FEEDBACK ss_tui_input_get_int(int id, int32_t *value);
+SS_FEEDBACK ss_tui_input_get_float(int id, float *value);
+
+
 /* ── Slide control ───────────────────────────
  * ss_tui_update(slide_id)
  *   Draws every element of that slide whose
  *   update_needed flag is 0 (dirty), then
  *   sets the flag to 1 (clean).
  *
+ * ss_tui_slide_free(slide_id)
+ *   Frees all pool elements that belong to
+ *   slide_id. Call before re-creating a slide
+ *   to avoid pool exhaustion on task restart.
+ *
  * ss_tui_erase()
  *   Clears the terminal and marks every element
  *   (all slides) as dirty so that the next
  *   ss_tui_update() redraws everything.        */
 void ss_tui_update(uint8_t slide_id);
+void ss_tui_slide_free(uint8_t slide_id);
 void ss_tui_erase(void);
 
 
