@@ -15,7 +15,10 @@
 
 static uint8_t _iface = 0;
 
-
+typedef struct {
+    uint16_t row;
+    uint16_t col;
+} ss_tui_pos_t;
 
 
 typedef struct {
@@ -829,7 +832,7 @@ void ss_tui_set_line_color(uint8_t fg)       { _g_line_color = fg; }
 
 
 int ss_tui_text_box_create(uint8_t slide_id,
-                           ss_tui_pos_t pos,
+                           uint16_t x, uint16_t y,
                            const char *name)
 {
     int id = _alloc_slot();
@@ -839,7 +842,8 @@ int ss_tui_text_box_create(uint8_t slide_id,
     b->base.type          = SS_TUI_ETYPE_TEXT_BOX;
     b->base.slide_id      = slide_id;
     b->base.update_needed = 0;
-    b->base.pos           = pos;
+    b->base.pos.col       = x;
+    b->base.pos.row       = y;
     _scopy(b->name, name, SS_TUI_NAME_MAX_LEN);
     b->kv_count    = 0;
     b->max_key_len = 0;
@@ -928,7 +932,7 @@ void ss_tui_text_box_set_string(int kv_id, const char *str)
 }
 
 int ss_tui_text_create(uint8_t slide_id,
-                       ss_tui_pos_t pos,
+                       uint16_t x, uint16_t y,
                        const char *text)
 {
     int id = _alloc_slot();
@@ -938,7 +942,8 @@ int ss_tui_text_create(uint8_t slide_id,
     e->base.type           = SS_TUI_ETYPE_TEXT;
     e->base.slide_id       = slide_id;
     e->base.update_needed  = 0;
-    e->base.pos            = pos;
+    e->base.pos.col        = x;
+    e->base.pos.row        = y;
     _scopy(e->text, text, SS_TUI_TEXT_MAX_LEN);
     return id;
 }
@@ -953,8 +958,8 @@ void ss_tui_text_set(int text_id, const char *text)
 
 
 int ss_tui_line_create(uint8_t slide_id,
-                       ss_tui_pos_t start,
-                       ss_tui_pos_t end)
+                       uint16_t x1, uint16_t y1,
+                       uint16_t x2, uint16_t y2)
 {
     int id = _alloc_slot();
     if (id == SS_TUI_INVALID_ID) return SS_TUI_INVALID_ID;
@@ -963,8 +968,10 @@ int ss_tui_line_create(uint8_t slide_id,
     e->base.type           = SS_TUI_ETYPE_LINE;
     e->base.slide_id       = slide_id;
     e->base.update_needed  = 0;
-    e->base.pos            = start;
-    e->end                 = end;
+    e->base.pos.col        = x1;
+    e->base.pos.row        = y1;
+    e->end.col             = x2;
+    e->end.row             = y2;
     return id;
 }
 
@@ -1050,7 +1057,7 @@ void ss_tui_erase(void)
  * Input Widget
  * ════════════════════════════════════════════ */
 
-int ss_tui_input_create(uint8_t slide_id, ss_tui_pos_t pos,
+int ss_tui_input_create(uint8_t slide_id, uint16_t x, uint16_t y,
                         uint16_t width, const char *name, bool activate)
 {
     if (width < 3u) width = 3u;
@@ -1062,7 +1069,8 @@ int ss_tui_input_create(uint8_t slide_id, ss_tui_pos_t pos,
     e->base.type          = SS_TUI_ETYPE_INPUT;
     e->base.slide_id      = slide_id;
     e->base.update_needed = 0;
-    e->base.pos           = pos;
+    e->base.pos.col       = x;
+    e->base.pos.row       = y;
     e->width              = width;
     e->len                = 0;
     e->buf[0]             = '\0';

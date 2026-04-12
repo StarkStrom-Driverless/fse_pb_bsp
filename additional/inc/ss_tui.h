@@ -205,12 +205,6 @@ void ss_tui_box_separator(uint16_t row, uint16_t col,
  * Widget System
  * ════════════════════════════════════════════ */
 
-/* ── Position ── */
-typedef struct {
-    uint16_t row;
-    uint16_t col;
-} ss_tui_pos_t;
-
 /* ── Element type tag ── */
 typedef enum {
     SS_TUI_ETYPE_NONE = 0,
@@ -247,7 +241,7 @@ void ss_tui_set_line_color(uint8_t fg);
  *   – 5 integer digits, space-padded
  *   – always 2 decimal places                */
 int  ss_tui_text_box_create(uint8_t slide_id,
-                            ss_tui_pos_t pos,
+                            uint16_t x, uint16_t y,
                             const char *name);
 
 int  ss_tui_text_box_add_key_value(int box_id,
@@ -263,15 +257,15 @@ void ss_tui_text_box_set_string(int kv_id, const char *str);
 
 /* ── Standalone text element ─────────────── */
 int  ss_tui_text_create(uint8_t slide_id,
-                        ss_tui_pos_t pos,
+                        uint16_t x, uint16_t y,
                         const char *text);
 
 void ss_tui_text_set(int text_id, const char *text);
 
 /* ── Standalone line element ─────────────── */
 int  ss_tui_line_create(uint8_t slide_id,
-                        ss_tui_pos_t start,
-                        ss_tui_pos_t end);
+                        uint16_t x1, uint16_t y1,
+                        uint16_t x2, uint16_t y2);
 
 /* ── Input widget ────────────────────────────
  * Ein einzeiliges Texteingabefeld mit Rahmen und Name.
@@ -297,7 +291,7 @@ int  ss_tui_line_create(uint8_t slide_id,
  * Gibt SS_FEEDBACK_ERROR zurück während editiert wird
  * oder der Puffer nicht parsierbar ist.                             */
 int         ss_tui_input_create(uint8_t slide_id,
-                                ss_tui_pos_t pos,
+                                uint16_t x, uint16_t y,
                                 uint16_t width,
                                 const char *name,
                                 bool activate);
