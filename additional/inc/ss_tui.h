@@ -6,6 +6,7 @@
 #define _SS_TUI_H_
 
 #include <stdint.h>
+#include <stdbool.h>
 #include "ss_feedback.h"
 
 /* ─────────────────────────────────────────────────────────────
@@ -86,6 +87,9 @@
 #endif
 #ifndef SS_TUI_INPUT_MAX_LEN
 #  define SS_TUI_INPUT_MAX_LEN    24   /* max chars for an input widget     */
+#endif
+#ifndef SS_TUI_VALUE_STR_MAX_LEN
+#  define SS_TUI_VALUE_STR_MAX_LEN 12  /* max chars for a string kv value   */
 #endif
 
 /* ── Box-drawing characters (UTF-8) ── */
@@ -250,7 +254,12 @@ int  ss_tui_text_box_add_key_value(int box_id,
                                    const char *key,
                                    float value);
 
+int  ss_tui_text_box_add_key_string(int box_id,
+                                    const char *key,
+                                    const char *value);
+
 void ss_tui_text_box_set_value(int kv_id, float value);
+void ss_tui_text_box_set_string(int kv_id, const char *str);
 
 /* ── Standalone text element ─────────────── */
 int  ss_tui_text_create(uint8_t slide_id,
@@ -290,7 +299,8 @@ int  ss_tui_line_create(uint8_t slide_id,
 int         ss_tui_input_create(uint8_t slide_id,
                                 ss_tui_pos_t pos,
                                 uint16_t width,
-                                const char *name);
+                                const char *name,
+                                bool activate);
 
 void        ss_tui_input_activate(int id);
 void        ss_tui_input_deactivate(int id);
@@ -316,6 +326,7 @@ SS_FEEDBACK ss_tui_input_get_float(int id, float *value);
  *   Clears the terminal and marks every element
  *   (all slides) as dirty so that the next
  *   ss_tui_update() redraws everything.        */
+void ss_tui_start(uint8_t slide_id);
 void ss_tui_update(uint8_t slide_id);
 void ss_tui_slide_free(uint8_t slide_id);
 void ss_tui_erase(void);

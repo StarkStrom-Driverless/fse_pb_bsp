@@ -39,9 +39,11 @@ typedef struct {
 
 typedef struct {
     _elem_base_t base;
-    char  key[SS_TUI_KEY_MAX_LEN];
-    float value;
-    int   parent_box_id;
+    char     key[SS_TUI_KEY_MAX_LEN];
+    float    value;
+    char     value_str[SS_TUI_VALUE_STR_MAX_LEN];
+    uint8_t  is_string;
+    int      parent_box_id;
 } _elem_kv_t;
 
 
@@ -591,7 +593,13 @@ static void _draw_kv_elem(const _elem_kv_t *kv)
     _send_char(' ');
     _put_key_padded(kv->key, max_kl);
     _send_str(" : ");
-    _put_float_value(kv->value);
+    if (kv->is_string) {
+        uint8_t vlen = _slen(kv->value_str);
+        _send((const uint8_t *)kv->value_str, vlen);
+        for (uint8_t i = vlen; i < 9u; i++) _send_char(' ');
+    } else {
+        _put_float_value(kv->value);
+    }
     _send_char(' ');
     ss_tui_reset();
 }
@@ -900,6 +908,25 @@ void ss_tui_text_box_set_value(int kv_id, float value)
     s->base.update_needed = 0;
 }
 
+int ss_tui_text_box_add_key_string(int box_id, const char *key, const char *value)
+{
+    int kv_id = ss_tui_text_box_add_key_value(box_id, key, 0.0f);
+    if (kv_id == SS_TUI_INVALID_ID) return SS_TUI_INVALID_ID;
+
+    _slot_data_t *s = _get_slot(kv_id);
+    s->kv.is_string = 1;
+    _scopy(s->kv.value_str, value, SS_TUI_VALUE_STR_MAX_LEN);
+    return kv_id;
+}
+
+void ss_tui_text_box_set_string(int kv_id, const char *str)
+{
+    _slot_data_t *s = _get_slot(kv_id);
+    if (!s || s->base.type != SS_TUI_ETYPE_KV) return;
+    _scopy(s->kv.value_str, str, SS_TUI_VALUE_STR_MAX_LEN);
+    s->base.update_needed = 0;
+}
+
 int ss_tui_text_create(uint8_t slide_id,
                        ss_tui_pos_t pos,
                        const char *text)
@@ -942,8 +969,19 @@ int ss_tui_line_create(uint8_t slide_id,
 }
 
 
+void ss_tui_start(uint8_t slide_id)
+{
+    ss_tui_clear();
+    ss_tui_update(slide_id);
+}
+
 void ss_tui_update(uint8_t slide_id)
 {
+    static uint8_t _update_count = 0;
+    if (++_update_count >= 20u) {
+        _update_count = 0;
+        ss_tui_erase();
+    }
 
     for (int i = 0; i < SS_TUI_MAX_ELEMENTS; i++) {
         if (!_pool[i].in_use)              continue;
@@ -1013,7 +1051,7 @@ void ss_tui_erase(void)
  * ════════════════════════════════════════════ */
 
 int ss_tui_input_create(uint8_t slide_id, ss_tui_pos_t pos,
-                        uint16_t width, const char *name)
+                        uint16_t width, const char *name, bool activate)
 {
     if (width < 3u) width = 3u;
 
@@ -1031,6 +1069,8 @@ int ss_tui_input_create(uint8_t slide_id, ss_tui_pos_t pos,
     e->state              = _INPUT_IDLE;
     e->activated          = 0;
     _scopy(e->name, name ? name : "", SS_TUI_NAME_MAX_LEN);
+
+    if (activate) ss_tui_input_activate(id);
     return id;
 }
 
