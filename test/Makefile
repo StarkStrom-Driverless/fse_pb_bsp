@@ -8,8 +8,7 @@ OBJS += $(patsubst %.c, %.o, $(wildcard usr/src/*.c))
 
 TGT_CPPFLAGS	+= -Iusr/inc
 
-all: $(BINARY)
-
+all:
 
 gdb:
 	gdb-multiarch --tui -silent -x 'fse_pb_bsp/tools/gdbinit' -iex 'set auto-load safe-path /'
