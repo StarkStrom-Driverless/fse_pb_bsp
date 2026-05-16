@@ -231,21 +231,19 @@ SS_FEEDBACK ss_adc_get_measurement_pos_from_pin_id(uint16_t pin_id, uint8_t *mea
  * 
  */
 SS_FEEDBACK ss_adc_set_next_measurment_pos(void) {
-    SS_FEEDBACK rc = SS_FEEDBACK_OK;
+    SS_FEEDBACK rc = SS_FEEDBACK_ADC_FAILED_NEXT_MPOS;
 
-    uint8_t original_pos = ss_adc.measurement_pos;
-    do {
+
+    for (uint8_t i = 0; i < MAX_MEASUREMENT; i++) {
         ss_adc.measurement_pos++;
         if (ss_adc.measurement_pos >= MAX_MEASUREMENT) {
             ss_adc.measurement_pos = 0;
         }
-        /*
-        if (ss_adc.measurement_pos == original_pos) {
-            rc = SS_FEEDBACK_ADC_FAILED_NEXT_MPOS;
+        if (ss_adc.measurements[ss_adc.measurement_pos].enable == 1) {
+            rc = SS_FEEDBACK_OK;
             break;
         }
-            */
-    }while(ss_adc.measurements[ss_adc.measurement_pos].enable == 0);
+    }
 
     return rc;
 }

@@ -426,9 +426,10 @@ SS_FEEDBACK ss_can_queue_add(uint8_t channel, uint32_t id, struct SS_CAN_MSG_QUE
     ss_can_queue_get(channel + 1, id, queue);
 
     rc = ss_can_filter_add_msg(channel + 1, SS_CAN_ID_RAW(id));
-    SS_HANDLE_ERROR_WITH_EXIT(rc);
 
-    taskEXIT_CRITICAL(); 
+    taskEXIT_CRITICAL();
+
+    SS_HANDLE_ERROR_WITH_EXIT(rc);
 
     return rc;
 }
@@ -533,6 +534,15 @@ SS_FEEDBACK ss_can_filter_add_msg_11(uint8_t channel, uint16_t id) {
     }
 
     struct SS_CAN_ID_FILTERS *filters = &ss_can.channel[channel].filters;
+
+    /* Kein freier Filter-Bank mehr: die aufsteigenden Standard-Baenke
+     * (free_id_group) wuerden mit den absteigenden Extended-Baenken
+     * (free_ide_group) kollidieren. Pruefung VOR dem HW-Schreibzugriff. */
+    if (filters->free_id_group >= filters->free_ide_group) {
+        rc = SS_FEEDBACK_CAN_FILTER_OVERRUN;
+        SS_HANDLE_ERROR_WITH_EXIT(rc);
+    }
+
     uint16_t tmp[4] = {};
 
     filters->ids[filters->insert_pos].id = id;
@@ -562,11 +572,9 @@ SS_FEEDBACK ss_can_filter_add_msg_11(uint8_t channel, uint16_t id) {
     
 
     if (cnt == 4) {
+        /* aktuelle Bank ist voll -> naechste Bank fuer den naechsten
+         * Aufruf. Ob die noch frei ist, prueft der Check am Anfang. */
         filters->free_id_group++;
-        if ((filters->free_ide_group + filters->free_id_group) >= SS_FILTER_BANKS) {
-            rc = SS_FEEDBACK_CAN_FILTER_OVERRUN;
-            SS_HANDLE_ERROR_WITH_EXIT(rc);
-        }
     }
 
     
