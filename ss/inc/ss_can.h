@@ -129,9 +129,8 @@ SS_FEEDBACK ss_can_queue_get(	uint8_t channel,
 								struct SS_CAN_MSG_QUEUE **queue);
 #endif
 
-#ifdef USE_PRIVATE
 SS_FEEDBACK ss_can_queue_read(struct SS_CAN_MSG_QUEUE *queue, struct SS_CAN_FRAME* frame);
-#endif
+
 #ifdef USE_PRIVATE
 SS_FEEDBACK ss_can_queue_has_msg(struct SS_CAN_MSG_QUEUE *queue);
 #endif
@@ -168,18 +167,12 @@ uint32_t ss_can_get_fifo_from_channel(uint8_t channel);
  *  CAN FRAME MANUPULATION FUNCTIONS
  *
  */
-#ifdef USE_PRIVATE
 void ss_can_frame_set_common(struct SS_CAN_FRAME *msg, uint32_t id, uint8_t dlc);
-#endif
-#ifdef USE_PRIVATE
+
 void ss_can_frame_set_signal(struct SS_CAN_FRAME *msg, uint8_t start_bit, uint8_t length, uint64_t value);
-#endif
-#ifdef USE_PRIVATE
 uint64_t ss_can_frame_get_signal(struct SS_CAN_FRAME* msg, uint8_t start_bit, uint8_t length);
-#endif
-#ifdef USE_PRIVATE
+
 void ss_can_frame_reset(struct SS_CAN_FRAME *msg);
-#endif
 
 /***
  *

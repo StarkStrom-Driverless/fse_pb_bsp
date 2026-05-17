@@ -25,23 +25,12 @@ struct SS_ADC ss_adc = {0};
 #define SS_FEEDBACK_BASE SS_FEEDBACK_ADC_INIT_ERROR
 
 /***
- * 
+ *
  * ISR FUNCTIONS
- * 
+ *
  */
 void adc_isr(void) {
-    if (adc_eoc(ADC1)) {
-        ss_adc.measurements[ss_adc.measurement_pos].measurement = adc_read_regular(ADC1);
-    }
-    else if (adc_eoc(ADC2)) {
-        ss_adc.measurements[ss_adc.measurement_pos].measurement = adc_read_regular(ADC2);
-    }
-    else if (adc_eoc(ADC3)) {
-        ss_adc.measurements[ss_adc.measurement_pos].measurement = adc_read_regular(ADC3);
-    }
-    if (ss_adc_set_next_measurment_pos() == SS_FEEDBACK_OK) {
-        ss_adc_start_channel(ss_adc.measurements[ss_adc.measurement_pos].pin_id);
-    }
+    /* unused: ss_adc_read uses one-shot polling instead of continuous ISR measurement */
 }
 
 
@@ -52,12 +41,19 @@ void adc_isr(void) {
  */
 SS_FEEDBACK ss_adc_read(uint16_t pin_id, uint16_t *val) {
     SS_FEEDBACK rc = SS_FEEDBACK_OK;
-    uint8_t measure_pos = 0;
+    uint32_t adc = 0;
+    uint32_t adc_channel = 0;
 
-    rc = ss_adc_get_measurement_pos_from_pin_id(pin_id, &measure_pos);
+    rc = ss_adc_get_adc_from_pin_id(pin_id, &adc);
     SS_HANDLE_ERROR_WITH_EXIT(rc);
 
-    *val = ss_adc.measurements[measure_pos].measurement;
+    rc = ss_adc_get_channel_from_pin_id(pin_id, &adc_channel);
+    SS_HANDLE_ERROR_WITH_EXIT(rc);
+
+    adc_set_regular_sequence(adc, 1, (uint8_t*)(&adc_channel));
+    adc_start_conversion_regular(adc);
+    while (!adc_eoc(adc));
+    *val = (uint16_t)adc_read_regular(adc);
 
     return rc;
 }
@@ -80,20 +76,7 @@ SS_FEEDBACK ss_adc_init(uint16_t pin_id) {
 
     adc_power_on(adc);
 
-    adc_set_sample_time_on_all_channels(adc, ADC_SMPR_SMP_28CYC);
-
-    adc_enable_eoc_interrupt(adc);
-
-    nvic_enable_irq(NVIC_ADC_IRQ);
-
-    rc = ss_adc_get_measurement_pos_from_pin_id(pin_id, &measurement_pos);
-    SS_HANDLE_ERROR_WITH_EXIT(rc);
-
-    ss_adc.measurements[measurement_pos].enable = 1;
-    ss_adc.measurements[measurement_pos].pin_id = pin_id;
-    ss_adc.measurement_pos = 0;
-
-    rc = ss_adc_start();
+    adc_set_sample_time_on_all_channels(adc, ADC_SMPR_SMP_480CYC);
 
     return rc;
 }

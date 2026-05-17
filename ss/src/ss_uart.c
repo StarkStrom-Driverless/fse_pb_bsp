@@ -133,7 +133,7 @@ SS_FEEDBACK ss_uart_get_pins_from_interface(uint8_t interface, uint16_t* rx, uin
         case 1: *rx = PIN('A', 10); *tx = PIN('A', 9); break;
         case 2: *rx = PIN('A', 3); *tx = PIN('A', 2); break;
         case 3: *rx = PIN('B', 11); *tx = PIN('B', 10); break;
-        case 4: *rx = PIN('A', 1); *tx = PIN('A', 0); break;
+        case 4: *rx = PIN('C', 11); *tx = PIN('C', 10); break;
         case 6: *rx = PIN('C', 7); *tx = PIN('C', 6); break;
         default: rc = SS_FEEDBACK_ERROR; break;
     }
@@ -296,6 +296,10 @@ SS_FEEDBACK ss_uart_send(uint8_t interface, uint8_t* value, uint32_t len) {
     rc = ss_uart_queue_channel_get(interface, &channel);
     SS_HANDLE_ERROR_WITH_EXIT(rc);
 
+    if (!channel->tx.enabled) {
+        return SS_FEEDBACK_ERROR;
+    }
+
     for (uint32_t i = 0; i < len; i++) {
         xQueueSend(channel->tx.queue, &value[i], portMAX_DELAY);
     }
@@ -314,6 +318,10 @@ SS_FEEDBACK ss_uart_flush(uint8_t interface) {
 
     rc = ss_uart_queue_channel_get(interface, &channel);
     SS_HANDLE_ERROR_WITH_EXIT(rc);
+
+    if (!channel->tx.enabled) {
+        return SS_FEEDBACK_ERROR;
+    }
 
     if (!channel->tx.tx_busy) {
         uint8_t byte;
