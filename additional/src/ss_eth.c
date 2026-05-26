@@ -113,7 +113,7 @@ SS_FEEDBACK ss_eth_set_mac(uint64_t mac) {
 SS_FEEDBACK ss_eth_init(uint32_t ip, uint32_t sn, uint64_t mac, uint32_t gw) {
     SS_FEEDBACK rc = SS_FEEDBACK_OK;
 
-    ss_eth.rst_pin_id = PIN('C', 3);
+    ss_eth.rst_pin_id = PIN('C', 2);
     ss_eth.cs_pin_id = PIN('A', 10);
 
     
