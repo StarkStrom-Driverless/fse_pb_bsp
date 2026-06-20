@@ -144,7 +144,25 @@ uint32_t ss_get_spi_port_from_id(uint8_t spi_interface_id) {
 
 
 
-SS_FEEDBACK ss_spi_init(uint8_t spi_interface_id, uint32_t baudrate)
+SS_FEEDBACK ss_spi_mode(uint8_t spi_interface_id, uint8_t mode)
+{
+    uint32_t spi_port = ss_get_spi_port_from_id(spi_interface_id);
+    if (spi_port == 0) return SS_FEEDBACK_SPI_INIT_ERROR;
+
+    spi_disable(spi_port);
+
+    if (mode & 0x02) spi_set_clock_polarity_1(spi_port);
+    else             spi_set_clock_polarity_0(spi_port);
+
+    if (mode & 0x01) spi_set_clock_phase_1(spi_port);
+    else             spi_set_clock_phase_0(spi_port);
+
+    spi_enable(spi_port);
+
+    return SS_FEEDBACK_OK;
+}
+
+SS_FEEDBACK ss_spi_init(uint8_t spi_interface_id, uint32_t baudrate, uint8_t mode)
 {
     SS_FEEDBACK rc;
 
@@ -156,11 +174,9 @@ SS_FEEDBACK ss_spi_init(uint8_t spi_interface_id, uint32_t baudrate)
     rc = ss_enable_spi_gpios(spi_interface_id);
     SS_HANDLE_ERROR_WITH_EXIT(rc);
 
-
     uint32_t spi_prescaler = 0;
     rc = ss_clock_spi(&spi_prescaler, baudrate, spi_interface_id);
     SS_HANDLE_ERROR_WITH_EXIT(rc);
-
 
     spi_disable(spi_port);
 
@@ -169,16 +185,12 @@ SS_FEEDBACK ss_spi_init(uint8_t spi_interface_id, uint32_t baudrate)
     spi_send_msb_first(spi_port);
     spi_set_full_duplex_mode(spi_port);
 
-    spi_set_clock_polarity_0(spi_port);   // CPOL=0
-    spi_set_clock_phase_0(spi_port);      // CPHA=0
-
-    spi_enable_software_slave_management(spi_port);  // SSM=1
-    spi_set_nss_high(spi_port);                       // SSI=1
+    spi_enable_software_slave_management(spi_port);
+    spi_set_nss_high(spi_port);
 
     spi_set_baudrate_prescaler(spi_port, spi_prescaler);
 
-    spi_enable(spi_port);
-    return SS_FEEDBACK_OK;
+    return ss_spi_mode(spi_interface_id, mode);
 }
 
 int8_t ss_spi_rxtx(uint8_t spi_interface_id, uint8_t* rx, uint8_t* tx, uint16_t num) {

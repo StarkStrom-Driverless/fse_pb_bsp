@@ -23,6 +23,7 @@ struct WZ5500 ss_eth;
 
 
 static void wizchip_cs_select(void) {
+    ss_spi_mode(W5500_SPI_ID, 0);
     ss_io_write(ss_eth.cs_pin_id, SS_GPIO_OFF);
 }
 
@@ -151,7 +152,7 @@ SS_FEEDBACK ss_eth_init(uint32_t ip, uint32_t sn, uint64_t mac, uint32_t gw) {
 
     ss_io_write(ss_eth.cs_pin_id, SS_GPIO_ON);
 
-    if (ss_spi_init(W5500_SPI_ID, ss_eth.baudrate) != SS_FEEDBACK_OK) {
+    if (ss_spi_init(W5500_SPI_ID, ss_eth.baudrate, 0) != SS_FEEDBACK_OK) {
         return SS_SET_TOPLEVEL_ERROR(SS_FEEDBACK_ETHERNET_INIT_ERROR, SS_FEEDBACK_SPI_INIT_ERROR);
     }
 
@@ -203,7 +204,7 @@ SS_FEEDBACK ss_eth_init_wiz() {
 
     //ss_eth.baudrate = 10500000;
     ss_eth.baudrate = 42000000;
-    if (ss_spi_init(W5500_SPI_ID, ss_eth.baudrate) != SS_FEEDBACK_OK) {
+    if (ss_spi_init(W5500_SPI_ID, ss_eth.baudrate, 0) != SS_FEEDBACK_OK) {
         return SS_SET_TOPLEVEL_ERROR(SS_FEEDBACK_ETHERNET_INIT_ERROR, SS_FEEDBACK_SPI_INIT_ERROR);
     }
 

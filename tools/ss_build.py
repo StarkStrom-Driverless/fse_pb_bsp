@@ -19,7 +19,7 @@ def get_dir_of_file(file : str):
 
 def build(  make_file : str = "../../Makefile"):
     cmd = [
-        "make"
+        "bear", "--", "make"
     ]
 
     directory = get_dir_of_file(make_file)

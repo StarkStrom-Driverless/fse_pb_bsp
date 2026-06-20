@@ -18,7 +18,7 @@
 #include "ss_clock.h"
 
 static inline void ss_delay(volatile uint32_t count) {
-    count *= ss_clock.ahb * 10;
+    count *= ss_clock.ahb;
     while (count--) {
         __asm__ __volatile__("nop");
     }
