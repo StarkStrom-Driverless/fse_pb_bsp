@@ -15,6 +15,13 @@
 #include "ss_can.h"
 #include <libopencm3/stm32/flash.h>
 
+#include "ss_config.h"
+
+#ifdef COMPILE_SS_PRINTF
+#include "ss_printf.h"
+#endif
+
+
 #define SS_FEEDBACK_BASE SS_FEEDBACK_CANBOOT_INIT_ERROR
 
 struct SS_CANBOOT ss_canboot;
@@ -24,6 +31,11 @@ void canboot_task(void *args) {
     struct SS_CAN_MSG_QUEUE* queue;
     uint8_t received_update = 0;
     ss_can_queue_add(1, ss_canboot.can_id, &queue);
+
+#ifdef COMPILE_SS_PRINTF
+    ss_printf(4, "-> started <canboot_task:%d> \r\n", 0);
+#endif
+
     for(;;) {
         if (ss_can_queue_read(queue, &frame) == SS_FEEDBACK_CAN_MSG_RECEIVED) {
             received_update = 1;
