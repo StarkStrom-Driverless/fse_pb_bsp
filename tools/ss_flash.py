@@ -69,18 +69,11 @@ def get_img_sign_name(name : str):
 
 
 
-def telnet_flash(   img : str = "../../bp_test.bin",
-                    position : str = "0x08020000"):
+def telnet_write_image( img : str,
+                        position : str):
 
     if oocd_is_running() == False:
         oocd_start()
-    
-    signed_img_name : str = get_img_sign_name(name=img)
-    sign_img(
-        img = img,
-        signed_img = signed_img_name
-    )
-
 
     try:
         tn = telnetlib.Telnet("localhost", 4444, timeout=5)
@@ -96,7 +89,7 @@ def telnet_flash(   img : str = "../../bp_test.bin",
             "flash",
             "write_image",
             "erase",
-            signed_img_name,
+            img,
             position,
             "\n"
         ]
@@ -117,6 +110,24 @@ def telnet_flash(   img : str = "../../bp_test.bin",
 
     if oocd_is_running() == True:
         oocd_stop()
+
+
+def telnet_flash(   img : str = "../../bp_test.bin",
+                    position : str = "0x08020000"):
+
+    signed_img_name : str = get_img_sign_name(name=img)
+    sign_img(
+        img = img,
+        signed_img = signed_img_name
+    )
+
+    telnet_write_image(img=signed_img_name, position=position)
+
+
+def telnet_flash_bootloader( img : str = "zephyr.bin",
+                            position : str = "0x08000000"):
+
+    telnet_write_image(img=img, position=position)
 
 
 def flash_can_state(can_socket : str = "can0"):
@@ -325,6 +336,9 @@ def telnet_flash_handle(args):
     falsh_call_build()
     telnet_flash()
 
+def bootloader_flash_handle(args):
+    telnet_flash_bootloader(img=args.bin_file, position=args.position)
+
 def can_flash_handle(args):
     can_id = int(args.id, 16)
     send_firmware_via_can(args.bin_file, can_id)
@@ -333,6 +347,12 @@ def can_flash_handle(args):
 def flash_add_sub(sub):
     parser_flash = sub.add_parser("flash", help="flash via telnet and stlink")
     parser_flash.set_defaults(func=telnet_flash_handle)
+
+
+    parser_bootloader = sub.add_parser("bootloader", help="flash bootloader via telnet and stlink")
+    parser_bootloader.add_argument("--bin_file", default="zephyr.bin", help="bootloader binary such as zephyr.bin")
+    parser_bootloader.add_argument("--position", default="0x08000000", help="flash address to write the bootloader to")
+    parser_bootloader.set_defaults(func=bootloader_flash_handle)
 
 
     parser_canflash = sub.add_parser("canflash", help="flash via can")
