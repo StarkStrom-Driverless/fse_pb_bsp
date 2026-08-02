@@ -15,8 +15,9 @@
 #define _SS_INIT_H_
 
 #include "ss_feedback.h"
+#include <stdbool.h>
 
-SS_FEEDBACK ss_init();
+bool ss_init();
 
 #endif // _SS_INIT_H_
 

@@ -14,9 +14,9 @@
  *
  * Kein printf, kein stdio, kein stdlib.
  * Einzige externe Abhängigkeit:
- *   SS_FEEDBACK ss_uart_send(uint8_t interface,
- *                            uint8_t *value,
- *                            uint32_t len);
+ *   bool ss_uart_send(uint8_t interface,
+ *                      uint8_t *value,
+ *                      uint32_t len);
  * ───────────────────────────────────────────────────────────── */
 
 /* ── Foreground colours ── */
@@ -288,7 +288,7 @@ int  ss_tui_line_create(uint8_t slide_id,
  *   EDITING  → gelber Rahmen + '*' oben rechts + Cursor
  *
  * ss_tui_input_get_*() aus dem Slide-Task aufrufen.
- * Gibt SS_FEEDBACK_ERROR zurück während editiert wird
+ * Gibt false zurück während editiert wird
  * oder der Puffer nicht parsierbar ist.                             */
 int         ss_tui_input_create(uint8_t slide_id,
                                 uint16_t x, uint16_t y,
@@ -300,9 +300,9 @@ void        ss_tui_input_activate(int id);
 void        ss_tui_input_deactivate(int id);
 void        ss_tui_input_feed(uint8_t byte);
 
-SS_FEEDBACK ss_tui_input_get_str(int id, char *buf, uint8_t max_len);
-SS_FEEDBACK ss_tui_input_get_int(int id, int32_t *value);
-SS_FEEDBACK ss_tui_input_get_float(int id, float *value);
+bool ss_tui_input_get_str(int id, char *buf, uint8_t max_len);
+bool ss_tui_input_get_int(int id, int32_t *value);
+bool ss_tui_input_get_float(int id, float *value);
 
 
 /* ── Slide control ───────────────────────────

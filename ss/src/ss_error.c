@@ -51,9 +51,6 @@ void ss_error_reset(void) {
     ss_error_current_ctx()->depth = 0;
 }
 
-/* Hand-rolled formatting (matches ss_printf.c's approach) so this module
- * does not pull newlib's stdio layer (and its _read/_write/_lseek/_kill
- * syscall stubs) into the link just to render a debug line. */
 static void ss_error_append_char(char *buf, uint32_t *pos, uint32_t cap, char c) {
     if (*pos < cap - 1) {
         buf[(*pos)++] = c;
@@ -125,15 +122,10 @@ void ss_error_dump(void (*writer)(const char *str)) {
 #include "ss_uart.h"
 #include <libopencm3/stm32/usart.h>
 
-/* Deliberately bypasses ss_uart_send()/ss_printf(): those go through a
- * FreeRTOS queue that is only drained by the UART ISR, which in turn only
- * makes progress once the scheduler is running. This path must also work
- * for failures that happen before ss_rtos_start(), so it talks to the
- * peripheral directly and just busy-waits. */
 static void ss_error_write_blocking(uint8_t uart_interface, const char *str) {
     uint32_t uart_addr = 0;
 
-    if (ss_uart_get_uart_addr_from_interface(uart_interface, &uart_addr) != SS_FEEDBACK_OK) {
+    if (!ss_uart_get_uart_addr_from_interface(uart_interface, &uart_addr)) {
         return;
     }
 

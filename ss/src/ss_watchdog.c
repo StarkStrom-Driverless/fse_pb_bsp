@@ -5,23 +5,17 @@
 #include "ss_watchdog.h"
 #include <libopencm3/stm32/iwdg.h>
 
-#define SS_FEEDBACK_BASE                            SS_FEEDBACK_BASE_NOT_SET
 
-
-SS_FEEDBACK ss_watchdog_init(uint16_t period_ms) {
-    SS_FEEDBACK rc = SS_FEEDBACK_OK;
-
+bool ss_watchdog_init(uint16_t period_ms) {
     iwdg_set_period_ms(period_ms);
     iwdg_start();
 
-    return rc;
+    return true;
 }
 
-SS_FEEDBACK ss_watchdog_feed() {
-    SS_FEEDBACK rc = SS_FEEDBACK_OK;
-
+bool ss_watchdog_feed() {
     iwdg_reset();
 
-    return rc;
+    return true;
 }
 #endif // COMPILE_SS_WATCHDOG

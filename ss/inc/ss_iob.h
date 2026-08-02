@@ -14,6 +14,7 @@
 #ifndef _SS_IOB_H_
 #define _SS_IOB_H_
 
+#include <stdbool.h>
 #include "ss_feedback.h"
 
 #define MAX_INPUT_OBSERVATIONS 16
@@ -34,16 +35,16 @@ struct IOB {
 
 extern struct IOB ss_iob;
 
-SS_FEEDBACK ss_iob_add(uint16_t pin_id, uint8_t polarity);
+bool ss_iob_add(uint16_t pin_id, uint8_t polarity);
 
 #ifdef USE_PRIVATE
-SS_FEEDBACK get_port_from_pin_id(uint16_t pin_id, uint32_t* cm3_port);
+bool get_port_from_pin_id(uint16_t pin_id, uint32_t* cm3_port);
 #endif
 #ifdef USE_PRIVATE
-SS_FEEDBACK get_nvic_exit_from_pin_id(uint16_t pin_id, uint32_t* nvic_exti);
+bool get_nvic_exit_from_pin_id(uint16_t pin_id, uint32_t* nvic_exti);
 #endif
 #ifdef USE_PRIVATE
-SS_FEEDBACK get_exti_from_pin_id(uint16_t pin_id, uint32_t* exti);
+bool get_exti_from_pin_id(uint16_t pin_id, uint32_t* exti);
 #endif
 
 uint8_t ss_iob_get(uint16_t pin_id);

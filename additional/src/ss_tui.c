@@ -10,6 +10,7 @@
 
 #include "ss_uart.h"
 #include "ss_rtos.h"
+#include "ss_error.h"
 
 
 
@@ -757,9 +758,9 @@ static void _draw_input_elem(const _elem_input_t *e)
 
 /* ── Parser-Helfer (kein stdlib) ──────────── */
 
-static SS_FEEDBACK _parse_int(const char *buf, uint8_t len, int32_t *out)
+static bool _parse_int(const char *buf, uint8_t len, int32_t *out)
 {
-    if (len == 0u) return SS_FEEDBACK_ERROR;
+    if (len == 0u) SS_ERROR("invalid input");
 
     uint8_t  i    = 0;
     int32_t  sign = 1;
@@ -767,22 +768,22 @@ static SS_FEEDBACK _parse_int(const char *buf, uint8_t len, int32_t *out)
     if      (buf[i] == '-') { sign = -1; i++; }
     else if (buf[i] == '+') {            i++; }
 
-    if (i == len) return SS_FEEDBACK_ERROR; /* nur Vorzeichen */
+    if (i == len) SS_ERROR("invalid input"); /* nur Vorzeichen */
 
     int32_t result = 0;
     while (i < len) {
-        if (buf[i] < '0' || buf[i] > '9') return SS_FEEDBACK_ERROR;
+        if (buf[i] < '0' || buf[i] > '9') SS_ERROR("invalid input");
         result = result * 10 + (int32_t)(buf[i] - '0');
         i++;
     }
 
     *out = sign * result;
-    return SS_FEEDBACK_OK;
+    return true;
 }
 
-static SS_FEEDBACK _parse_float(const char *buf, uint8_t len, float *out)
+static bool _parse_float(const char *buf, uint8_t len, float *out)
 {
-    if (len == 0u) return SS_FEEDBACK_ERROR;
+    if (len == 0u) SS_ERROR("invalid input");
 
     uint8_t i        = 0;
     float   sign     = 1.0f;
@@ -790,18 +791,18 @@ static SS_FEEDBACK _parse_float(const char *buf, uint8_t len, float *out)
     if      (buf[i] == '-') { sign = -1.0f; i++; }
     else if (buf[i] == '+') {               i++; }
 
-    if (i == len) return SS_FEEDBACK_ERROR;
+    if (i == len) SS_ERROR("invalid input");
 
     /* Ganzzahliger Anteil (max. 5 Stellen) */
     float   result     = 0.0f;
     uint8_t int_digits = 0;
     while (i < len && buf[i] != '.') {
-        if (buf[i] < '0' || buf[i] > '9') return SS_FEEDBACK_ERROR;
+        if (buf[i] < '0' || buf[i] > '9') SS_ERROR("invalid input");
         result = result * 10.0f + (float)(buf[i] - '0');
         int_digits++;
         i++;
     }
-    if (int_digits == 0u) return SS_FEEDBACK_ERROR;
+    if (int_digits == 0u) SS_ERROR("invalid input");
 
     /* Nachkommastellen (max. 2) */
     if (i < len && buf[i] == '.') {
@@ -809,19 +810,19 @@ static SS_FEEDBACK _parse_float(const char *buf, uint8_t len, float *out)
         float   factor    = 0.1f;
         uint8_t dec_count = 0u;
         while (i < len && dec_count < 2u) {
-            if (buf[i] < '0' || buf[i] > '9') return SS_FEEDBACK_ERROR;
+            if (buf[i] < '0' || buf[i] > '9') SS_ERROR("invalid input");
             result   += (float)(buf[i] - '0') * factor;
             factor   *= 0.1f;
             dec_count++;
             i++;
         }
-        if (i < len) return SS_FEEDBACK_ERROR; /* mehr als 2 Dezimalstellen */
+        if (i < len) SS_ERROR("invalid input"); /* mehr als 2 Dezimalstellen */
     }
 
-    if (i != len) return SS_FEEDBACK_ERROR; /* unbekannte Zeichen am Ende */
+    if (i != len) SS_ERROR("invalid input"); /* unbekannte Zeichen am Ende */
 
     *out = sign * result;
-    return SS_FEEDBACK_OK;
+    return true;
 }
 
 
@@ -1189,28 +1190,28 @@ void ss_tui_input_feed(uint8_t byte)
 }
 
 
-SS_FEEDBACK ss_tui_input_get_str(int id, char *buf, uint8_t max_len)
+bool ss_tui_input_get_str(int id, char *buf, uint8_t max_len)
 {
     _slot_data_t *s = _get_slot(id);
-    if (!s || s->base.type != SS_TUI_ETYPE_INPUT) return SS_FEEDBACK_ERROR;
-    if (s->input.state == _INPUT_EDITING)          return SS_FEEDBACK_ERROR;
+    if (!s || s->base.type != SS_TUI_ETYPE_INPUT) SS_ERROR("invalid input");
+    if (s->input.state == _INPUT_EDITING)          SS_ERROR("invalid input");
     _scopy(buf, s->input.buf, max_len);
-    return SS_FEEDBACK_OK;
+    return true;
 }
 
-SS_FEEDBACK ss_tui_input_get_int(int id, int32_t *value)
+bool ss_tui_input_get_int(int id, int32_t *value)
 {
     _slot_data_t *s = _get_slot(id);
-    if (!s || s->base.type != SS_TUI_ETYPE_INPUT) return SS_FEEDBACK_ERROR;
-    if (s->input.state == _INPUT_EDITING)          return SS_FEEDBACK_ERROR;
+    if (!s || s->base.type != SS_TUI_ETYPE_INPUT) SS_ERROR("invalid input");
+    if (s->input.state == _INPUT_EDITING)          SS_ERROR("invalid input");
     return _parse_int(s->input.buf, s->input.len, value);
 }
 
-SS_FEEDBACK ss_tui_input_get_float(int id, float *value)
+bool ss_tui_input_get_float(int id, float *value)
 {
     _slot_data_t *s = _get_slot(id);
-    if (!s || s->base.type != SS_TUI_ETYPE_INPUT) return SS_FEEDBACK_ERROR;
-    if (s->input.state == _INPUT_EDITING)          return SS_FEEDBACK_ERROR;
+    if (!s || s->base.type != SS_TUI_ETYPE_INPUT) SS_ERROR("invalid input");
+    if (s->input.state == _INPUT_EDITING)          SS_ERROR("invalid input");
     return _parse_float(s->input.buf, s->input.len, value);
 }
 

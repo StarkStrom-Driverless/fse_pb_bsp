@@ -11,9 +11,8 @@
 #include "ss_delay.h"
 #include "wizchip_conf.h"
 #include "socket.h"
+#include "ss_error.h"
 #include <libopencm3/stm32/gpio.h>
-
-#define SS_FEEDBACK_BASE  SS_FEEDBACK_ETH_INIT_ERROR
 
 
 static uint8_t mem_tx[8] = {2,2,2,2,2,2,2,2};
@@ -58,62 +57,50 @@ static void wizchip_spi_writeburst(uint8_t* pBuf, uint16_t len) {
 }
 
 
-SS_FEEDBACK ss_eth_cpy_ip_style(uint8_t* dest, uint64_t source, uint8_t len) {
-    SS_FEEDBACK rc = SS_FEEDBACK_OK;
-
+bool ss_eth_cpy_ip_style(uint8_t* dest, uint64_t source, uint8_t len) {
     uint8_t *tmp = (uint8_t*)&source;
 
     for(uint8_t i = 0; i < len; i++) {
         dest[i] = tmp[i];
     }
 
-    return rc;
+    return true;
 }
 
-SS_FEEDBACK ss_eth_set_gw(uint32_t gw) {
-    SS_FEEDBACK rc = SS_FEEDBACK_OK;
-
+bool ss_eth_set_gw(uint32_t gw) {
     ss_eth_cpy_ip_style(    ss_eth.intf_conf.gw,
                             gw,
                             4);
 
-    return rc;
+    return true;
 }
 
-SS_FEEDBACK ss_eth_set_nm(uint32_t nm) {
-    SS_FEEDBACK rc = SS_FEEDBACK_OK;
-
+bool ss_eth_set_nm(uint32_t nm) {
     ss_eth_cpy_ip_style(    ss_eth.intf_conf.nm,
                             nm,
                             4);
 
-    return rc;
+    return true;
 }
 
-SS_FEEDBACK ss_eth_set_dns(uint32_t dns) {
-    SS_FEEDBACK rc = SS_FEEDBACK_OK;
-
+bool ss_eth_set_dns(uint32_t dns) {
     ss_eth_cpy_ip_style(    ss_eth.intf_conf.dns,
                             dns,
                             4);
 
-    return rc;
+    return true;
 }
 
-SS_FEEDBACK ss_eth_set_mac(uint64_t mac) {
-    SS_FEEDBACK rc = SS_FEEDBACK_OK;
-
+bool ss_eth_set_mac(uint64_t mac) {
     ss_eth_cpy_ip_style(    ss_eth.intf_conf.mac,
                             mac,
                             6);
 
-    return rc;
+    return true;
 }
 
 
-SS_FEEDBACK ss_eth_init(uint32_t ip, uint32_t sn, uint64_t mac, uint32_t gw) {
-    SS_FEEDBACK rc = SS_FEEDBACK_OK;
-
+bool ss_eth_init(uint32_t ip, uint32_t sn, uint64_t mac, uint32_t gw) {
     ss_eth.rst_pin_id = PIN('C', 2);
     ss_eth.cs_pin_id = PIN('A', 10);
 
@@ -140,11 +127,9 @@ SS_FEEDBACK ss_eth_init(uint32_t ip, uint32_t sn, uint64_t mac, uint32_t gw) {
 
     ss_eth.ports.insert_pos = 0;
 
-    rc = ss_io_init(ss_eth.cs_pin_id, SS_GPIO_MODE_OUTPUT);
-    SS_HANDLE_ERROR_WITH_EXIT(rc);
+    if (!ss_io_init(ss_eth.cs_pin_id, SS_GPIO_MODE_OUTPUT)) SS_ERROR(NULL);
 
-    rc = ss_io_init(ss_eth.rst_pin_id, SS_GPIO_MODE_OUTPUT);
-    SS_HANDLE_ERROR_WITH_EXIT(rc);
+    if (!ss_io_init(ss_eth.rst_pin_id, SS_GPIO_MODE_OUTPUT)) SS_ERROR(NULL);
 
     gpio_set_output_options(GPIO(PINBANK(ss_eth.cs_pin_id)), GPIO_OTYPE_PP, GPIO_OSPEED_100MHZ, BIT(PINNO(ss_eth.cs_pin_id)));
     gpio_set_output_options(GPIO(PINBANK(ss_eth.rst_pin_id)), GPIO_OTYPE_PP, GPIO_OSPEED_100MHZ, BIT(PINNO(ss_eth.rst_pin_id)));
@@ -152,18 +137,12 @@ SS_FEEDBACK ss_eth_init(uint32_t ip, uint32_t sn, uint64_t mac, uint32_t gw) {
 
     ss_io_write(ss_eth.cs_pin_id, SS_GPIO_ON);
 
-    if (ss_spi_init(W5500_SPI_ID, ss_eth.baudrate, 0) != SS_FEEDBACK_OK) {
-        return SS_SET_TOPLEVEL_ERROR(SS_FEEDBACK_ETHERNET_INIT_ERROR, SS_FEEDBACK_SPI_INIT_ERROR);
-    }
+    if (!ss_spi_init(W5500_SPI_ID, ss_eth.baudrate, 0)) SS_ERROR(NULL);
 
-    rc = ss_eth_init_wiz();
-
-    return rc;
+    return ss_eth_init_wiz();
 }
 
-SS_FEEDBACK ss_eth_init_wiz() {
-    SS_FEEDBACK rc = SS_FEEDBACK_OK;
-
+bool ss_eth_init_wiz() {
     ss_io_write(ss_eth.rst_pin_id, SS_GPIO_OFF);
     ss_delay(1000);
     ss_io_write(ss_eth.rst_pin_id, SS_GPIO_ON);
@@ -172,9 +151,8 @@ SS_FEEDBACK ss_eth_init_wiz() {
     reg_wizchip_spi_cbfunc(wizchip_spi_read, wizchip_spi_write);
 
     if (wizchip_init(mem_tx, mem_rx) != 0) {
-        rc = SS_FEEDBACK_ETHERNET_WIZ_INIT_ERROR;
+        SS_ERROR("wizchip_init failed");
     }
-    SS_HANDLE_ERROR_WITH_EXIT(rc);
 
     static wiz_NetInfo netinfo;
     memcpy(netinfo.mac, ss_eth.intf_conf.mac, sizeof(uint8_t) * 6);
@@ -198,24 +176,20 @@ SS_FEEDBACK ss_eth_init_wiz() {
 
     uint8_t ver = getVERSIONR();
     if (getVERSIONR() != 0x04) {
-        rc = SS_FEEDBACK_ETHERNET_WIZ_INIT_ERROR;
+        SS_ERROR("wizchip version mismatch");
     }
 
 
     //ss_eth.baudrate = 10500000;
     ss_eth.baudrate = 42000000;
-    if (ss_spi_init(W5500_SPI_ID, ss_eth.baudrate, 0) != SS_FEEDBACK_OK) {
-        return SS_SET_TOPLEVEL_ERROR(SS_FEEDBACK_ETHERNET_INIT_ERROR, SS_FEEDBACK_SPI_INIT_ERROR);
-    }
+    if (!ss_spi_init(W5500_SPI_ID, ss_eth.baudrate, 0)) SS_ERROR(NULL);
 
-    return rc;
+    return true;
 }
 
 
 
-SS_FEEDBACK ss_eth_socket_udp_add(uint32_t port, struct SS_ETH_PAYLOAD* payload) {
-    SS_FEEDBACK rc = SS_FEEDBACK_OK;
-
+bool ss_eth_socket_udp_add(uint32_t port, struct SS_ETH_PAYLOAD* payload) {
     struct SS_ETH_INTF *port_ptr = &ss_eth.ports.port[ss_eth.ports.insert_pos];
 
     port_ptr->intf_number = ss_eth.ports.insert_pos;
@@ -227,46 +201,32 @@ SS_FEEDBACK ss_eth_socket_udp_add(uint32_t port, struct SS_ETH_PAYLOAD* payload)
     payload->buffer_len = SS_ETH_PAYLOAD_BUFFER_SIZE;
 
     if (ss_eth.ports.insert_pos++ == SS_ETH_MAX_PORTS) {
-        rc = SS_FEEDBACK_ETH_MAX_PORTS;
+        SS_ERROR("too many eth ports");
     }
-    SS_HANDLE_ERROR_WITH_EXIT(rc);
 
     socket(port_ptr->intf_number, Sn_MR_UDP, port, port_ptr->intf_flags);
 
-    return rc;
+    return true;
 }
 
-SS_FEEDBACK ss_eth_get(uint32_t port, struct SS_ETH_INTF** tmp) {
-    SS_FEEDBACK rc = SS_FEEDBACK_ETH_PORT_NOT_FOUND;
-
+bool ss_eth_get(uint32_t port, struct SS_ETH_INTF** tmp) {
     for (uint8_t i = 0; i < SS_ETH_MAX_PORTS; i++) {
         if (ss_eth.ports.port[i].port == port) {
-            rc = SS_FEEDBACK_OK;
             *tmp = &ss_eth.ports.port[i];
-            break;
+            return true;
         }
     }
 
-    return rc;
+    SS_ERROR("eth port not found");
 }
 
-SS_FEEDBACK ss_eth_received_frame(struct SS_ETH_INTF* tmp) {
-    SS_FEEDBACK rc = SS_FEEDBACK_ETH_NO_MSG_RECEIVED;
-
-    uint16_t rx_size = getSn_RX_RSR(tmp->intf_number);
-    if (rx_size > 0) {
-        rc = SS_FEEDBACK_ETH_MSG_RECEIVED;
-    }
-
-    return rc;
+bool ss_eth_received_frame(struct SS_ETH_INTF* tmp) {
+    return getSn_RX_RSR(tmp->intf_number) > 0;
 }
 
-SS_FEEDBACK ss_eth_read(struct SS_ETH_INTF* tmp, struct SS_ETH_PAYLOAD** payload) {
-    SS_FEEDBACK rc = SS_FEEDBACK_ETH_NO_MSG_RECEIVED;
-
-
+bool ss_eth_read(struct SS_ETH_INTF* tmp, struct SS_ETH_PAYLOAD** payload) {
     if (getSn_RX_RSR(tmp->intf_number) == 0) {
-        return rc;
+        return false;
     }
 
     int len = recvfrom(tmp->intf_number,
@@ -279,21 +239,16 @@ SS_FEEDBACK ss_eth_read(struct SS_ETH_INTF* tmp, struct SS_ETH_PAYLOAD** payload
 
     *payload = tmp->payload;
 
-    if (len > 0) {
-        rc = SS_FEEDBACK_ETH_MSG_RECEIVED;
-    } else if (len < 0) {
-        rc = SS_FEEDBACK_ETH_INIT_ERROR;
-    }
+    if (len < 0) SS_ERROR("eth recvfrom failed");
 
-    return rc;
+    return len > 0;
 }
 
-SS_FEEDBACK ss_eth_read_filtered(struct SS_ETH_INTF* tmp, struct SS_ETH_PAYLOAD** payload, uint16_t expected_len) {
-    SS_FEEDBACK rc = SS_FEEDBACK_ETH_NO_MSG_RECEIVED;
+bool ss_eth_read_filtered(struct SS_ETH_INTF* tmp, struct SS_ETH_PAYLOAD** payload, uint16_t expected_len) {
     uint8_t sn = tmp->intf_number;
 
     if (getSn_RX_RSR(sn) == 0) {
-        return rc;
+        return false;
     }
 
     // Read 8-byte W5500 UDP header: [IP:4][Port:2][Len:2]
@@ -309,7 +264,7 @@ SS_FEEDBACK ss_eth_read_filtered(struct SS_ETH_INTF* tmp, struct SS_ETH_PAYLOAD*
         wiz_recv_ignore(sn, pack_len);
         setSn_CR(sn, Sn_CR_RECV);
         while (getSn_CR(sn));
-        return rc;
+        return false;
     }
 
     wiz_recv_data(sn, tmp->payload->buffer, pack_len);
@@ -324,21 +279,19 @@ SS_FEEDBACK ss_eth_read_filtered(struct SS_ETH_INTF* tmp, struct SS_ETH_PAYLOAD*
     tmp->payload->received_len = pack_len;
     *payload = tmp->payload;
 
-    return SS_FEEDBACK_ETH_MSG_RECEIVED;
+    return true;
 }
 
-SS_FEEDBACK ss_eth_send(struct SS_ETH_INTF* tmp, struct SS_ETH_PAYLOAD* payload) {
-    SS_FEEDBACK rc = SS_FEEDBACK_OK;
-
+bool ss_eth_send(struct SS_ETH_INTF* tmp, struct SS_ETH_PAYLOAD* payload) {
     uint8_t len = sendto(   tmp->intf_number,
                             payload->buffer,
                             payload->buffer_len,
                             payload->id.ip,
                             payload->id.port);
     if (len <= 0) {
-        rc = SS_FEEDBACK_ETH_TRANSMIT_ERROR;
+        SS_ERROR("eth sendto failed");
     }
-    return rc;
+    return true;
 }
 
 #endif // COMPILE_SS_ETH

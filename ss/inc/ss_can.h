@@ -30,14 +30,6 @@
 
 #define SS_CAN_ID_PARALLEL(id, num) id | (num << 28)
 #define SS_CAN_ID_RAW(id) id & 0xFFFFFFF
-
-#define SS_CAN_ADAPT_CHANNEL(channel, rc) 	\
-	if (channel == 1 || channel == 2) { 	\
-		channel--;							\
-	} else 	{								\
-		rc = SS_FEEDBACK_ERROR;				\
-	}										\
-
 struct SS_CAN_FRAME {
 	uint32_t std_id;
 	uint32_t ext_id;
@@ -112,9 +104,9 @@ extern struct SS_CAN ss_can;
 
 bool ss_can_init(uint8_t can_interface_id, uint32_t baudrate);
 
-SS_FEEDBACK ss_can_read(uint8_t can_interface_id, struct SS_CAN_FRAME* can_frame);
+bool ss_can_read(uint8_t can_interface_id, struct SS_CAN_FRAME* can_frame);
 
-SS_FEEDBACK ss_can_send(uint8_t can_interface_id, struct SS_CAN_FRAME* can_frame);
+bool ss_can_send(uint8_t can_interface_id, struct SS_CAN_FRAME* can_frame);
 
 
 
@@ -125,15 +117,15 @@ SS_FEEDBACK ss_can_send(uint8_t can_interface_id, struct SS_CAN_FRAME* can_frame
  */
 
 #ifdef USE_PRIVATE
-SS_FEEDBACK ss_can_queue_get(	uint8_t channel,
+bool ss_can_queue_get(	uint8_t channel,
 								uint32_t id,
 								struct SS_CAN_MSG_QUEUE **queue);
 #endif
 
-SS_FEEDBACK ss_can_queue_read(struct SS_CAN_MSG_QUEUE *queue, struct SS_CAN_FRAME* frame);
+uint8_t ss_can_queue_read(struct SS_CAN_MSG_QUEUE *queue, struct SS_CAN_FRAME* frame);
 
 #ifdef USE_PRIVATE
-SS_FEEDBACK ss_can_queue_has_msg(struct SS_CAN_MSG_QUEUE *queue);
+uint32_t ss_can_queue_has_msg(struct SS_CAN_MSG_QUEUE *queue);
 #endif
 
 bool ss_can_queue_add(uint8_t channel, uint32_t id, struct SS_CAN_MSG_QUEUE **queue);
@@ -184,19 +176,19 @@ void ss_can_frame_reset(struct SS_CAN_FRAME *msg);
 bool ss_can_tod_init(uint8_t channel);
 #endif
 #ifdef USE_PRIVATE
-SS_FEEDBACK ss_can_tod_add(uint8_t channel, uint32_t id, uint16_t reset_value);
+bool ss_can_tod_add(uint8_t channel, uint32_t id, uint16_t reset_value);
 #endif
 #ifdef USE_PRIVATE
-SS_FEEDBACK ss_can_tod_check();
+bool ss_can_tod_check();
 #endif
 #ifdef USE_PRIVATE
-SS_FEEDBACK ss_can_tod_update(uint8_t channel, uint32_t id);
+bool ss_can_tod_update(uint8_t channel, uint32_t id);
 #endif
 #ifdef USE_PRIVATE
-SS_FEEDBACK ss_can_tod_get(uint8_t channel, struct SS_TOD** tod_field);
+bool ss_can_tod_get(uint8_t channel, struct SS_TOD** tod_field);
 #endif
 #ifdef USE_PRIVATE
-SS_FEEDBACK ss_can_tod_check_field(struct SS_TOD* tod_field, uint8_t cnt, uint32_t* id, bool* tod_detected);
+bool ss_can_tod_check_field(struct SS_TOD* tod_field, uint8_t cnt, uint32_t* id, bool* tod_detected);
 #endif
 
 

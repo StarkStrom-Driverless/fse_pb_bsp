@@ -205,23 +205,27 @@ print-%:
 
 %.elf %.map: $(OBJS) $(LDSCRIPT) $(OPENCM3_DIR)/lib/lib$(LIBNAME).a
 	@#printf "  LD      $(*).elf\n"
+	$(Q)mkdir -p $(dir $(*).elf)
 	$(Q)$(LD) $(TGT_LDFLAGS) $(LDFLAGS) $(OBJS) $(LDLIBS) -o $(*).elf
 
-%.o: %.c
-	@#printf "  CC      $(*).c\n"
-	$(Q)$(CC) $(TGT_CFLAGS) $(CFLAGS) $(TGT_CPPFLAGS) $(CPPFLAGS) -o $(*).o -c $(*).c
+$(BUILDDIR)/%.o: %.c
+	@#printf "  CC      $<\n"
+	$(Q)mkdir -p $(dir $@)
+	$(Q)$(CC) $(TGT_CFLAGS) $(CFLAGS) $(TGT_CPPFLAGS) $(CPPFLAGS) -o $@ -c $<
 
-%.o: %.cxx
-	@#printf "  CXX     $(*).cxx\n"
-	$(Q)$(CXX) $(TGT_CXXFLAGS) $(CXXFLAGS) $(TGT_CPPFLAGS) $(CPPFLAGS) -o $(*).o -c $(*).cxx
+$(BUILDDIR)/%.o: %.cxx
+	@#printf "  CXX     $<\n"
+	$(Q)mkdir -p $(dir $@)
+	$(Q)$(CXX) $(TGT_CXXFLAGS) $(CXXFLAGS) $(TGT_CPPFLAGS) $(CPPFLAGS) -o $@ -c $<
 
-%.o: %.cpp
-	@#printf "  CXX     $(*).cpp\n"
-	$(Q)$(CXX) $(TGT_CXXFLAGS) $(CXXFLAGS) $(TGT_CPPFLAGS) $(CPPFLAGS) -o $(*).o -c $(*).cpp
+$(BUILDDIR)/%.o: %.cpp
+	@#printf "  CXX     $<\n"
+	$(Q)mkdir -p $(dir $@)
+	$(Q)$(CXX) $(TGT_CXXFLAGS) $(CXXFLAGS) $(TGT_CPPFLAGS) $(CPPFLAGS) -o $@ -c $<
 
 clean:
 	@#printf "  CLEAN\n"
-	$(Q)$(RM) $(GENERATED_BINARIES) generated.* $(OBJS) $(OBJS:%.o=%.d)
+	$(Q)$(RM) -r $(BUILDDIR) generated.*
 
 stylecheck: $(STYLECHECKFILES:=.stylecheck)
 styleclean: $(STYLECHECKFILES:=.styleclean)

@@ -52,7 +52,7 @@ def sign_img(   img : str,
 def get_img_sign_name(name : str):
     parts : List[str] = name.split("/")
     print(parts)
-    file = parts[2]
+    file = parts[-1]
     file_parts : List[str] = file.split(".")
 
     first_part = "/".join(parts[0:len(parts)-1])
@@ -112,7 +112,7 @@ def telnet_write_image( img : str,
         oocd_stop()
 
 
-def telnet_flash(   img : str = "../../bp_test.bin",
+def telnet_flash(   img : str = "../../build/bp_test.bin",
                     position : str = "0x08020000"):
 
     signed_img_name : str = get_img_sign_name(name=img)
@@ -343,6 +343,22 @@ def can_flash_handle(args):
     can_id = int(args.id, 16)
     send_firmware_via_can(args.bin_file, can_id)
 
+def flash_example(  target : str,
+                    position : str = "0x08020000"):
+    from ss_build import example_build, create_bin
+
+    print(f">> ./ss example_build {target}")
+    example_build(target)
+
+    elf_file = f"../../fse_pb_bsp/examples/build/{target}.elf"
+    bin_file = f"../../fse_pb_bsp/examples/build/{target}.bin"
+    create_bin(elf_file=elf_file, bin_file=bin_file)
+
+    telnet_flash(img=bin_file, position=position)
+
+def flash_example_handle(args):
+    flash_example(args.target)
+
 
 def flash_add_sub(sub):
     parser_flash = sub.add_parser("flash", help="flash via telnet and stlink")
@@ -356,9 +372,14 @@ def flash_add_sub(sub):
 
 
     parser_canflash = sub.add_parser("canflash", help="flash via can")
-    parser_canflash.add_argument("--bin_file", default="../../bp_test.bin", help="signed bin file such as ../../bp_test.bin")
+    parser_canflash.add_argument("--bin_file", default="../../build/bp_test.bin", help="signed bin file such as ../../build/bp_test.bin")
     parser_canflash.add_argument("--id", type=str, help="can id to send image")
     parser_canflash.set_defaults(func=can_flash_handle)
+
+
+    parser_flash_example = sub.add_parser("flash_example", help="build and flash one of the fse_pb_bsp examples via telnet and stlink")
+    parser_flash_example.add_argument("target", help="example name, e.g. adc, pwm, can_tx, uart, ...")
+    parser_flash_example.set_defaults(func=flash_example_handle)
 
 
 

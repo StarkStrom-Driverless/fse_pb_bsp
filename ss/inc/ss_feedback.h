@@ -2,7 +2,7 @@
  * @author  Maximilian Hoffmann <m.hoffmann@startstrom.de>
  * @company Startstrom Augsburg
  * @mail    <maximilian.hoffmann@startstrom-augsburg.de>
- * 
+ *
  * Copyright (c) 2025 Startstrom Augsburg
  * All rights reserved.
  */
@@ -11,95 +11,5 @@
 #define _SS_FEEDBACK_H_
 
 #include <inttypes.h>
-
-typedef uint32_t SS_FEEDBACK;
-
- 
-
-#define SS_FEEDBACK_OK                              (SS_FEEDBACK)0x00
-#define SS_FEEDBACK_ERROR                           (SS_FEEDBACK)0x01
-#define SS_FEEDBACK_NULL                            (SS_FEEDBACK)0x02
-#define SS_FEEDBACK_BASE_NOT_SET                    (SS_FEEDBACK)0x03
-
-#define SS_FEEDBACK_CLOCK_INIT_ERROR                (SS_FEEDBACK)0x10
-#define SS_FEEDBACK_CLOCK_CAN_INIT_ERROR            (SS_FEEDBACK)0x11
-#define SS_FEEDBACK_CLOCK_SPI_INIT_ERROR            (SS_FEEDBACK)0x12
-
-#define SS_FEEDBACK_SPI_INIT_ERROR                  (SS_FEEDBACK)0x20
-#define SS_FEEDBACK_SPI_GPIO_INIT_ERROR             (SS_FEEDBACK)0x21
-#define SS_FEEDBACK_SPI_RCC_INIT_ERROR              (SS_FEEDBACK)0x22
-
-#define SS_FEEDBACK_RCC_INIT_ERROR                  (SS_FEEDBACK)0x30
-
-#define SS_FEEDBACK_ETHERNET_INIT_ERROR             (SS_FEEDBACK)0x40
-#define SS_FEEDBACK_ETHERNET_WIZ_INIT_ERROR         (SS_FEEDBACK)0x40
-
-#define SS_FEEDBACK_IO_INIT_ERROR                   (SS_FEEDBACK)0x50
-#define SS_FEEDBACK_IO_PB_LEDS_INIT_ERROR           (SS_FEEDBACK)0x51
-#define SS_FEEDBACK_IO_PWM_INIT_ERROR               (SS_FEEDBACK)0x52
-#define SS_FEEDBACK_IO_PINID_ERROR                  (SS_FEEDBACK)0x53
-#define SS_FEEDBACK_IO_IOB_ERROR                    (SS_FEEDBACK)0x54
-#define SS_FEEDBACK_IO_IOB_PINID_OFR                (SS_FEEDBACK)0x55
-
-#define SS_FEEDBACK_RTOS_INIT_TASK_ERROR            (SS_FEEDBACK)0x60
-#define SS_FEEDBACK_RTOS_INIT_RX_TASK_ERROR         (SS_FEEDBACK)0x61
-#define SS_FEEDBACK_RTOS_INIT_BIGTASK_ERROR         (SS_FEEDBACK)0x62
-
-#define SS_FEEDBACK_CAN_INIT_ERROR                  (SS_FEEDBACK)0x70
-#define SS_FEEDBACK_CAN_PIN_CONFIG_ERROR            (SS_FEEDBACK)0x71
-#define SS_FEEDBACK_CAN_PIN_RCC_ERROR               (SS_FEEDBACK)0x72
-#define SS_FEEDBACK_CAN_PERIPH_ERROR                (SS_FEEDBACK)0x73
-#define SS_FEEDBACK_CAN_FILTER_OVERRUN              (SS_FEEDBACK)0x74
-#define SS_FEEDBACK_CAN_TOD_OVERRUN                 (SS_FEEDBACK)0x75
-#define SS_FEEDBACK_CAN_TOD_HAPPEND                 (SS_FEEDBACK)0x76
-#define SS_FEEDBACK_CAN_TOD_ID_NOT_FOUND            (SS_FEEDBACK)0x77
-#define SS_FEEDBACK_CAN_QUEUE_CREATE_ERROR          (SS_FEEDBACK)0x78
-#define SS_FEEDBACK_CAN_QUEUE_OVERRUN               (SS_FEEDBACK)0x79
-#define SS_FEEDBACK_CAN_QUEUE_STD_WRONG_USE         (SS_FEEDBACK)0x7a
-#define SS_FEEDBACK_CAN_NO_MSG_RECEIVED             (SS_FEEDBACK)0x7b
-#define SS_FEEDBACK_CAN_MSG_RECEIVED                (SS_FEEDBACK)0x7c
-#define SS_FEEDBACK_CAN_MSG_STD_ID                  (SS_FEEDBACK)0x7d
-#define SS_FEEDBACK_CAN_MSG_IDE                     (SS_FEEDBACK)0x7e
-#define SS_FEEDBACK_CAN_MSG_IDE_INVALID             (SS_FEEDBACK)0x7f
-
-#define SS_FEEDBACK_ADC_INIT_ERROR                  (SS_FEEDBACK)0x80
-#define SS_FEEDBACK_ADC_RCC_INIT_ERROR              (SS_FEEDBACK)0x81
-#define SS_FEEDBACK_ADC_PINID_ERROR                 (SS_FEEDBACK)0x82
-#define SS_FEEDBACK_ADC_FAILED_NEXT_MPOS            (SS_FEEDBACK)0x83
-#define SS_FEEDBACK_ADC_FAILED_START                (SS_FEEDBACK)0x84
-
-#define SS_FEEDBACK_FM_INIT_ERROR                   (SS_FEEDBACK)0x91
-#define SS_FEEDBACK_FM_PIN_ID_ERROR                 (SS_FEEDBACK)0x92
-#define SS_FEEDBACK_FM_PIN_NOT_ENABLED              (SS_FEEDBACK)0x93
-
-#define SS_FEEDBACK_ETH_INIT_ERROR                  (SS_FEEDBACK)0xa0
-#define SS_FEEDBACK_ETH_MAX_PORTS                   (SS_FEEDBACK)0xa1
-#define SS_FEEDBACK_ETH_UNSUPPORTED                 (SS_FEEDBACK)0xa2
-#define SS_FEEDBACK_ETH_PORT_NOT_FOUND              (SS_FEEDBACK)0xa3
-#define SS_FEEDBACK_ETH_MSG_RECEIVED                (SS_FEEDBACK)0xa4
-#define SS_FEEDBACK_ETH_NO_MSG_RECEIVED             (SS_FEEDBACK)0xa5
-#define SS_FEEDBACK_ETH_TRANSMIT_ERROR              (SS_FEEDBACK)0xa6
-
-#define SS_FEEDBACK_PWM_INIT_ERROR                  (SS_FEEDBACK)0xb0
-#define SS_FEEDBACK_PWM_PIN_ID_ERROR                (SS_FEEDBACK)0xb1
-
-#define SS_FEEDBACK_CANBOOT_INIT_ERROR              (SS_FEEDBACK)0xc0
-
-#define SS_FEEDBACK_FSM_INIT_ERROR                  (SS_FEEDBACK)0xc8
-#define SS_FEEDBACK_FSM_WRONG_KEY                   (SS_FEEDBACK)0xc9
-#define SS_FEEDBACK_FSM_RECEIVED_EVENT              (SS_FEEDBACK)0xca
-#define SS_FEEDBACK_FSM_NOT_RECEIVED_EVENT          (SS_FEEDBACK)0xcb
-#define SS_FEEDBACK_FSM_EVENT_SEND_FAILED           (SS_FEEDBACK)0xcc
-
-#define SS_FEEDBACK_UART_INIT_ERROR                 (SS_FEEDBACK)0xd0
-#define SS_FEEDBACK_UART_MSG_RECEIVED               (SS_FEEDBACK)0xd1
-#define SS_FEEDBACK_UART_MSG_NOT_RECEIVED           (SS_FEEDBACK)0xd2
-
-//#define SS_FEEDBACK_BASE                            SS_FEEDBACK_BASE_NOT_SET
-
-#define SS_HANDLE_INIT(func)                        if (func != SS_FEEDBACK_OK) ss_init_error(func)
-#define SS_SET_TOPLEVEL_ERROR(err, tpl_err)         (SS_FEEDBACK)(tpl_err << 16 | err)
-#define SS_HANDLE_ERROR_WITH_EXIT(rc)               if (rc != SS_FEEDBACK_OK) return SS_SET_TOPLEVEL_ERROR(SS_FEEDBACK_BASE, rc)
-#define SS_HANDLE_NULL_WITH_EXIT(value)             if (value == 0) return SS_SET_TOPLEVEL_ERROR(SS_FEEDBACK_BASE, SS_FEEDBACK_NULL)
 
 #endif

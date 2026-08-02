@@ -17,13 +17,16 @@
 ## along with this library.  If not, see <http://www.gnu.org/licenses/>.
 ##
 
-OBJS += $(patsubst %.c, %.o, $(wildcard fse_pb_bsp/ss/src/*.c))
+LIB_OBJS += $(patsubst %.c, $(BUILDDIR)/%.o, $(wildcard fse_pb_bsp/ss/src/*.c))
 TGT_CPPFLAGS	+= -Ifse_pb_bsp/ss/inc
 TGT_CPPFLAGS    += -Ifse_pb_bsp/rtos/include
 TGT_CPPFLAGS    += -Ifse_pb_bsp/helpers
 
-OBJS += $(patsubst %.c, %.o, $(wildcard fse_pb_bsp/additional/src/*.c))
+LIB_OBJS += $(patsubst %.c, $(BUILDDIR)/%.o, $(wildcard fse_pb_bsp/additional/src/*.c))
 TGT_CPPFLAGS	+= -Ifse_pb_bsp/additional/inc
+
+# Drittanbieter-Warning in wizchip nur für diese Datei unterdrücken
+$(BUILDDIR)/fse_pb_bsp/additional/src/wizchip_conf.o: CFLAGS += -Wno-missing-field-initializers
 
 LDSCRIPT = fse_pb_bsp/stm32f4-discovery.ld
 

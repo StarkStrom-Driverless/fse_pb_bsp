@@ -32,8 +32,6 @@
 #include "string.h"
 
 
-#define SS_FEEDBACK_BASE SS_FEEDBACK_CAN_INIT_ERROR
-
 struct SS_CAN ss_can;
 
 
@@ -56,13 +54,13 @@ void can_isr(uint8_t channel) {
             
             ss_can_read(channel, &can_frame);
             
-            if (ss_can_queue_get(channel, can_frame.std_id, &queue) == SS_FEEDBACK_OK) {
+            if (ss_can_queue_get(channel, can_frame.std_id, &queue)) {
                 xQueueSendFromISR(queue->queue, &can_frame, &xHigherPriorityTaskWoken);
 
                 for (uint16_t i = 1; i <= queue->parallel_queue_id; i++) {
                     uint32_t id = SS_CAN_ID_PARALLEL(can_frame.std_id, i);
 
-                    if (ss_can_queue_get(channel, id, &queue) == SS_FEEDBACK_OK) {
+                    if (ss_can_queue_get(channel, id, &queue)) {
                         xQueueSendFromISR(queue->queue, &can_frame, &xHigherPriorityTaskWoken);
                     }
                 }
@@ -81,7 +79,7 @@ void can_isr(uint8_t channel) {
             
             ss_can_read(channel, &can_frame);
             
-            if (ss_can_queue_get(channel, can_frame.std_id, &queue) == SS_FEEDBACK_OK) {
+            if (ss_can_queue_get(channel, can_frame.std_id, &queue)) {
                 xQueueSendFromISR(queue->queue, &can_frame, &xHigherPriorityTaskWoken);
             }
         }
@@ -153,9 +151,9 @@ bool ss_can_enable_gpios(uint8_t can_interface_id) {
             SS_ERROR("unknown can_interface_id");
     }
 
-    if (ss_io_init(tx, GPIO_MODE_AF) != SS_FEEDBACK_OK)      SS_ERROR("tx pin init failed");
-    if (ss_io_init(rx, GPIO_MODE_AF) != SS_FEEDBACK_OK)      SS_ERROR("rx pin init failed");
-    if (ss_io_init(stb, GPIO_MODE_OUTPUT) != SS_FEEDBACK_OK) SS_ERROR("stb pin init failed");
+    if (!ss_io_init(tx, GPIO_MODE_AF))      SS_ERROR(NULL);
+    if (!ss_io_init(rx, GPIO_MODE_AF))      SS_ERROR(NULL);
+    if (!ss_io_init(stb, GPIO_MODE_OUTPUT)) SS_ERROR(NULL);
 
     ss_io_write(stb, SS_GPIO_ON);
 
@@ -216,18 +214,14 @@ uint32_t ss_can_get_fifo_from_channel(uint8_t channel) {
     return fifo;
 }
 
-SS_FEEDBACK ss_can_get_id_type_from_id(uint32_t id) {
-    SS_FEEDBACK rc = SS_FEEDBACK_CAN_MSG_IDE_INVALID;
-
-    if (!(id & ~(0xFFFFFFF))) {
-        if(id <= 0x7FF) {
-            rc = SS_FEEDBACK_CAN_MSG_STD_ID;
-        } else {
-            rc = SS_FEEDBACK_CAN_MSG_IDE;
-        }
+bool ss_can_id_is_extended(uint32_t id, bool *is_extended) {
+    if (id & ~(0xFFFFFFF)) {
+        SS_ERROR("can id does not fit 29 bits");
     }
 
-    return rc;
+    *is_extended = id > 0x7FF;
+
+    return true;
 }
 
 bool ss_can_enable_pending_interrupt(uint8_t channel, uint32_t can_port) {
@@ -294,8 +288,7 @@ bool ss_can_init(uint8_t can_interface_id, uint32_t baudrate) {
     return true;
 }
 
-SS_FEEDBACK ss_can_read(uint8_t can_interface_id, struct SS_CAN_FRAME* can_frame) {
-    SS_FEEDBACK rc = SS_FEEDBACK_OK;
+bool ss_can_read(uint8_t can_interface_id, struct SS_CAN_FRAME* can_frame) {
     uint32_t can_port = ss_can_get_port_from_id(can_interface_id);
     uint8_t fifo = (can_interface_id == 2) ? 1 : 0;
 
@@ -312,13 +305,12 @@ SS_FEEDBACK ss_can_read(uint8_t can_interface_id, struct SS_CAN_FRAME* can_frame
 
     can_fifo_release(can_port, fifo);
 
-    return rc;
+    return true;
 }
 
-SS_FEEDBACK ss_can_send(uint8_t can_interface_id, struct SS_CAN_FRAME* can_frame) {
-    SS_FEEDBACK rc = SS_FEEDBACK_OK;
+bool ss_can_send(uint8_t can_interface_id, struct SS_CAN_FRAME* can_frame) {
     uint32_t can_port = ss_can_get_port_from_id(can_interface_id);
-    
+
     int8_t ret =  can_transmit(   can_port,
                     can_frame->std_id,
                     can_frame->ide,
@@ -326,7 +318,7 @@ SS_FEEDBACK ss_can_send(uint8_t can_interface_id, struct SS_CAN_FRAME* can_frame
                     can_frame->dlc,
                     can_frame->data);
 
-    return rc;
+    return true;
 }
 
 
@@ -340,22 +332,17 @@ SS_FEEDBACK ss_can_send(uint8_t can_interface_id, struct SS_CAN_FRAME* can_frame
 
 
 
-SS_FEEDBACK ss_can_queue_get(uint8_t channel, uint32_t id, struct SS_CAN_MSG_QUEUE **queue) {
-    SS_FEEDBACK rc = SS_FEEDBACK_OK;
-
-    volatile uint32_t debug_id = id;
-
+bool ss_can_queue_get(uint8_t channel, uint32_t id, struct SS_CAN_MSG_QUEUE **queue) {
     channel--;
 
     struct SS_CAN_MSG_QUEUE_MAP* tmp = hmgetp_null(ss_can.channel[channel].msg_queues.map, id);
     if (tmp == NULL) {
-        rc = SS_FEEDBACK_ERROR;
+        return false;
     }
-    SS_HANDLE_ERROR_WITH_EXIT(rc);
 
     *queue = &tmp->value;
 
-    return rc;    
+    return true;
 }
 
 bool ss_can_queue_add(uint8_t channel, uint32_t id, struct SS_CAN_MSG_QUEUE **queue) {
@@ -377,8 +364,8 @@ bool ss_can_queue_add(uint8_t channel, uint32_t id, struct SS_CAN_MSG_QUEUE **qu
         ss_can.channel[channel].msg_queues.map = NULL;
         init = true;
     } else {
-        SS_FEEDBACK rc = ss_can_queue_get(channel + 1, id, &msg_queue);
-        if (rc == SS_FEEDBACK_OK && msg_queue->parallel_queue_id < 15) {
+        bool found = ss_can_queue_get(channel + 1, id, &msg_queue);
+        if (found && msg_queue->parallel_queue_id < 15) {
             msg_queue->parallel_queue_id++;
             parallel_queue_id = msg_queue->parallel_queue_id;
             id = (parallel_queue_id << 28) | id;
@@ -431,25 +418,12 @@ bool ss_can_queue_add_combined(uint8_t channel, uint32_t* ids, uint8_t len, stru
 
 
 
-SS_FEEDBACK ss_can_queue_read(struct SS_CAN_MSG_QUEUE *queue, struct SS_CAN_FRAME* frame) {
-    SS_FEEDBACK rc = SS_FEEDBACK_CAN_NO_MSG_RECEIVED;
-
-    if (xQueueReceive(queue->queue, frame, (TickType_t) 0 ) == pdPASS) {
-        rc = SS_FEEDBACK_CAN_MSG_RECEIVED;
-    }
-
-    return rc;
+uint8_t ss_can_queue_read(struct SS_CAN_MSG_QUEUE *queue, struct SS_CAN_FRAME* frame) {
+    return xQueueReceive(queue->queue, frame, (TickType_t) 0 ) == pdPASS ? 1 : 0;
 }
 
-SS_FEEDBACK ss_can_queue_has_msg(struct SS_CAN_MSG_QUEUE *queue) {
-    SS_FEEDBACK rc = SS_FEEDBACK_CAN_NO_MSG_RECEIVED;
-
-    UBaseType_t tmp = uxQueueMessagesWaiting(queue->queue);
-    if (tmp > 0) {
-        rc = SS_FEEDBACK_CAN_MSG_RECEIVED;
-    }
-
-    return rc;
+uint32_t ss_can_queue_has_msg(struct SS_CAN_MSG_QUEUE *queue) {
+    return uxQueueMessagesWaiting(queue->queue);
 }
 
 
@@ -591,13 +565,10 @@ bool ss_can_filter_add_msg_28(uint8_t channel, uint32_t ide) {
 }
 
 bool ss_can_filter_add_msg(uint8_t channel, uint32_t id) {
-    SS_FEEDBACK id_type = ss_can_get_id_type_from_id(id);
+    bool is_extended;
+    if (!ss_can_id_is_extended(id, &is_extended)) SS_ERROR(NULL);
 
-    if (id_type == SS_FEEDBACK_CAN_MSG_IDE_INVALID) {
-        SS_ERROR("can id fits neither 11 nor 29 bit format");
-    }
-
-    if (id_type == SS_FEEDBACK_CAN_MSG_IDE) {
+    if (is_extended) {
         return ss_can_filter_add_msg_28(channel, id);
     }
 
@@ -619,14 +590,11 @@ bool ss_can_tod_init(uint8_t channel) {
 }
 
 
-SS_FEEDBACK ss_can_tod_add(uint8_t channel, uint32_t id, uint16_t reset_value) {
-    SS_FEEDBACK rc = SS_FEEDBACK_OK;
-
+bool ss_can_tod_add(uint8_t channel, uint32_t id, uint16_t reset_value) {
     if (channel == 1 || channel == 2) {
         channel--;
     } else {
-        rc = SS_FEEDBACK_ERROR;
-        return rc;
+        SS_ERROR("invalid can channel");
     }
 
     struct SS_TOD* tod = &ss_can.channel[channel].tod;
@@ -637,23 +605,23 @@ SS_FEEDBACK ss_can_tod_add(uint8_t channel, uint32_t id, uint16_t reset_value) {
     tod->msgs[tod->msg_count].timeout_detected = 0;
 
     if (tod->msg_count > MAX_CAN_MSGS) {
-        rc = SS_FEEDBACK_CAN_TOD_OVERRUN;
-    } else {
-        tod->msg_count++;
+        SS_ERROR("tod message overrun");
     }
-    
-    return rc;
+
+    tod->msg_count++;
+
+    return true;
 }
 
-SS_FEEDBACK ss_can_tod_check() {
-    SS_FEEDBACK rc = SS_FEEDBACK_OK;
+bool ss_can_tod_check() {
+    bool timeout_happened = false;
 
     for (uint8_t j = 0; j < 2; j++) {
         struct SS_TOD* tod = &ss_can.channel[j].tod;
 
         for (uint8_t i = 0; i < tod->msg_count; i++) {
             if (tod->msgs[i].active_counter == 0) {
-                rc = SS_FEEDBACK_CAN_TOD_HAPPEND;
+                timeout_happened = true;
                 tod->msgs[i].timeout_detected = 1;
             } else {
                 tod->msgs[i].timeout_detected = 0;
@@ -662,58 +630,49 @@ SS_FEEDBACK ss_can_tod_check() {
         }
     }
 
-    return rc;
+    return timeout_happened;
 }
 
-SS_FEEDBACK ss_can_tod_update(uint8_t channel, uint32_t id) {
-    SS_FEEDBACK rc = SS_FEEDBACK_CAN_TOD_ID_NOT_FOUND;
-
+bool ss_can_tod_update(uint8_t channel, uint32_t id) {
     if (channel == 1 || channel == 2) {
         channel--;
     } else {
-        rc = SS_FEEDBACK_ERROR;
-        return rc;
+        SS_ERROR("invalid can channel");
     }
 
     struct SS_TOD* tod = &ss_can.channel[channel].tod;
+    bool found = false;
 
     for (uint8_t i = 0; i < tod->msg_count; i++) {
         if (tod->msgs[i].std_id == id) {
             tod->msgs[i].active_counter = tod->msgs[i].reset_value;
-            rc = SS_FEEDBACK_OK;
+            found = true;
         }
     }
 
-    return rc;
+    return found;
 }
 
-SS_FEEDBACK ss_can_tod_get(uint8_t channel, struct SS_TOD** tod_field) {
-    SS_FEEDBACK rc = SS_FEEDBACK_OK;
-
+bool ss_can_tod_get(uint8_t channel, struct SS_TOD** tod_field) {
     if (channel != 1 && channel != 2) {
-        rc = SS_FEEDBACK_ERROR;
+        SS_ERROR("invalid can channel");
     }
-    SS_HANDLE_ERROR_WITH_EXIT(rc);
 
     channel--;
 
     *tod_field = &ss_can.channel[channel].tod;
 
-    return rc;
+    return true;
 }
 
-SS_FEEDBACK ss_can_tod_check_field(struct SS_TOD* tod_field, uint8_t cnt, uint32_t* id, bool* tod_detected) {
-    SS_FEEDBACK rc = SS_FEEDBACK_OK;
-
+bool ss_can_tod_check_field(struct SS_TOD* tod_field, uint8_t cnt, uint32_t* id, bool* tod_detected) {
     if (tod_field == NULL) {
-        rc = SS_FEEDBACK_ERROR;
+        SS_ERROR("tod_field is NULL");
     }
-    SS_HANDLE_ERROR_WITH_EXIT(rc);
 
     if (cnt > tod_field->msg_count) {
-        rc = SS_FEEDBACK_ERROR;
+        SS_ERROR("cnt out of range");
     }
-    SS_HANDLE_ERROR_WITH_EXIT(rc);
 
     if(id != NULL) {
         *id = tod_field->msgs[cnt].std_id;
@@ -722,9 +681,9 @@ SS_FEEDBACK ss_can_tod_check_field(struct SS_TOD* tod_field, uint8_t cnt, uint32
     if(tod_detected != NULL) {
         *tod_detected = (tod_field->msgs[cnt].timeout_detected) ? true : false;
     }
-    
 
-    return rc;
+
+    return true;
 }
 
 

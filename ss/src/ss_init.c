@@ -14,17 +14,16 @@
 #include "ss_init.h"
 #include "ss_leds.h"
 #include "ss_clock.h"
+#include "ss_error.h"
 #include <libopencm3/cm3/scb.h>
 
-inline SS_FEEDBACK ss_init() {
+inline bool ss_init() {
     SCB_VTOR = 0x08020200;
 
-    ss_clock_init(SS_CLOCK_FAST);
+    if (!ss_clock_init(SS_CLOCK_FAST)) SS_ERROR(NULL);
 
-    ss_leds_init();
+    if (!ss_leds_init()) SS_ERROR(NULL);
 
-
-
-    return SS_FEEDBACK_OK;
+    return true;
 }
 #endif // COMPILE_SS_INIT

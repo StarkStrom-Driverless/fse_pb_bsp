@@ -19,13 +19,10 @@
 #include "ss_gpio.h"
 #include "ss_spi.h"
 #include "ss_clock.h"
+#include "ss_error.h"
 
-#define SS_FEEDBACK_BASE SS_FEEDBACK_SPI_INIT_ERROR
 
-
-SS_FEEDBACK ss_enable_spi_gpios(uint8_t spi_interface_id) {
-    SS_FEEDBACK rc = SS_FEEDBACK_OK;
-
+bool ss_enable_spi_gpios(uint8_t spi_interface_id) {
     uint16_t miso = 0;
     uint16_t mosi = 0;
     uint16_t sck = 0;
@@ -50,21 +47,12 @@ SS_FEEDBACK ss_enable_spi_gpios(uint8_t spi_interface_id) {
             break;
 
         default:
-            rc = SS_FEEDBACK_SPI_GPIO_INIT_ERROR;
-
-            break;
+            SS_ERROR("unknown spi_interface_id");
     }
-    SS_HANDLE_ERROR_WITH_EXIT(rc);
 
-    rc = ss_io_init(miso, GPIO_MODE_AF);
-    SS_HANDLE_ERROR_WITH_EXIT(rc);
-
-    rc = ss_io_init(mosi, GPIO_MODE_AF);
-    SS_HANDLE_ERROR_WITH_EXIT(rc);
-
-    rc = ss_io_init(sck, GPIO_MODE_AF);
-    SS_HANDLE_ERROR_WITH_EXIT(rc);
-
+    if (!ss_io_init(miso, GPIO_MODE_AF)) SS_ERROR(NULL);
+    if (!ss_io_init(mosi, GPIO_MODE_AF)) SS_ERROR(NULL);
+    if (!ss_io_init(sck, GPIO_MODE_AF))  SS_ERROR(NULL);
 
     uint8_t af = 0;
     switch(spi_interface_id) {
@@ -78,11 +66,8 @@ SS_FEEDBACK ss_enable_spi_gpios(uint8_t spi_interface_id) {
             break;
 
         default:
-            rc = SS_FEEDBACK_SPI_GPIO_INIT_ERROR;
-            break;
+            SS_ERROR("unknown spi_interface_id");
     }
-    SS_HANDLE_ERROR_WITH_EXIT(rc);
-
 
     gpio_set_af(GPIO(PINBANK(miso)), af, BIT(PINNO(miso)));
     gpio_set_af(GPIO(PINBANK(mosi)), af, BIT(PINNO(mosi)));
@@ -92,13 +77,10 @@ SS_FEEDBACK ss_enable_spi_gpios(uint8_t spi_interface_id) {
     gpio_set_output_options(GPIO(PINBANK(mosi)), GPIO_OTYPE_PP, GPIO_OSPEED_100MHZ, BIT(PINNO(mosi)));
     gpio_set_output_options(GPIO(PINBANK(sck)), GPIO_OTYPE_PP, GPIO_OSPEED_100MHZ, BIT(PINNO(sck)));
 
-
-    return rc;
+    return true;
 }
 
-SS_FEEDBACK ss_enable_spi_rcc(uint8_t can_interface_id) {
-    SS_FEEDBACK status = SS_FEEDBACK_OK;
-
+bool ss_enable_spi_rcc(uint8_t can_interface_id) {
     switch(can_interface_id) {
         case 1:
             rcc_periph_clock_enable(RCC_SPI1);
@@ -113,11 +95,10 @@ SS_FEEDBACK ss_enable_spi_rcc(uint8_t can_interface_id) {
             break;
 
         default:
-            status = SS_FEEDBACK_SPI_RCC_INIT_ERROR;
-            break;
+            SS_ERROR("unknown spi_interface_id");
     }
 
-    return status;
+    return true;
 }
 
 uint32_t ss_get_spi_port_from_id(uint8_t spi_interface_id) {
@@ -144,10 +125,10 @@ uint32_t ss_get_spi_port_from_id(uint8_t spi_interface_id) {
 
 
 
-SS_FEEDBACK ss_spi_mode(uint8_t spi_interface_id, uint8_t mode)
+bool ss_spi_mode(uint8_t spi_interface_id, uint8_t mode)
 {
     uint32_t spi_port = ss_get_spi_port_from_id(spi_interface_id);
-    if (spi_port == 0) return SS_FEEDBACK_SPI_INIT_ERROR;
+    if (spi_port == 0) SS_ERROR("unknown spi_interface_id");
 
     spi_disable(spi_port);
 
@@ -159,24 +140,19 @@ SS_FEEDBACK ss_spi_mode(uint8_t spi_interface_id, uint8_t mode)
 
     spi_enable(spi_port);
 
-    return SS_FEEDBACK_OK;
+    return true;
 }
 
-SS_FEEDBACK ss_spi_init(uint8_t spi_interface_id, uint32_t baudrate, uint8_t mode)
+bool ss_spi_init(uint8_t spi_interface_id, uint32_t baudrate, uint8_t mode)
 {
-    SS_FEEDBACK rc;
-
     uint32_t spi_port = ss_get_spi_port_from_id(spi_interface_id);
 
-    rc = ss_enable_spi_rcc(spi_interface_id);
-    SS_HANDLE_ERROR_WITH_EXIT(rc);
+    if (!ss_enable_spi_rcc(spi_interface_id)) SS_ERROR(NULL);
 
-    rc = ss_enable_spi_gpios(spi_interface_id);
-    SS_HANDLE_ERROR_WITH_EXIT(rc);
+    if (!ss_enable_spi_gpios(spi_interface_id)) SS_ERROR(NULL);
 
     uint32_t spi_prescaler = 0;
-    rc = ss_clock_spi(&spi_prescaler, baudrate, spi_interface_id);
-    SS_HANDLE_ERROR_WITH_EXIT(rc);
+    if (!ss_clock_spi(&spi_prescaler, baudrate, spi_interface_id)) SS_ERROR(NULL);
 
     spi_disable(spi_port);
 

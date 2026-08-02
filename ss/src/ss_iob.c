@@ -20,16 +20,14 @@
 #include <ss_gpio.h>
 #include <ss_makros.h>
 #include "ss_iob.h"
-
-#define SS_FEEDBACK_BASE SS_FEEDBACK_IO_IOB_ERROR
+#include "ss_error.h"
 
 struct IOB ss_iob = {0};
 
 
-SS_FEEDBACK get_exti_from_pin_id(uint16_t pin_id, uint32_t* exti) {
+bool get_exti_from_pin_id(uint16_t pin_id, uint32_t* exti) {
     uint8_t id = PINNO(pin_id);
-    SS_FEEDBACK rc = SS_FEEDBACK_OK;
-    
+
     switch (id)
     {
         case 0: *exti = EXTI0; break;
@@ -48,18 +46,15 @@ SS_FEEDBACK get_exti_from_pin_id(uint16_t pin_id, uint32_t* exti) {
         case 13: *exti = EXTI13; break;
         case 14: *exti = EXTI14; break;
         case 15: *exti = EXTI15; break;
-    
-        default: 
-            rc = SS_FEEDBACK_IO_IOB_PINID_OFR;
-            break;
+
+        default:
+            SS_ERROR("pin id out of range");
     }
 
-    return rc;
+    return true;
 }
 
-SS_FEEDBACK get_port_from_pin_id(uint16_t pin_id, uint32_t* cm3_port) {
-    SS_FEEDBACK rc = SS_FEEDBACK_OK;;
-
+bool get_port_from_pin_id(uint16_t pin_id, uint32_t* cm3_port) {
     uint8_t port = PINBANK(pin_id);
 
     switch(port) {
@@ -67,17 +62,14 @@ SS_FEEDBACK get_port_from_pin_id(uint16_t pin_id, uint32_t* cm3_port) {
         case 1: *cm3_port = GPIOB; break;
         case 2: *cm3_port = GPIOC; break;
         case 3: *cm3_port = GPIOD; break;
-        default: 
-            rc = SS_FEEDBACK_IO_IOB_PINID_OFR;
-            break;
+        default:
+            SS_ERROR("pin id out of range");
     }
 
-    return rc;
+    return true;
 }
 
-SS_FEEDBACK get_nvic_exit_from_pin_id(uint16_t pin_id, uint32_t* nvic_exti) {
-    SS_FEEDBACK rc = SS_FEEDBACK_OK;
-    
+bool get_nvic_exit_from_pin_id(uint16_t pin_id, uint32_t* nvic_exti) {
     uint8_t id = PINNO(pin_id);
 
     switch(id) {
@@ -103,35 +95,29 @@ SS_FEEDBACK get_nvic_exit_from_pin_id(uint16_t pin_id, uint32_t* nvic_exti) {
             *nvic_exti = NVIC_EXTI15_10_IRQ ; break;
 
         default:
-            rc = SS_FEEDBACK_IO_IOB_PINID_OFR; 
-            break;
+            SS_ERROR("pin id out of range");
     }
 
-    return rc;
+    return true;
 }
 
-SS_FEEDBACK ss_iob_add(uint16_t pin_id, uint8_t polarity) {
-    SS_FEEDBACK rc;
-
+bool ss_iob_add(uint16_t pin_id, uint8_t polarity) {
     uint32_t exti;
     uint32_t port;
     uint32_t nvic_exti;
 
     if (PINNO(pin_id) > MAX_INPUT_OBSERVATIONS) {
-        return SS_SET_TOPLEVEL_ERROR(SS_FEEDBACK_BASE, SS_FEEDBACK_IO_IOB_PINID_OFR);
+        SS_ERROR("pin id out of range");
     }
 
 
     rcc_periph_clock_enable(RCC_SYSCFG);
 
-    rc = get_exti_from_pin_id(pin_id, &exti);
-    SS_HANDLE_ERROR_WITH_EXIT(rc);
+    if (!get_exti_from_pin_id(pin_id, &exti)) SS_ERROR(NULL);
 
-    rc = get_port_from_pin_id(pin_id, &port);
-    SS_HANDLE_ERROR_WITH_EXIT(rc);
+    if (!get_port_from_pin_id(pin_id, &port)) SS_ERROR(NULL);
 
-    rc = get_nvic_exit_from_pin_id(pin_id, &nvic_exti);
-    SS_HANDLE_ERROR_WITH_EXIT(rc);
+    if (!get_nvic_exit_from_pin_id(pin_id, &nvic_exti)) SS_ERROR(NULL);
 
     ss_iob.iobs[PINNO(pin_id)].enabled = 1;
     ss_iob.iobs[PINNO(pin_id)].pin_id = pin_id;
@@ -154,7 +140,7 @@ SS_FEEDBACK ss_iob_add(uint16_t pin_id, uint8_t polarity) {
     
     nvic_enable_irq(nvic_exti);
 
-    return SS_FEEDBACK_OK;
+    return true;
 }
 
 uint8_t exti_get_pending(uint8_t line) {

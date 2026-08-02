@@ -15,6 +15,7 @@
 #define _SS_FREQ_MEASURE_
 
 #include <inttypes.h>
+#include <stdbool.h>
 
 #include "ss_clock.h"
 
@@ -47,22 +48,22 @@ extern struct SS_FREQ_MEASURE ss_fm;
  *
  */
 #ifdef USE_PRIVATE
-SS_FEEDBACK ss_fm_get_ic_from_pin_id(uint16_t pin_id, uint32_t* ic_channel);
+bool ss_fm_get_ic_from_pin_id(uint16_t pin_id, uint32_t* ic_channel);
 #endif
 #ifdef USE_PRIVATE
-SS_FEEDBACK ss_fm_get_iqr_cc_from_pin_id(uint16_t pin_id, uint32_t* irq);
+bool ss_fm_get_iqr_cc_from_pin_id(uint16_t pin_id, uint32_t* irq);
 #endif
 #ifdef USE_PRIVATE
-SS_FEEDBACK ss_fm_get_irq_from_pin_id(uint16_t pin_id, uint32_t* irq);
+bool ss_fm_get_irq_from_pin_id(uint16_t pin_id, uint32_t* irq);
 #endif
 #ifdef USE_PRIVATE
-SS_FEEDBACK ss_fm_get_pin_struct_from_pin_id(uint16_t pin_id, struct FREQ_PIN** tmp);
+bool ss_fm_get_pin_struct_from_pin_id(uint16_t pin_id, struct FREQ_PIN** tmp);
 #endif
 #ifdef USE_PRIVATE
 uint8_t ss_fm_get_af_from_pin_id(uint16_t pin_id);
 #endif
 #ifdef USE_PRIVATE
-SS_FEEDBACK ss_fm_get_ti_from_pin_id(uint16_t pin_id, uint32_t* ti);
+bool ss_fm_get_ti_from_pin_id(uint16_t pin_id, uint32_t* ti);
 #endif
 
 /***
@@ -71,9 +72,9 @@ SS_FEEDBACK ss_fm_get_ti_from_pin_id(uint16_t pin_id, uint32_t* ti);
  *
  */
 
-SS_FEEDBACK ss_fm_init(uint16_t pin_id,  uint32_t resolution);
+bool ss_fm_init(uint16_t pin_id,  uint32_t resolution);
 
-SS_FEEDBACK ss_fm_read(uint16_t pin_id, float *value);
+bool ss_fm_read(uint16_t pin_id, float *value);
 
 /***
  *

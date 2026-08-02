@@ -7,9 +7,10 @@
 
 #include "ss_feedback.h"
 #include <inttypes.h>
+#include <stdbool.h>
 
-SS_FEEDBACK ss_watchdog_init(uint16_t period_ms);
-SS_FEEDBACK ss_watchdog_feed();
+bool ss_watchdog_init(uint16_t period_ms);
+bool ss_watchdog_feed();
 
 #endif // _SS_WATCHDOG_H_
 

@@ -15,6 +15,7 @@
 #define _SS_ADC_H_
 
 #include <inttypes.h>
+#include <stdbool.h>
 #include "ss_feedback.h"
 
 #define MAX_MEASUREMENT 12
@@ -49,9 +50,9 @@ void adc_isr(void);
  *
  */
 
-SS_FEEDBACK ss_adc_read(uint16_t pin_id, uint16_t *val);
+bool ss_adc_read(uint16_t pin_id, uint16_t *val);
 
-SS_FEEDBACK ss_adc_init(uint16_t pin_id);
+bool ss_adc_init(uint16_t pin_id);
 
 
 
@@ -61,16 +62,16 @@ SS_FEEDBACK ss_adc_init(uint16_t pin_id);
  *
  */
 #ifdef USE_PRIVATE
-SS_FEEDBACK ss_adc_rcc_init_from_pin_id(uint16_t pin_id);
+bool ss_adc_rcc_init_from_pin_id(uint16_t pin_id);
 #endif
 #ifdef USE_PRIVATE
-SS_FEEDBACK ss_adc_get_adc_from_pin_id(uint16_t pin_id, uint32_t *adc);
+bool ss_adc_get_adc_from_pin_id(uint16_t pin_id, uint32_t *adc);
 #endif
 #ifdef USE_PRIVATE
-SS_FEEDBACK ss_adc_get_channel_from_pin_id(uint16_t pin_id, uint32_t *adc_channel);
+bool ss_adc_get_channel_from_pin_id(uint16_t pin_id, uint32_t *adc_channel);
 #endif
 #ifdef USE_PRIVATE
-SS_FEEDBACK ss_adc_get_measurement_pos_from_pin_id(uint16_t pin_id, uint8_t *measurement_pos);
+bool ss_adc_get_measurement_pos_from_pin_id(uint16_t pin_id, uint8_t *measurement_pos);
 #endif
 
 
@@ -80,13 +81,13 @@ SS_FEEDBACK ss_adc_get_measurement_pos_from_pin_id(uint16_t pin_id, uint8_t *mea
  *
  */
 #ifdef USE_PRIVATE
-SS_FEEDBACK ss_adc_set_next_measurment_pos(void);
+bool ss_adc_set_next_measurment_pos(void);
 #endif
 #ifdef USE_PRIVATE
-SS_FEEDBACK ss_adc_start(void);
+bool ss_adc_start(void);
 #endif
 #ifdef USE_PRIVATE
-SS_FEEDBACK ss_adc_start_channel(uint16_t pin_id);
+bool ss_adc_start_channel(uint16_t pin_id);
 #endif
 
 #endif // _SS_ADC_H_

@@ -13,6 +13,7 @@
 #if COMPILE_SS_CANBOOT
 #include "ss_canboot.h"
 #include "ss_can.h"
+#include "ss_error.h"
 #include <libopencm3/stm32/flash.h>
 
 #include "ss_config.h"
@@ -21,8 +22,6 @@
 #include "ss_printf.h"
 #endif
 
-
-#define SS_FEEDBACK_BASE SS_FEEDBACK_CANBOOT_INIT_ERROR
 
 struct SS_CANBOOT ss_canboot;
 
@@ -37,7 +36,7 @@ void canboot_task(void *args) {
 #endif
 
     for(;;) {
-        if (ss_can_queue_read(queue, &frame) == SS_FEEDBACK_CAN_MSG_RECEIVED) {
+        if (ss_can_queue_read(queue, &frame)) {
             received_update = 1;
             flash_unlock();
 
@@ -75,11 +74,9 @@ void canboot_task(void *args) {
     }
 }
 
-SS_FEEDBACK ss_canboot_init(uint32_t id) {
-    SS_FEEDBACK rc = SS_FEEDBACK_OK;
-
+bool ss_canboot_init(uint32_t id) {
     uint32_t* start_address = (uint32_t*)CAN_BOOT_OFFSET;
-    
+
     if (*start_address != 0xFFFFFFFF) {
         flash_unlock();
 
@@ -96,19 +93,15 @@ SS_FEEDBACK ss_canboot_init(uint32_t id) {
     ss_canboot.flash_offset = CAN_BOOT_OFFSET;
 
     if (ss_can.channel[0].enabled == false) {
-        if (!ss_can_init(1, 1000000)) {
-            rc = SS_FEEDBACK_CAN_INIT_ERROR;
-        }
+        if (!ss_can_init(1, 1000000)) SS_ERROR(NULL);
     }
-    SS_HANDLE_ERROR_WITH_EXIT(rc);
 
     /*
-    rc = ss_can_filter_add_msg(1, id);
-    SS_HANDLE_ERROR_WITH_EXIT(rc);
+    if (!ss_can_filter_add_msg(1, id)) SS_ERROR(NULL);
     */
-   
-    rc = ss_rtos_task_add(canboot_task, NULL, 0, "canboot_task");
 
-    return rc;
+    if (!ss_rtos_task_add(canboot_task, NULL, 0, "canboot_task")) SS_ERROR(NULL);
+
+    return true;
 }
 #endif // COMPILE_SS_CANBOOT

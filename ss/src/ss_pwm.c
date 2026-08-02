@@ -18,12 +18,9 @@
 #include "ss_pwm.h"
 #include "ss_clock.h"
 #include "ss_feedback.h"
+#include "ss_error.h"
 
-#define SS_FEEDBACK_BASE SS_FEEDBACK_IO_INIT_ERROR
-
-SS_FEEDBACK ss_get_timer_channel_from_pin_id(uint16_t pin_id, uint32_t* timer_addr) {
-    SS_FEEDBACK rc = 0;
-
+bool ss_get_timer_channel_from_pin_id(uint16_t pin_id, uint32_t* timer_addr) {
     switch(pin_id) {
         case PIN('A', 0):
         case PIN('A', 5):
@@ -56,20 +53,17 @@ SS_FEEDBACK ss_get_timer_channel_from_pin_id(uint16_t pin_id, uint32_t* timer_ad
         case PIN('A', 9):
         case PIN('B', 15):
         case PIN('C', 7):  
-            *timer_addr = TIM_OC2; 
+            *timer_addr = TIM_OC2;
             break;
 
         default:
-            rc = SS_FEEDBACK_PWM_PIN_ID_ERROR; 
-            break;
+            SS_ERROR("unknown pin_id");
     }
 
-    return rc;
+    return true;
 }
 
-SS_FEEDBACK ss_get_timer_from_pin_id(uint16_t pin_id, uint32_t* timer_addr) {
-    SS_FEEDBACK rc = SS_FEEDBACK_OK;
-
+bool ss_get_timer_from_pin_id(uint16_t pin_id, uint32_t* timer_addr) {
     switch(pin_id) {
         case PIN('A', 0):           // CH1
         case PIN('A', 1):           // CH2
@@ -108,19 +102,17 @@ SS_FEEDBACK ss_get_timer_from_pin_id(uint16_t pin_id, uint32_t* timer_addr) {
         case PIN('C', 7):
         case PIN('C', 8):
         case PIN('C', 9):  
-            *timer_addr = TIM8; 
+            *timer_addr = TIM8;
             break;
 
         default:
-            rc = SS_FEEDBACK_PWM_PIN_ID_ERROR; 
-            break;
+            SS_ERROR("unknown pin_id");
     }
 
-    return rc;
+    return true;
 }
 
-SS_FEEDBACK ss_enable_timer_clock_from_pin_id(uint16_t pin_id) {
-    SS_FEEDBACK status = SS_FEEDBACK_OK;
+bool ss_enable_timer_clock_from_pin_id(uint16_t pin_id) {
     switch(pin_id) {
         case PIN('A', 0):
         case PIN('A', 1):
@@ -163,15 +155,12 @@ SS_FEEDBACK ss_enable_timer_clock_from_pin_id(uint16_t pin_id) {
             break;
 
         default:
-            status = SS_FEEDBACK_IO_PINID_ERROR;
-            break;
+            SS_ERROR("unknown pin_id");
     }
-    return status;
+    return true;
 }
 
-SS_FEEDBACK get_pwm_af_mode_for_pin_id(uint16_t pin_id, uint8_t* af) {
-    SS_FEEDBACK rc = SS_FEEDBACK_OK;
-
+bool get_pwm_af_mode_for_pin_id(uint16_t pin_id, uint8_t* af) {
     switch(pin_id) {
         case PIN('A', 0):
         case PIN('A', 1):
@@ -208,15 +197,12 @@ SS_FEEDBACK get_pwm_af_mode_for_pin_id(uint16_t pin_id, uint8_t* af) {
             break;
 
         default:
-            *af = SS_FEEDBACK_PWM_PIN_ID_ERROR;
-            break;
+            SS_ERROR("unknown pin_id");
     }
-    return rc;
+    return true;
 }
 
-SS_FEEDBACK ss_is_pin_id_extended_timer(uint16_t pin_id, uint8_t *extended) {
-    SS_FEEDBACK rc = SS_FEEDBACK_OK;
-
+bool ss_is_pin_id_extended_timer(uint16_t pin_id, uint8_t *extended) {
     switch(pin_id) {
         case PIN('C', 6):
         case PIN('C', 7):
@@ -246,17 +232,14 @@ SS_FEEDBACK ss_is_pin_id_extended_timer(uint16_t pin_id, uint8_t *extended) {
             *extended = 0;
             break;
 
-        default: 
-            rc = SS_FEEDBACK_PWM_PIN_ID_ERROR;
-            break;
+        default:
+            SS_ERROR("unknown pin_id");
     }
 
-    return rc;
+    return true;
 }
 
-SS_FEEDBACK ss_pwm_get_frequenzy_from_clock_config(uint16_t pin_id, uint16_t* frequency) {
-    SS_FEEDBACK rc = SS_FEEDBACK_OK;
-    
+bool ss_pwm_get_frequenzy_from_clock_config(uint16_t pin_id, uint16_t* frequency) {
     switch(pin_id) {
         case PIN('A', 0):
         case PIN('A', 1):
@@ -299,39 +282,30 @@ SS_FEEDBACK ss_pwm_get_frequenzy_from_clock_config(uint16_t pin_id, uint16_t* fr
             break;
 
         default:
-            rc = SS_FEEDBACK_PWM_PIN_ID_ERROR;
-            break;
+            SS_ERROR("unknown pin_id");
     }
 
-    return rc;
+    return true;
 }
 
-SS_FEEDBACK ss_pwm_init(uint16_t pin_id, uint32_t frequency) {
-    SS_FEEDBACK rc;
-
-    rc = ss_io_init(pin_id, GPIO_MODE_AF);
-    SS_HANDLE_ERROR_WITH_EXIT(rc);
+bool ss_pwm_init(uint16_t pin_id, uint32_t frequency) {
+    if (!ss_io_init(pin_id, GPIO_MODE_AF)) SS_ERROR(NULL);
 
     uint8_t af;
-    rc = get_pwm_af_mode_for_pin_id(pin_id, &af);
-    SS_HANDLE_ERROR_WITH_EXIT(rc);
+    if (!get_pwm_af_mode_for_pin_id(pin_id, &af)) SS_ERROR(NULL);
 
     gpio_set_af(GPIO(PINBANK(pin_id)), af, BIT(PINNO(pin_id)));
 
-    rc = ss_enable_timer_clock_from_pin_id(pin_id);
-    SS_HANDLE_ERROR_WITH_EXIT(rc);
+    if (!ss_enable_timer_clock_from_pin_id(pin_id)) SS_ERROR(NULL);
 
     uint32_t timer_id;
-    rc = ss_get_timer_from_pin_id(pin_id, &timer_id);
-    SS_HANDLE_ERROR_WITH_EXIT(rc);
+    if (!ss_get_timer_from_pin_id(pin_id, &timer_id)) SS_ERROR(NULL);
 
     uint32_t channel;
-    rc = ss_get_timer_channel_from_pin_id(pin_id, &channel);
-    SS_HANDLE_ERROR_WITH_EXIT(rc);
+    if (!ss_get_timer_channel_from_pin_id(pin_id, &channel)) SS_ERROR(NULL);
 
     uint16_t fsys;
-    rc = ss_pwm_get_frequenzy_from_clock_config(pin_id, &fsys);
-    SS_HANDLE_ERROR_WITH_EXIT(rc);
+    if (!ss_pwm_get_frequenzy_from_clock_config(pin_id, &fsys)) SS_ERROR(NULL);
 
     timer_set_mode(timer_id, TIM_CR1_CKD_CK_INT, TIM_CR1_CMS_EDGE, TIM_CR1_DIR_UP);
 
@@ -348,44 +322,35 @@ SS_FEEDBACK ss_pwm_init(uint16_t pin_id, uint32_t frequency) {
     timer_enable_counter(timer_id);
 
     uint8_t extended;
-    rc = ss_is_pin_id_extended_timer(pin_id, &extended);
-    SS_HANDLE_ERROR_WITH_EXIT(rc);
+    if (!ss_is_pin_id_extended_timer(pin_id, &extended)) SS_ERROR(NULL);
 
     if(extended) {
         timer_enable_break_main_output(timer_id);
     }
-        
+
     timer_enable_oc_output(timer_id, channel);
 
-    return SS_FEEDBACK_OK;
+    return true;
 }
 
-SS_FEEDBACK ss_pwm_init_highres(uint16_t pin_id, uint32_t frequency)  {
-    SS_FEEDBACK rc;
-
-    rc = ss_io_init(pin_id, GPIO_MODE_AF);
-    SS_HANDLE_ERROR_WITH_EXIT(rc);
+bool ss_pwm_init_highres(uint16_t pin_id, uint32_t frequency)  {
+    if (!ss_io_init(pin_id, GPIO_MODE_AF)) SS_ERROR(NULL);
 
     uint8_t af;
-    rc = get_pwm_af_mode_for_pin_id(pin_id, &af);
-    SS_HANDLE_ERROR_WITH_EXIT(rc);
+    if (!get_pwm_af_mode_for_pin_id(pin_id, &af)) SS_ERROR(NULL);
 
     gpio_set_af(GPIO(PINBANK(pin_id)), af, BIT(PINNO(pin_id)));
 
-    rc = ss_enable_timer_clock_from_pin_id(pin_id);
-    SS_HANDLE_ERROR_WITH_EXIT(rc);
+    if (!ss_enable_timer_clock_from_pin_id(pin_id)) SS_ERROR(NULL);
 
-    uint32_t timer_id; 
-    rc = ss_get_timer_from_pin_id(pin_id, &timer_id);
-    SS_HANDLE_ERROR_WITH_EXIT(rc);
+    uint32_t timer_id;
+    if (!ss_get_timer_from_pin_id(pin_id, &timer_id)) SS_ERROR(NULL);
 
     uint32_t channel;
-    rc = ss_get_timer_channel_from_pin_id(pin_id, &channel);
-    SS_HANDLE_ERROR_WITH_EXIT(rc);
+    if (!ss_get_timer_channel_from_pin_id(pin_id, &channel)) SS_ERROR(NULL);
 
     uint16_t fsys;
-    rc = ss_pwm_get_frequenzy_from_clock_config(pin_id, &fsys);
-    SS_HANDLE_ERROR_WITH_EXIT(rc);
+    if (!ss_pwm_get_frequenzy_from_clock_config(pin_id, &fsys)) SS_ERROR(NULL);
 
     timer_set_mode(timer_id, TIM_CR1_CKD_CK_INT, TIM_CR1_CMS_EDGE, TIM_CR1_DIR_UP);
 
@@ -402,48 +367,39 @@ SS_FEEDBACK ss_pwm_init_highres(uint16_t pin_id, uint32_t frequency)  {
     timer_enable_counter(timer_id);
 
     uint8_t extended;
-    rc = ss_is_pin_id_extended_timer(pin_id, &extended);
-    SS_HANDLE_ERROR_WITH_EXIT(rc);
+    if (!ss_is_pin_id_extended_timer(pin_id, &extended)) SS_ERROR(NULL);
 
     if(extended) {
         timer_enable_break_main_output(timer_id);
     }
-        
+
     timer_enable_oc_output(timer_id, channel);
 
-    return SS_FEEDBACK_OK;
+    return true;
 }
 
 
-SS_FEEDBACK ss_pwm_write(uint16_t pin_id, uint32_t value) {
-    SS_FEEDBACK rc = SS_FEEDBACK_OK;
-
+bool ss_pwm_write(uint16_t pin_id, uint32_t value) {
     uint32_t timer_id;
-    rc = ss_get_timer_from_pin_id(pin_id, &timer_id);
-    SS_HANDLE_ERROR_WITH_EXIT(rc);
+    if (!ss_get_timer_from_pin_id(pin_id, &timer_id)) SS_ERROR(NULL);
 
     uint32_t channel;
-    rc = ss_get_timer_channel_from_pin_id(pin_id, &channel);
-    SS_HANDLE_ERROR_WITH_EXIT(rc);
+    if (!ss_get_timer_channel_from_pin_id(pin_id, &channel)) SS_ERROR(NULL);
 
     timer_set_oc_value(timer_id, channel, value);
 
-    return SS_FEEDBACK_OK;
+    return true;
 }
 
-SS_FEEDBACK ss_pwm_write_highres(uint16_t pin_id, uint32_t value) {
-    SS_FEEDBACK rc = SS_FEEDBACK_OK;
-
+bool ss_pwm_write_highres(uint16_t pin_id, uint32_t value) {
     uint32_t timer_id;
-    rc = ss_get_timer_from_pin_id(pin_id, &timer_id);
-    SS_HANDLE_ERROR_WITH_EXIT(rc);
+    if (!ss_get_timer_from_pin_id(pin_id, &timer_id)) SS_ERROR(NULL);
 
     uint32_t channel;
-    rc = ss_get_timer_channel_from_pin_id(pin_id, &channel);
-    SS_HANDLE_ERROR_WITH_EXIT(rc);
+    if (!ss_get_timer_channel_from_pin_id(pin_id, &channel)) SS_ERROR(NULL);
 
     timer_set_oc_value(timer_id, channel, value);
-    
-    return SS_FEEDBACK_OK;
+
+    return true;
 }
 #endif // COMPILE_SS_PWM

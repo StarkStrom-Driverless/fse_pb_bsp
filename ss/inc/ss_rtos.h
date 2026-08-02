@@ -17,25 +17,26 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include "ss_feedback.h"
+#include <stdbool.h>
 
 #define SS_RTOS_DELAY_MS pdMS_TO_TICKS
 
 #define SS_RTOS_TASK_ADD(func, prio) ss_rtos_add_task_generic(func, NULL, prio, #func, configMINIMAL_STACK_SIZE)
 
-SS_FEEDBACK ss_rtos_task_delete(char* name);
+bool ss_rtos_task_delete(char* name);
 
-SS_FEEDBACK ss_rtos_task_add(  TaskFunction_t task_ptr,
+bool ss_rtos_task_add(  TaskFunction_t task_ptr,
                         void * const params,
                         UBaseType_t prio,
                         char* name);
 
-SS_FEEDBACK ss_rtos_big_task_add(  TaskFunction_t task_ptr,
+bool ss_rtos_big_task_add(  TaskFunction_t task_ptr,
                         void * const params,
                         UBaseType_t prio,
                         char* name);
 
 #ifdef USE_PRIVATE
-SS_FEEDBACK ss_rtos_add_task_generic(   TaskFunction_t task_ptr,
+bool ss_rtos_add_task_generic(   TaskFunction_t task_ptr,
                                         void *const params,
                                         UBaseType_t prio,
                                         char* name,

@@ -15,6 +15,7 @@
 #define __SS_GPIO_H__
 
 #include <inttypes.h>
+#include <stdbool.h>
 #include "ss_feedback.h"
 #include "ss_makros.h"
 
@@ -24,10 +25,10 @@ enum { SS_GPIO_MODE_INPUT, SS_GPIO_MODE_OUTPUT, SS_GPIO_MODE_AF, SS_GPIO_MODE_AN
 enum {SS_GPIO_OFF, SS_GPIO_ON, SS_GPIO_TOGGLE};
 
 #ifdef USE_PRIVATE
-SS_FEEDBACK ss_enable_rcc_from_id(uint16_t pin_id);
+bool ss_enable_rcc_from_id(uint16_t pin_id);
 #endif
 
-SS_FEEDBACK ss_io_init(uint16_t pin_id, uint8_t mode);
+bool ss_io_init(uint16_t pin_id, uint8_t mode);
 
 void ss_io_write(uint16_t pin_id, uint8_t value);
 

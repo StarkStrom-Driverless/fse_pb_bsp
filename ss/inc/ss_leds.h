@@ -14,8 +14,10 @@
 #ifndef _SS_LEDS_H_
 #define _SS_LEDS_H_
 
+#include <stdbool.h>
+
 #ifdef USE_PRIVATE
-int8_t ss_leds_init(void);
+bool ss_leds_init(void);
 #endif
 
 void ss_led_error_on(void);

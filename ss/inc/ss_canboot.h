@@ -17,6 +17,7 @@
 #define CAN_BOOT_OFFSET 0x08080000
 
 #include "ss_feedback.h"
+#include <stdbool.h>
 
 struct SS_CANBOOT {
     uint32_t can_id;
@@ -29,7 +30,7 @@ extern struct SS_CANBOOT ss_canboot;
 static void canboot_task(void* args);
 #endif
 
-SS_FEEDBACK ss_canboot_init(uint32_t id);
+bool ss_canboot_init(uint32_t id);
 
 #endif // _SS_CAN_BOOT_H_
 

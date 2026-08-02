@@ -19,10 +19,9 @@
 #include "ss_makros.h"
 #include "ss_gpio.h"
 #include "ss_adc.h"
+#include "ss_error.h"
 
 struct SS_ADC ss_adc = {0};
-
-#define SS_FEEDBACK_BASE SS_FEEDBACK_ADC_INIT_ERROR
 
 /***
  *
@@ -30,47 +29,38 @@ struct SS_ADC ss_adc = {0};
  *
  */
 void adc_isr(void) {
-    /* unused: ss_adc_read uses one-shot polling instead of continuous ISR measurement */
 }
 
 
 /***
- * 
+ *
  * ADC USER FUNCTIONS
- * 
+ *
  */
-SS_FEEDBACK ss_adc_read(uint16_t pin_id, uint16_t *val) {
-    SS_FEEDBACK rc = SS_FEEDBACK_OK;
+bool ss_adc_read(uint16_t pin_id, uint16_t *val) {
     uint32_t adc = 0;
     uint32_t adc_channel = 0;
 
-    rc = ss_adc_get_adc_from_pin_id(pin_id, &adc);
-    SS_HANDLE_ERROR_WITH_EXIT(rc);
+    if (!ss_adc_get_adc_from_pin_id(pin_id, &adc)) SS_ERROR(NULL);
 
-    rc = ss_adc_get_channel_from_pin_id(pin_id, &adc_channel);
-    SS_HANDLE_ERROR_WITH_EXIT(rc);
+    if (!ss_adc_get_channel_from_pin_id(pin_id, &adc_channel)) SS_ERROR(NULL);
 
     adc_set_regular_sequence(adc, 1, (uint8_t*)(&adc_channel));
     adc_start_conversion_regular(adc);
     while (!adc_eoc(adc));
     *val = (uint16_t)adc_read_regular(adc);
 
-    return rc;
+    return true;
 }
 
-SS_FEEDBACK ss_adc_init(uint16_t pin_id) {
-    SS_FEEDBACK rc = SS_FEEDBACK_OK;
-    uint8_t measurement_pos = 0;
+bool ss_adc_init(uint16_t pin_id) {
     uint32_t adc = 0;
 
-    rc = ss_adc_rcc_init_from_pin_id(pin_id);
-    SS_HANDLE_ERROR_WITH_EXIT(rc);
+    if (!ss_adc_rcc_init_from_pin_id(pin_id)) SS_ERROR(NULL);
 
-    rc = ss_io_init(pin_id, GPIO_MODE_ANALOG);
-    SS_HANDLE_ERROR_WITH_EXIT(rc);
+    if (!ss_io_init(pin_id, GPIO_MODE_ANALOG)) SS_ERROR(NULL);
 
-    rc = ss_adc_get_adc_from_pin_id(pin_id, &adc);
-    SS_HANDLE_ERROR_WITH_EXIT(rc);
+    if (!ss_adc_get_adc_from_pin_id(pin_id, &adc)) SS_ERROR(NULL);
 
     adc_power_off(adc);
 
@@ -78,18 +68,16 @@ SS_FEEDBACK ss_adc_init(uint16_t pin_id) {
 
     adc_set_sample_time_on_all_channels(adc, ADC_SMPR_SMP_480CYC);
 
-    return rc;
+    return true;
 }
 
 
 /***
- * 
+ *
  * ADC PERIPH FUNCTIONS
- * 
+ *
  */
-SS_FEEDBACK ss_adc_rcc_init_from_pin_id(uint16_t pin_id) {
-    SS_FEEDBACK rc = SS_FEEDBACK_OK;
-
+bool ss_adc_rcc_init_from_pin_id(uint16_t pin_id) {
     switch(pin_id) {
         case PIN('A', 0):
         case PIN('A', 1):
@@ -112,18 +100,14 @@ SS_FEEDBACK ss_adc_rcc_init_from_pin_id(uint16_t pin_id) {
             rcc_periph_clock_enable(RCC_ADC3);
             break;
 
-        default: 
-            rc = SS_FEEDBACK_ADC_RCC_INIT_ERROR; 
-            break;
+        default:
+            SS_ERROR("unknown pin_id");
     }
 
-    return rc;
+    return true;
 }
 
-SS_FEEDBACK ss_adc_get_adc_from_pin_id(uint16_t pin_id, uint32_t *adc) {
-    SS_FEEDBACK rc = SS_FEEDBACK_OK;
-
-
+bool ss_adc_get_adc_from_pin_id(uint16_t pin_id, uint32_t *adc) {
     switch(pin_id) {
         case PIN('A', 0):
         case PIN('A', 1):
@@ -146,18 +130,15 @@ SS_FEEDBACK ss_adc_get_adc_from_pin_id(uint16_t pin_id, uint32_t *adc) {
             *adc = ADC3;
             break;
 
-        default: 
-            rc = SS_FEEDBACK_ADC_PINID_ERROR;
-            break;
+        default:
+            SS_ERROR("unknown pin_id");
     }
 
-    return rc;
+    return true;
 }
 
 
-SS_FEEDBACK ss_adc_get_channel_from_pin_id(uint16_t pin_id, uint32_t *adc_channel) {
-    SS_FEEDBACK rc = SS_FEEDBACK_OK;
-
+bool ss_adc_get_channel_from_pin_id(uint16_t pin_id, uint32_t *adc_channel) {
     switch(pin_id) {
         case PIN('A', 0): *adc_channel = ADC_CHANNEL0; break;
         case PIN('A', 1): *adc_channel = ADC_CHANNEL1; break;
@@ -174,17 +155,14 @@ SS_FEEDBACK ss_adc_get_channel_from_pin_id(uint16_t pin_id, uint32_t *adc_channe
         case PIN('C', 2): *adc_channel = ADC_CHANNEL12; break;
         case PIN('C', 3): *adc_channel = ADC_CHANNEL13; break;
 
-        default: 
-            rc = SS_FEEDBACK_ADC_PINID_ERROR;
-            break;
+        default:
+            SS_ERROR("unknown pin_id");
     }
 
-    return rc;
+    return true;
 }
 
-SS_FEEDBACK ss_adc_get_measurement_pos_from_pin_id(uint16_t pin_id, uint8_t *measurement_pos) {
-    SS_FEEDBACK rc = SS_FEEDBACK_OK;
-    
+bool ss_adc_get_measurement_pos_from_pin_id(uint16_t pin_id, uint8_t *measurement_pos) {
     switch(pin_id) {
         case PIN('A', 0): *measurement_pos = 0; break;
         case PIN('A', 1): *measurement_pos = 1; break;
@@ -201,78 +179,66 @@ SS_FEEDBACK ss_adc_get_measurement_pos_from_pin_id(uint16_t pin_id, uint8_t *mea
         case PIN('C', 2): *measurement_pos = 10; break;
         case PIN('C', 3): *measurement_pos = 11; break;
 
-        default: 
-            rc = SS_FEEDBACK_ADC_PINID_ERROR;    
-            break;
+        default:
+            SS_ERROR("unknown pin_id");
     }
 
-    return rc;
+    return true;
 }
 
 
 
 
 /***
- * 
+ *
  * ADC CORE CIRCULAR MEASUREMENT
- * 
+ *
  */
-SS_FEEDBACK ss_adc_set_next_measurment_pos(void) {
-    SS_FEEDBACK rc = SS_FEEDBACK_ADC_FAILED_NEXT_MPOS;
-
-
+bool ss_adc_set_next_measurment_pos(void) {
     for (uint8_t i = 0; i < MAX_MEASUREMENT; i++) {
         ss_adc.measurement_pos++;
         if (ss_adc.measurement_pos >= MAX_MEASUREMENT) {
             ss_adc.measurement_pos = 0;
         }
         if (ss_adc.measurements[ss_adc.measurement_pos].enable == 1) {
-            rc = SS_FEEDBACK_OK;
-            break;
+            return true;
         }
     }
 
-    return rc;
+    SS_ERROR("no enabled measurement found");
 }
 
-SS_FEEDBACK ss_adc_start(void) {
-    SS_FEEDBACK rc = SS_FEEDBACK_ADC_FAILED_START;
+bool ss_adc_start(void) {
+    bool any_enabled = false;
 
     for (uint8_t i = 0; i < MAX_MEASUREMENT; i++) {
         if (ss_adc.measurements[i].enable == 1) {
-            rc = SS_FEEDBACK_OK;
+            any_enabled = true;
         }
     }
-    SS_HANDLE_ERROR_WITH_EXIT(rc);
+    if (!any_enabled) SS_ERROR("no enabled measurement");
 
-    rc = ss_adc_set_next_measurment_pos();
-    SS_HANDLE_ERROR_WITH_EXIT(rc);
+    if (!ss_adc_set_next_measurment_pos()) SS_ERROR(NULL);
 
     uint16_t pin_id = ss_adc.measurements[ss_adc.measurement_pos].pin_id;
-    rc = ss_adc_start_channel(pin_id);
-    SS_HANDLE_ERROR_WITH_EXIT(rc);
+    if (!ss_adc_start_channel(pin_id)) SS_ERROR(NULL);
 
-    return rc;
+    return true;
 }
 
-SS_FEEDBACK ss_adc_start_channel(uint16_t pin_id) {
-    SS_FEEDBACK rc = SS_FEEDBACK_OK;
-
+bool ss_adc_start_channel(uint16_t pin_id) {
     uint32_t adc = 0;
     uint32_t adc_channel = 0;
 
+    if (!ss_adc_get_adc_from_pin_id(pin_id, &adc)) SS_ERROR(NULL);
 
-    rc = ss_adc_get_adc_from_pin_id(pin_id, &adc);
-    SS_HANDLE_ERROR_WITH_EXIT(rc);
-
-    rc = ss_adc_get_channel_from_pin_id(pin_id, &adc_channel);
-    SS_HANDLE_ERROR_WITH_EXIT(rc);
+    if (!ss_adc_get_channel_from_pin_id(pin_id, &adc_channel)) SS_ERROR(NULL);
 
     adc_set_regular_sequence(adc, 1, (uint8_t*)(&adc_channel));
 
     adc_start_conversion_regular(adc);
 
-    return rc;
+    return true;
 }
 
 

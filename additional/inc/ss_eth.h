@@ -6,6 +6,7 @@
 #define _WZ5500_WRAPPER_H_
 
 #include <stdint.h>
+#include <stdbool.h>
 
 #include "wizchip_conf.h"
 #include "socket.h"
@@ -78,10 +79,10 @@ extern struct WZ5500 ss_eth;
  *
  */
 #ifdef USE_PRIVATE
-SS_FEEDBACK ss_eth_cpy_ip_style(uint8_t* dest, uint64_t source, uint8_t len);
+bool ss_eth_cpy_ip_style(uint8_t* dest, uint64_t source, uint8_t len);
 #endif
 #ifdef USE_PRIVATE
-SS_FEEDBACK ss_eth_init_wiz();
+bool ss_eth_init_wiz();
 #endif
 
 /***
@@ -89,32 +90,32 @@ SS_FEEDBACK ss_eth_init_wiz();
  * USER FUNCTIONS FOR INIT
  *
  */
-SS_FEEDBACK ss_eth_init(uint32_t ip, uint32_t sn, uint64_t mac, uint32_t gw);
+bool ss_eth_init(uint32_t ip, uint32_t sn, uint64_t mac, uint32_t gw);
 
 #ifdef USE_PRIVATE
-SS_FEEDBACK ss_eth_set_gw(uint32_t gw);
+bool ss_eth_set_gw(uint32_t gw);
 #endif
 #ifdef USE_PRIVATE
-SS_FEEDBACK ss_eth_set_nm(uint32_t nm);
+bool ss_eth_set_nm(uint32_t nm);
 #endif
 #ifdef USE_PRIVATE
-SS_FEEDBACK ss_eth_set_dns(uint32_t dns);
+bool ss_eth_set_dns(uint32_t dns);
 #endif
 #ifdef USE_PRIVATE
-SS_FEEDBACK ss_eth_set_mac(uint64_t mac);
+bool ss_eth_set_mac(uint64_t mac);
 #endif
-SS_FEEDBACK ss_eth_socket_udp_add(uint32_t port, struct SS_ETH_PAYLOAD* payload);
+bool ss_eth_socket_udp_add(uint32_t port, struct SS_ETH_PAYLOAD* payload);
 
 /***
  *
  * USER FUNCTIONS FOR PROCESS
  *
  */
-SS_FEEDBACK ss_eth_get(uint32_t port, struct SS_ETH_INTF** tmp);
-SS_FEEDBACK ss_eth_read(struct SS_ETH_INTF* tmp, struct SS_ETH_PAYLOAD** payload);
-SS_FEEDBACK ss_eth_read_filtered(struct SS_ETH_INTF* tmp, struct SS_ETH_PAYLOAD** payload, uint16_t expected_len);
-SS_FEEDBACK ss_eth_send(struct SS_ETH_INTF* tmp, struct SS_ETH_PAYLOAD* payload);
-SS_FEEDBACK ss_eth_received_frame(struct SS_ETH_INTF* tmp);
+bool ss_eth_get(uint32_t port, struct SS_ETH_INTF** tmp);
+bool ss_eth_read(struct SS_ETH_INTF* tmp, struct SS_ETH_PAYLOAD** payload);
+bool ss_eth_read_filtered(struct SS_ETH_INTF* tmp, struct SS_ETH_PAYLOAD** payload, uint16_t expected_len);
+bool ss_eth_send(struct SS_ETH_INTF* tmp, struct SS_ETH_PAYLOAD* payload);
+bool ss_eth_received_frame(struct SS_ETH_INTF* tmp);
 
 #endif // _WZ5500_WRAPPER_H_
 

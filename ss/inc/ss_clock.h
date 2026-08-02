@@ -41,7 +41,7 @@ struct SS_CLOCK_CAN {
 extern struct SS_CLOCK ss_clock;
 
 #ifdef USE_PRIVATE
-SS_FEEDBACK ss_clock_init(uint8_t config);
+bool ss_clock_init(uint8_t config);
 #endif
 
 #ifdef USE_PRIVATE
@@ -49,11 +49,11 @@ bool ss_clock_can(struct SS_CLOCK_CAN* config, uint32_t baudrate);
 #endif
 
 #ifdef USE_PRIVATE
-SS_FEEDBACK ss_clock_spi(uint32_t* prescaler, uint32_t baudrate, uint8_t interface);
+bool ss_clock_spi(uint32_t* prescaler, uint32_t baudrate, uint8_t interface);
 #endif
 
 #ifdef USE_PRIVATE
-SS_FEEDBACK ss_clock_fm(uint16_t pin_id, uint32_t *frequency);
+bool ss_clock_fm(uint16_t pin_id, uint32_t *frequency);
 #endif
 
 #endif // _SS_CLOCK_H_

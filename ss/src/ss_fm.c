@@ -19,19 +19,17 @@
 #include <libopencm3/cm3/nvic.h>
 #include <libopencm3/stm32/gpio.h>
 #include "ss_clock.h"
-
-#define SS_FEEDBACK_BASE SS_FEEDBACK_FM_INIT_ERROR
+#include "ss_error.h"
 
 struct SS_FREQ_MEASURE ss_fm;
 
 
 /***
- * 
+ *
  * PERIPH FUNCTIONS
- * 
+ *
  */
-SS_FEEDBACK ss_fm_get_ic_from_pin_id(uint16_t pin_id, uint32_t* ic_channel) {
-    SS_FEEDBACK rc = SS_FEEDBACK_OK;
+bool ss_fm_get_ic_from_pin_id(uint16_t pin_id, uint32_t* ic_channel) {
     switch(pin_id) {
         case PIN('A', 0):
         case PIN('A', 5):
@@ -64,20 +62,17 @@ SS_FEEDBACK ss_fm_get_ic_from_pin_id(uint16_t pin_id, uint32_t* ic_channel) {
         case PIN('A', 9):
         case PIN('B', 15):
         case PIN('C', 7):  
-            *ic_channel = TIM_IC2; 
+            *ic_channel = TIM_IC2;
             break;
 
-        default: 
-            rc = SS_FEEDBACK_FM_PIN_ID_ERROR;
-            break;
+        default:
+            SS_ERROR("unknown pin_id");
     }
 
-    return rc;
+    return true;
 }
 
-SS_FEEDBACK ss_fm_get_iqr_cc_from_pin_id(uint16_t pin_id, uint32_t* irq) {
-    SS_FEEDBACK rc = SS_FEEDBACK_OK;;
-
+bool ss_fm_get_iqr_cc_from_pin_id(uint16_t pin_id, uint32_t* irq) {
     switch(pin_id) {
         case PIN('A', 0):
         case PIN('A', 5):
@@ -110,20 +105,17 @@ SS_FEEDBACK ss_fm_get_iqr_cc_from_pin_id(uint16_t pin_id, uint32_t* irq) {
         case PIN('A', 9):
         case PIN('B', 15):
         case PIN('C', 7):  
-            *irq = TIM_DIER_CC2IE; 
+            *irq = TIM_DIER_CC2IE;
             break;
 
         default:
-            rc =  SS_FEEDBACK_FM_PIN_ID_ERROR;
-            break;
+            SS_ERROR("unknown pin_id");
     }
 
-    return rc;
+    return true;
 }
 
-SS_FEEDBACK ss_fm_get_irq_from_pin_id(uint16_t pin_id, uint32_t* irq) {
-    SS_FEEDBACK rc = SS_FEEDBACK_OK;
-
+bool ss_fm_get_irq_from_pin_id(uint16_t pin_id, uint32_t* irq) {
     switch(pin_id) {
         case PIN('A', 0):
         case PIN('A', 1):
@@ -162,20 +154,17 @@ SS_FEEDBACK ss_fm_get_irq_from_pin_id(uint16_t pin_id, uint32_t* irq) {
         case PIN('C', 7):
         case PIN('C', 8):
         case PIN('C', 9):  
-            *irq = NVIC_TIM8_CC_IRQ; 
+            *irq = NVIC_TIM8_CC_IRQ;
             break;
 
         default:
-            rc =  SS_FEEDBACK_FM_PIN_ID_ERROR;
-            break;
+            SS_ERROR("unknown pin_id");
     }
 
-    return rc;
+    return true;
 }
 
-SS_FEEDBACK ss_fm_get_pin_struct_from_pin_id(uint16_t pin_id, struct FREQ_PIN** tmp) {
-    SS_FEEDBACK rc = SS_FEEDBACK_OK;
-
+bool ss_fm_get_pin_struct_from_pin_id(uint16_t pin_id, struct FREQ_PIN** tmp) {
     switch(pin_id) {
         case PIN('A', 0): *tmp = &ss_fm.ports[3].pins[0]; break;
         case PIN('A', 1): *tmp = &ss_fm.ports[3].pins[1]; break;
@@ -206,11 +195,10 @@ SS_FEEDBACK ss_fm_get_pin_struct_from_pin_id(uint16_t pin_id, struct FREQ_PIN** 
         case PIN('C', 9): *tmp = &ss_fm.ports[4].pins[3]; break;
 
         default:
-            rc = SS_FEEDBACK_FM_PIN_ID_ERROR;
-            break;
+            SS_ERROR("unknown pin_id");
     }
 
-    return rc;
+    return true;
 }
 
 
@@ -261,9 +249,7 @@ uint8_t ss_fm_get_af_from_pin_id(uint16_t pin_id) {
     return af;
 }
 
-SS_FEEDBACK ss_fm_get_ti_from_pin_id(uint16_t pin_id, uint32_t* ti) {
-    SS_FEEDBACK rc = SS_FEEDBACK_OK;
-
+bool ss_fm_get_ti_from_pin_id(uint16_t pin_id, uint32_t* ti) {
     switch(pin_id) {
         case PIN('A', 0):
         case PIN('A', 5):
@@ -296,64 +282,53 @@ SS_FEEDBACK ss_fm_get_ti_from_pin_id(uint16_t pin_id, uint32_t* ti) {
         case PIN('A', 9):
         case PIN('B', 15):
         case PIN('C', 7):  
-            *ti = TIM_IC_IN_TI2; 
+            *ti = TIM_IC_IN_TI2;
             break;
 
         default:
-            rc =  SS_FEEDBACK_FM_PIN_ID_ERROR;
-            break;
+            SS_ERROR("unknown pin_id");
     }
 
-    return rc;
+    return true;
 }
 
 
 /***
- * 
+ *
  * USER FUNCTIONS
- * 
+ *
  */
-SS_FEEDBACK ss_fm_init(uint16_t pin_id,  uint32_t resolution) {
+bool ss_fm_init(uint16_t pin_id,  uint32_t resolution) {
     // TODO: Check all timer channel (even extended timer) for functionality
-    SS_FEEDBACK rc = SS_FEEDBACK_OK;
-
     uint32_t clock_frequency = 0;
     uint32_t ic;
     uint32_t irq;
     uint32_t nvic_irq;
     uint32_t ti;
     struct FREQ_PIN* channel;
-    
-    ss_io_init(pin_id, SS_GPIO_MODE_AF);
+
+    if (!ss_io_init(pin_id, SS_GPIO_MODE_AF)) SS_ERROR(NULL);
     gpio_set_af(GPIO(PINBANK(pin_id)), ss_fm_get_af_from_pin_id(pin_id), BIT(PINNO(pin_id)));
-    
-    uint32_t timer; 
-    rc = ss_get_timer_from_pin_id(pin_id, &timer);
-    SS_HANDLE_ERROR_WITH_EXIT(rc);
 
-    rc = ss_clock_fm(pin_id, &clock_frequency);
-    SS_HANDLE_ERROR_WITH_EXIT(rc);
+    uint32_t timer;
+    if (!ss_get_timer_from_pin_id(pin_id, &timer)) SS_ERROR(NULL);
 
-    rc = ss_fm_get_ic_from_pin_id(pin_id, &ic);
-    SS_HANDLE_ERROR_WITH_EXIT(rc);
+    if (!ss_clock_fm(pin_id, &clock_frequency)) SS_ERROR(NULL);
 
-    rc = ss_fm_get_iqr_cc_from_pin_id(pin_id, &irq);
-    SS_HANDLE_ERROR_WITH_EXIT(rc);
+    if (!ss_fm_get_ic_from_pin_id(pin_id, &ic)) SS_ERROR(NULL);
 
-    rc = ss_fm_get_irq_from_pin_id(pin_id, &nvic_irq);
-    SS_HANDLE_ERROR_WITH_EXIT(rc);
+    if (!ss_fm_get_iqr_cc_from_pin_id(pin_id, &irq)) SS_ERROR(NULL);
 
-    rc = ss_fm_get_ti_from_pin_id(pin_id, &ti);
-    SS_HANDLE_ERROR_WITH_EXIT(rc);
+    if (!ss_fm_get_irq_from_pin_id(pin_id, &nvic_irq)) SS_ERROR(NULL);
+
+    if (!ss_fm_get_ti_from_pin_id(pin_id, &ti)) SS_ERROR(NULL);
 
     uint32_t prescaler = (clock_frequency * 1000000 / resolution) - 1;
 
-    rc = ss_fm_get_pin_struct_from_pin_id(pin_id, &channel);
-    SS_HANDLE_ERROR_WITH_EXIT(rc);
+    if (!ss_fm_get_pin_struct_from_pin_id(pin_id, &channel)) SS_ERROR(NULL);
 
 
-    rc = ss_enable_timer_clock_from_pin_id(pin_id);
-    SS_HANDLE_ERROR_WITH_EXIT(rc);
+    if (!ss_enable_timer_clock_from_pin_id(pin_id)) SS_ERROR(NULL);
 
     timer_disable_counter(timer);
 
@@ -392,23 +367,19 @@ SS_FEEDBACK ss_fm_init(uint16_t pin_id,  uint32_t resolution) {
     channel->ic = ic;
 
 
-    return rc;
+    return true;
 }
 
-SS_FEEDBACK ss_fm_read(uint16_t pin_id, float *value) {
-    SS_FEEDBACK rc = SS_FEEDBACK_OK;
-
+bool ss_fm_read(uint16_t pin_id, float *value) {
     struct FREQ_PIN* channel;
 
-    rc = ss_fm_get_pin_struct_from_pin_id(pin_id, &channel);
-    SS_HANDLE_ERROR_WITH_EXIT(rc);
+    if (!ss_fm_get_pin_struct_from_pin_id(pin_id, &channel)) SS_ERROR(NULL);
 
     if (!channel->enabled) {
-        rc = SS_FEEDBACK_FM_PIN_NOT_ENABLED;
+        SS_ERROR("fm pin not enabled");
     }
-    SS_HANDLE_ERROR_WITH_EXIT(rc);
 
-    
+
     if (channel->requested >= 15) {
         if (channel->requested < 30) {
             uint32_t timer = channel->timer;
@@ -443,7 +414,7 @@ SS_FEEDBACK ss_fm_read(uint16_t pin_id, float *value) {
     
     *value = channel->frequency;
 
-    return rc;
+    return true;
 }
 
 

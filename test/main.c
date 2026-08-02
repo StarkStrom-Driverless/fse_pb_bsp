@@ -1,7 +1,5 @@
 #include "ss.h"
 
-void ss_init_error(SS_FEEDBACK feedback);
-
 uint16_t led = PIN('C', 1);
 
 static void blinky_task(void *args) {
@@ -18,11 +16,11 @@ static void blinky_task(void *args) {
 
 int main(void)
 {
-    SS_HANDLE_INIT(ss_init());
+    SS_ERROR_ASSERT(ss_init());
 
-    SS_HANDLE_INIT(ss_io_init(led, SS_GPIO_MODE_OUTPUT));
+    SS_ERROR_ASSERT(ss_io_init(led, SS_GPIO_MODE_OUTPUT));
 
-    SS_HANDLE_INIT(ss_rtos_task_add(blinky_task, NULL, 1, "blinky_task"));
+    SS_ERROR_ASSERT(ss_rtos_task_add(blinky_task, NULL, 1, "blinky_task"));
 
     ss_rtos_start();
 
@@ -34,10 +32,8 @@ int main(void)
 
 }
 
-void ss_init_error(SS_FEEDBACK feedback) {
-    uint16_t error = 0xFFFF & feedback;
-    uint16_t top_error = (feedback >> 16);
-    while(1) {
+void ss_error_fail(void) {
+    while (1) {
         ss_led_error_toggle();
         ss_delay(1000);
     }
