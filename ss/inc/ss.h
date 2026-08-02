@@ -10,6 +10,7 @@
 #ifndef _SS_H_
 #define _SS_H_
 
+#include "ss_error.h"
 #include "ss_gpio.h"
 #include "ss_pwm.h"
 #include "ss_systick.h"

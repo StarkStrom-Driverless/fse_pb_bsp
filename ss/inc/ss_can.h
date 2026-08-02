@@ -16,6 +16,7 @@
 
 #include <inttypes.h>
 #include <stddef.h>
+#include <stdbool.h>
 #include <FreeRTOS.h>
 #include <queue.h>
 #include "ss_clock.h"
@@ -109,7 +110,7 @@ extern struct SS_CAN ss_can;
  *
  */
 
-SS_FEEDBACK ss_can_init(uint8_t can_interface_id, uint32_t baudrate);
+bool ss_can_init(uint8_t can_interface_id, uint32_t baudrate);
 
 SS_FEEDBACK ss_can_read(uint8_t can_interface_id, struct SS_CAN_FRAME* can_frame);
 
@@ -135,10 +136,10 @@ SS_FEEDBACK ss_can_queue_read(struct SS_CAN_MSG_QUEUE *queue, struct SS_CAN_FRAM
 SS_FEEDBACK ss_can_queue_has_msg(struct SS_CAN_MSG_QUEUE *queue);
 #endif
 
-SS_FEEDBACK ss_can_queue_add(uint8_t channel, uint32_t id, struct SS_CAN_MSG_QUEUE **queue);
+bool ss_can_queue_add(uint8_t channel, uint32_t id, struct SS_CAN_MSG_QUEUE **queue);
 
 #ifdef USE_PRIVATE
-SS_FEEDBACK ss_can_queue_add_combined(uint8_t channel, uint32_t* ids, uint8_t len, struct SS_CAN_MSG_QUEUE **queue);
+bool ss_can_queue_add_combined(uint8_t channel, uint32_t* ids, uint8_t len, struct SS_CAN_MSG_QUEUE **queue);
 #endif
 
 /***
@@ -147,13 +148,13 @@ SS_FEEDBACK ss_can_queue_add_combined(uint8_t channel, uint32_t* ids, uint8_t le
  *
  */
 #ifdef USE_PRIVATE
-SS_FEEDBACK ss_can_enable_rcc(uint8_t can_interface_id);
+bool ss_can_enable_rcc(uint8_t can_interface_id);
 #endif
 #ifdef USE_PRIVATE
-SS_FEEDBACK ss_can_enable_gpios(uint8_t can_interface_id);
+bool ss_can_enable_gpios(uint8_t can_interface_id);
 #endif
 #ifdef USE_PRIVATE
-SS_FEEDBACK ss_can_nvic_init(uint8_t can_interface_id, uint8_t prio);
+bool ss_can_nvic_init(uint8_t can_interface_id, uint8_t prio);
 #endif
 #ifdef USE_PRIVATE
 uint32_t ss_can_get_port_from_id(uint8_t can_interface_id);
@@ -180,7 +181,7 @@ void ss_can_frame_reset(struct SS_CAN_FRAME *msg);
  *
  */
 #ifdef USE_PRIVATE
-SS_FEEDBACK ss_can_tod_init(uint8_t channel);
+bool ss_can_tod_init(uint8_t channel);
 #endif
 #ifdef USE_PRIVATE
 SS_FEEDBACK ss_can_tod_add(uint8_t channel, uint32_t id, uint16_t reset_value);
@@ -205,16 +206,16 @@ SS_FEEDBACK ss_can_tod_check_field(struct SS_TOD* tod_field, uint8_t cnt, uint32
  *
  */
 #ifdef USE_PRIVATE
-SS_FEEDBACK ss_can_filter_init(uint8_t channel);
+bool ss_can_filter_init(uint8_t channel);
 #endif
 #ifdef USE_PRIVATE
-SS_FEEDBACK ss_can_filter_add_msg_11(uint8_t channel, uint16_t id);
+bool ss_can_filter_add_msg_11(uint8_t channel, uint16_t id);
 #endif
 #ifdef USE_PRIVATE
-SS_FEEDBACK ss_can_filter_add_msg_28(uint8_t channel, uint32_t ide);
+bool ss_can_filter_add_msg_28(uint8_t channel, uint32_t ide);
 #endif
 #ifdef USE_PRIVATE
-SS_FEEDBACK ss_can_filter_add_msg(uint8_t channel, uint32_t id);
+bool ss_can_filter_add_msg(uint8_t channel, uint32_t id);
 #endif
 
 #endif // _SS_CAN_H_

@@ -20,6 +20,7 @@
 #include "ss_gpio.h"
 #include "ss_can.h"
 #include "ss_feedback.h"
+#include "ss_error.h"
 
 
 #ifndef typeof
@@ -113,28 +114,24 @@ void can2_rx1_isr(void)
  * 
  */
 
-SS_FEEDBACK ss_can_enable_rcc(uint8_t can_interface_id) {
-    SS_FEEDBACK rc = SS_FEEDBACK_OK;
+bool ss_can_enable_rcc(uint8_t can_interface_id) {
     switch(can_interface_id) {
         case 1:
             rcc_periph_clock_enable(RCC_CAN1);
             break;
-        
+
         case 2:
             rcc_periph_clock_enable(RCC_CAN2);
             break;
 
         default:
-            rc = SS_FEEDBACK_CAN_PIN_RCC_ERROR;
-            break;
+            SS_ERROR("unknown can_interface_id");
     }
 
-    return rc;
+    return true;
 }
 
-SS_FEEDBACK ss_can_enable_gpios(uint8_t can_interface_id) {
-    SS_FEEDBACK rc = SS_FEEDBACK_OK;
-
+bool ss_can_enable_gpios(uint8_t can_interface_id) {
     uint16_t tx = 0;
     uint16_t rx = 0;
     uint16_t stb = 0;
@@ -145,7 +142,7 @@ SS_FEEDBACK ss_can_enable_gpios(uint8_t can_interface_id) {
             rx = PIN('B', 8);
             stb = PIN('B', 7);
             break;
-        
+
         case 2:
             tx = PIN('B', 6);
             rx = PIN('B', 5);
@@ -153,49 +150,38 @@ SS_FEEDBACK ss_can_enable_gpios(uint8_t can_interface_id) {
             break;
 
         default:
-            rc = SS_FEEDBACK_CAN_PIN_CONFIG_ERROR;
-            break;
+            SS_ERROR("unknown can_interface_id");
     }
 
-    SS_HANDLE_ERROR_WITH_EXIT(rc);
-
-    rc = ss_io_init(tx, GPIO_MODE_AF);
-    SS_HANDLE_ERROR_WITH_EXIT(rc);
-
-    rc = ss_io_init(rx, GPIO_MODE_AF);
-    SS_HANDLE_ERROR_WITH_EXIT(rc);
-
-    rc = ss_io_init(stb, GPIO_MODE_OUTPUT);
-    SS_HANDLE_ERROR_WITH_EXIT(rc);
+    if (ss_io_init(tx, GPIO_MODE_AF) != SS_FEEDBACK_OK)      SS_ERROR("tx pin init failed");
+    if (ss_io_init(rx, GPIO_MODE_AF) != SS_FEEDBACK_OK)      SS_ERROR("rx pin init failed");
+    if (ss_io_init(stb, GPIO_MODE_OUTPUT) != SS_FEEDBACK_OK) SS_ERROR("stb pin init failed");
 
     ss_io_write(stb, SS_GPIO_ON);
 
     gpio_set_af(GPIO(PINBANK(tx)), GPIO_AF9, BIT(PINNO(tx)));
     gpio_set_af(GPIO(PINBANK(rx)), GPIO_AF9, BIT(PINNO(rx)));
 
-    return rc;
+    return true;
 }
 
-SS_FEEDBACK ss_can_nvic_init(uint8_t can_interface_id, uint8_t prio) {
-    SS_FEEDBACK rc = SS_FEEDBACK_OK;
-
+bool ss_can_nvic_init(uint8_t can_interface_id, uint8_t prio) {
     switch(can_interface_id) {
         case 1:
             nvic_enable_irq(NVIC_CAN1_RX0_IRQ);
             nvic_set_priority(NVIC_CAN1_RX0_IRQ, prio);
             break;
-        
+
         case 2:
             nvic_enable_irq(NVIC_CAN2_RX1_IRQ);
             nvic_set_priority(NVIC_CAN2_RX1_IRQ, prio);
             break;
 
         default:
-            rc = SS_FEEDBACK_CAN_PERIPH_ERROR;
-            break;
+            SS_ERROR("unknown can_interface_id");
     }
 
-    return rc;
+    return true;
 }
 
 
@@ -244,19 +230,17 @@ SS_FEEDBACK ss_can_get_id_type_from_id(uint32_t id) {
     return rc;
 }
 
-SS_FEEDBACK ss_can_enable_pending_interrupt(uint8_t channel, uint32_t can_port) {
-    SS_FEEDBACK rc = SS_FEEDBACK_OK;
-
+bool ss_can_enable_pending_interrupt(uint8_t channel, uint32_t can_port) {
     switch (channel)
     {
         case 0: can_enable_irq(can_port, CAN_IER_FMPIE0); break;
         case 1: can_enable_irq(can_port, CAN_IER_FMPIE1); break;
-    
+
         default:
         break;
     }
 
-    return rc;
+    return true;
 }
 
 
@@ -266,22 +250,17 @@ SS_FEEDBACK ss_can_enable_pending_interrupt(uint8_t channel, uint32_t can_port) 
  * 
  */
 
-SS_FEEDBACK ss_can_init(uint8_t can_interface_id, uint32_t baudrate) {
-    SS_FEEDBACK rc = SS_FEEDBACK_OK;
-
-    struct SS_CLOCK_CAN config; 
+bool ss_can_init(uint8_t can_interface_id, uint32_t baudrate) {
+    struct SS_CLOCK_CAN config;
 
     uint32_t can_port = ss_can_get_port_from_id(can_interface_id);
-    SS_HANDLE_NULL_WITH_EXIT(can_port);
+    if (can_port == 0) SS_ERROR("unknown can_interface_id");
 
-    rc = ss_can_enable_gpios(can_interface_id);
-    SS_HANDLE_ERROR_WITH_EXIT(rc);
+    if (!ss_can_enable_gpios(can_interface_id)) SS_ERROR(NULL);
 
-    rc = ss_can_enable_rcc(can_interface_id);
-    SS_HANDLE_ERROR_WITH_EXIT(rc);
+    if (!ss_can_enable_rcc(can_interface_id)) SS_ERROR(NULL);
 
-    rc = ss_clock_can(&config, baudrate);
-    SS_HANDLE_ERROR_WITH_EXIT(rc);
+    if (!ss_clock_can(&config, baudrate)) SS_ERROR(NULL);
 
     can_reset(can_port);
 
@@ -299,27 +278,20 @@ SS_FEEDBACK ss_can_init(uint8_t can_interface_id, uint32_t baudrate) {
                             false,
                             false);
 
-    if (ret) return ret;
+    if (ret) SS_ERROR("libopencm3 can_init failed");
 
-    
+    if (!ss_can_nvic_init(can_interface_id, configMAX_SYSCALL_INTERRUPT_PRIORITY)) SS_ERROR(NULL);
 
-    
+    if (!ss_can_enable_pending_interrupt(can_interface_id - 1, can_port)) SS_ERROR(NULL);
 
-    rc = ss_can_nvic_init(can_interface_id, configMAX_SYSCALL_INTERRUPT_PRIORITY);
-    SS_HANDLE_ERROR_WITH_EXIT(rc);
-                                    
-    rc = ss_can_enable_pending_interrupt(can_interface_id - 1, can_port);
-    SS_HANDLE_ERROR_WITH_EXIT(rc);
-
-    rc = ss_can_filter_init(can_interface_id - 1);
-    SS_HANDLE_ERROR_WITH_EXIT(rc);
+    if (!ss_can_filter_init(can_interface_id - 1)) SS_ERROR(NULL);
 
 
     ss_can.channel[can_interface_id - 1].enabled = true;
 
-    rc = ss_can_tod_init(can_interface_id - 1);
+    if (!ss_can_tod_init(can_interface_id - 1)) SS_ERROR(NULL);
 
-    return rc;
+    return true;
 }
 
 SS_FEEDBACK ss_can_read(uint8_t can_interface_id, struct SS_CAN_FRAME* can_frame) {
@@ -386,22 +358,18 @@ SS_FEEDBACK ss_can_queue_get(uint8_t channel, uint32_t id, struct SS_CAN_MSG_QUE
     return rc;    
 }
 
-SS_FEEDBACK ss_can_queue_add(uint8_t channel, uint32_t id, struct SS_CAN_MSG_QUEUE **queue) {
-    
-
-    SS_FEEDBACK rc = SS_FEEDBACK_OK;
+bool ss_can_queue_add(uint8_t channel, uint32_t id, struct SS_CAN_MSG_QUEUE **queue) {
     static bool init = false;
     struct SS_CAN_MSG_QUEUE* msg_queue;
     int16_t parallel_queue_id = 0;
 
     QueueHandle_t tmp = xQueueCreate(3, sizeof(struct SS_CAN_FRAME));
     if (tmp == NULL) {
-        rc = SS_FEEDBACK_CAN_QUEUE_CREATE_ERROR;
+        SS_ERROR("can queue create failed");
     }
-    SS_HANDLE_ERROR_WITH_EXIT(rc);
 
 
-    taskENTER_CRITICAL(); 
+    taskENTER_CRITICAL();
     channel--;
 
 
@@ -409,15 +377,11 @@ SS_FEEDBACK ss_can_queue_add(uint8_t channel, uint32_t id, struct SS_CAN_MSG_QUE
         ss_can.channel[channel].msg_queues.map = NULL;
         init = true;
     } else {
-        rc = ss_can_queue_get(channel + 1, id, &msg_queue);
-        if (rc == SS_FEEDBACK_OK) {
-            if (msg_queue->parallel_queue_id < 15) {
-                msg_queue->parallel_queue_id++;
-                parallel_queue_id = msg_queue->parallel_queue_id;
-                id = (parallel_queue_id << 28) | id;
-            } else {
-                rc = SS_FEEDBACK_ERROR;
-            }
+        SS_FEEDBACK rc = ss_can_queue_get(channel + 1, id, &msg_queue);
+        if (rc == SS_FEEDBACK_OK && msg_queue->parallel_queue_id < 15) {
+            msg_queue->parallel_queue_id++;
+            parallel_queue_id = msg_queue->parallel_queue_id;
+            id = (parallel_queue_id << 28) | id;
         }
     }
 
@@ -429,31 +393,27 @@ SS_FEEDBACK ss_can_queue_add(uint8_t channel, uint32_t id, struct SS_CAN_MSG_QUE
 
     ss_can_queue_get(channel + 1, id, queue);
 
-    rc = ss_can_filter_add_msg(channel + 1, SS_CAN_ID_RAW(id));
+    bool filter_ok = ss_can_filter_add_msg(channel + 1, SS_CAN_ID_RAW(id));
 
     taskEXIT_CRITICAL();
 
-    SS_HANDLE_ERROR_WITH_EXIT(rc);
+    if (!filter_ok) SS_ERROR(NULL);
 
-    return rc;
+    return true;
 }
 
-SS_FEEDBACK ss_can_queue_add_combined(uint8_t channel, uint32_t* ids, uint8_t len, struct SS_CAN_MSG_QUEUE **queue) {
-    SS_FEEDBACK rc = SS_FEEDBACK_OK;
+bool ss_can_queue_add_combined(uint8_t channel, uint32_t* ids, uint8_t len, struct SS_CAN_MSG_QUEUE **queue) {
     uint32_t first_id;
-
 
     channel--;
 
-
     if (len < 2) {
-        rc = SS_FEEDBACK_ERROR;
+        SS_ERROR("combined queue needs at least 2 ids");
     }
-    SS_HANDLE_ERROR_WITH_EXIT(rc);
 
     first_id = ids[0];
-    rc = ss_can_queue_add(channel + 1, first_id, queue);
-    SS_HANDLE_ERROR_WITH_EXIT(rc);
+    if (!ss_can_queue_add(channel + 1, first_id, queue)) SS_ERROR(NULL);
+
     struct SS_CAN_MSG_QUEUE value = {
         .queue = hmgetp(ss_can.channel[channel].msg_queues.map, first_id)->value.queue,
         .parallel_queue_id = 0
@@ -464,7 +424,7 @@ SS_FEEDBACK ss_can_queue_add_combined(uint8_t channel, uint32_t* ids, uint8_t le
         ss_can_filter_add_msg(channel + 1, ids[i]);
     }
 
-    return rc;
+    return true;
 }
 
 
@@ -500,9 +460,7 @@ SS_FEEDBACK ss_can_queue_has_msg(struct SS_CAN_MSG_QUEUE *queue) {
  * 
  */
 
-SS_FEEDBACK ss_can_filter_init(uint8_t channel) {
-    SS_FEEDBACK rc = SS_FEEDBACK_OK;
-
+bool ss_can_filter_init(uint8_t channel) {
     ss_can.channel[channel].filters.insert_pos = 0;
     ss_can.channel[channel].filters.free_id_group = 0;
     ss_can.channel[channel].filters.free_ide_group = SS_FILTER_BANKS - 1;
@@ -522,19 +480,16 @@ SS_FEEDBACK ss_can_filter_init(uint8_t channel) {
     }
 
 
-    return rc;
+    return true;
 }
 
-SS_FEEDBACK ss_can_filter_add_msg_11(uint8_t channel, uint16_t id) {
-    SS_FEEDBACK rc = SS_FEEDBACK_OK;
-
+bool ss_can_filter_add_msg_11(uint8_t channel, uint16_t id) {
     channel--;
 
     uint8_t offset = (channel == 1) ? SS_FILTER_BANKS : 0;
 
     if (channel != 0 && channel != 1) {
-        rc = SS_FEEDBACK_CAN_PERIPH_ERROR;
-        SS_HANDLE_ERROR_WITH_EXIT(rc);
+        SS_ERROR("invalid can channel");
     }
 
     struct SS_CAN_ID_FILTERS *filters = &ss_can.channel[channel].filters;
@@ -543,8 +498,7 @@ SS_FEEDBACK ss_can_filter_add_msg_11(uint8_t channel, uint16_t id) {
      * (free_id_group) wuerden mit den absteigenden Extended-Baenken
      * (free_ide_group) kollidieren. Pruefung VOR dem HW-Schreibzugriff. */
     if (filters->free_id_group >= filters->free_ide_group) {
-        rc = SS_FEEDBACK_CAN_FILTER_OVERRUN;
-        SS_HANDLE_ERROR_WITH_EXIT(rc);
+        SS_ERROR("can filter bank overrun");
     }
 
     uint16_t tmp[4] = {};
@@ -581,22 +535,19 @@ SS_FEEDBACK ss_can_filter_add_msg_11(uint8_t channel, uint16_t id) {
         filters->free_id_group++;
     }
 
-    
 
-    return rc;
+
+    return true;
 }
 
-SS_FEEDBACK ss_can_filter_add_msg_28(uint8_t channel, uint32_t ide) {
-    SS_FEEDBACK rc = SS_FEEDBACK_OK;
-
+bool ss_can_filter_add_msg_28(uint8_t channel, uint32_t ide) {
     uint8_t offset = (channel == 1) ? SS_FILTER_BANKS : 0;
 
     channel--;
 
 
     if (channel != 0 && channel != 1) {
-        rc = SS_FEEDBACK_CAN_PERIPH_ERROR;
-        SS_HANDLE_ERROR_WITH_EXIT(rc);
+        SS_ERROR("invalid can channel");
     }
 
     struct SS_CAN_ID_FILTERS *filters = &ss_can.channel[channel].filters;
@@ -631,30 +582,26 @@ SS_FEEDBACK ss_can_filter_add_msg_28(uint8_t channel, uint32_t ide) {
     if (cnt == 2) {
         filters->free_ide_group--;
         if ((filters->free_ide_group == filters->free_id_group)) {
-            return 2;
+            SS_ERROR("can id/ide filter bank collision");
         }
     }
 
 
-    return rc;
+    return true;
 }
 
-SS_FEEDBACK ss_can_filter_add_msg(uint8_t channel, uint32_t id) {
-    SS_FEEDBACK rc = SS_FEEDBACK_OK;
+bool ss_can_filter_add_msg(uint8_t channel, uint32_t id) {
+    SS_FEEDBACK id_type = ss_can_get_id_type_from_id(id);
 
-
-    rc = ss_can_get_id_type_from_id(id);
-    if (rc == SS_FEEDBACK_CAN_MSG_IDE_INVALID) {
-        return rc;
+    if (id_type == SS_FEEDBACK_CAN_MSG_IDE_INVALID) {
+        SS_ERROR("can id fits neither 11 nor 29 bit format");
     }
 
-    if (rc == SS_FEEDBACK_CAN_MSG_IDE) {
-        rc = ss_can_filter_add_msg_28(channel, id);
-    } else {
-        rc = ss_can_filter_add_msg_11(channel, id);
+    if (id_type == SS_FEEDBACK_CAN_MSG_IDE) {
+        return ss_can_filter_add_msg_28(channel, id);
     }
 
-    return rc;
+    return ss_can_filter_add_msg_11(channel, id);
 }
 
 
@@ -665,12 +612,10 @@ SS_FEEDBACK ss_can_filter_add_msg(uint8_t channel, uint32_t id) {
  * 
  */
 
-SS_FEEDBACK ss_can_tod_init(uint8_t channel) {
-    SS_FEEDBACK rc = SS_FEEDBACK_OK;
-
+bool ss_can_tod_init(uint8_t channel) {
     ss_can.channel[channel].tod.msg_count = 0;
 
-    return rc;
+    return true;
 }
 
 

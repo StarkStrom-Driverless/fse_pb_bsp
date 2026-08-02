@@ -17,6 +17,7 @@
 #define COMPILE_SS_RTOS         1
 #define COMPILE_SS_DELAY        1
 #define COMPILE_SS_SYSTICK      1
+#define COMPILE_SS_ERROR        1
 
 #define COMPILE_SS_ADC          1
 #define COMPILE_SS_CAN          1

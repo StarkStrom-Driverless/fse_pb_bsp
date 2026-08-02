@@ -96,7 +96,9 @@ SS_FEEDBACK ss_canboot_init(uint32_t id) {
     ss_canboot.flash_offset = CAN_BOOT_OFFSET;
 
     if (ss_can.channel[0].enabled == false) {
-        rc = ss_can_init(1, 1000000);
+        if (!ss_can_init(1, 1000000)) {
+            rc = SS_FEEDBACK_CAN_INIT_ERROR;
+        }
     }
     SS_HANDLE_ERROR_WITH_EXIT(rc);
 

@@ -15,6 +15,7 @@
 #define _SS_CLOCK_H_
 
 #include <inttypes.h>
+#include <stdbool.h>
 
 #include <libopencm3/stm32/can.h>
 #include <libopencm3/stm32/spi.h>
@@ -44,7 +45,7 @@ SS_FEEDBACK ss_clock_init(uint8_t config);
 #endif
 
 #ifdef USE_PRIVATE
-SS_FEEDBACK ss_clock_can(struct SS_CLOCK_CAN* config, uint32_t baudrate);
+bool ss_clock_can(struct SS_CLOCK_CAN* config, uint32_t baudrate);
 #endif
 
 #ifdef USE_PRIVATE

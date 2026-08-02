@@ -14,6 +14,7 @@
 #include "ss_clock.h"
 #include "ss_gpio.h"
 #include "ss_makros.h"
+#include "ss_error.h"
 
 #include <libopencm3/stm32/rcc.h>
 #include <libopencm3/stm32/flash.h>
@@ -49,7 +50,7 @@ SS_FEEDBACK ss_clock_init(uint8_t config) {
     return SS_FEEDBACK_OK;
 }
 
-SS_FEEDBACK ss_clock_can(struct SS_CLOCK_CAN* config, uint32_t baudrate) {
+bool ss_clock_can(struct SS_CLOCK_CAN* config, uint32_t baudrate) {
     switch (baudrate)
     {
     case 1000000:
@@ -72,19 +73,17 @@ SS_FEEDBACK ss_clock_can(struct SS_CLOCK_CAN* config, uint32_t baudrate) {
                     config->sjw = CAN_BTR_SJW_1TQ;
                 }
                 break;
-            
+
             default:
-                return SS_FEEDBACK_CLOCK_CAN_INIT_ERROR;
-            break;
+                SS_ERROR("unsupported apb1 clock for can baudrate");
         }
         break;
-    
+
         default:
-            return SS_FEEDBACK_CLOCK_CAN_INIT_ERROR;
-        break;
+            SS_ERROR("unsupported can baudrate");
     }
 
-    return SS_FEEDBACK_OK;
+    return true;
 }
 
 SS_FEEDBACK ss_get_spi_prescaler(uint32_t baudrate, uint32_t clk, uint32_t* prescaler) {

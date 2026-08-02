@@ -13,9 +13,14 @@
 #if COMPILE_SS_RTOS
 #include "ss_rtos.h"
 #include "ss_fsm.h"
+#include "ss_error.h"
 
 #define SS_FEEDBACK_BASE SS_FEEDBACK_BASE_NOT_SET
 
+#define SS_RTOS_MAX_TASKS 16
+
+static struct SS_ERROR_CONTEXT ss_error_pool[SS_RTOS_MAX_TASKS];
+static uint8_t                 ss_error_pool_used = 0;
 
 SS_FEEDBACK ss_rtos_add_task_generic(TaskFunction_t task_ptr, void *const params, UBaseType_t prio, char* name, size_t stack_size) {
     SS_FEEDBACK rc = SS_FEEDBACK_OK;
@@ -26,12 +31,16 @@ SS_FEEDBACK ss_rtos_add_task_generic(TaskFunction_t task_ptr, void *const params
     SS_HANDLE_ERROR_WITH_EXIT(rc);
 
 
-    BaseType_t task_created = xTaskCreate (task_ptr,name,stack_size,params,prio,NULL);
+    TaskHandle_t task_handle = NULL;
+    BaseType_t task_created = xTaskCreate (task_ptr,name,stack_size,params,prio,&task_handle);
     if (task_created != pdPASS) {
         rc = SS_FEEDBACK_RTOS_INIT_TASK_ERROR;
     }
     SS_HANDLE_ERROR_WITH_EXIT(rc);
 
+    if (ss_error_pool_used < SS_RTOS_MAX_TASKS) {
+        ss_error_register_task(task_handle, &ss_error_pool[ss_error_pool_used++]);
+    }
 
     rc = ss_fsm_eventqueue_add(name);
     SS_HANDLE_ERROR_WITH_EXIT(rc);
