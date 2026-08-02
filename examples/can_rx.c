@@ -22,6 +22,30 @@ void example_task(void* args) {
     }
 }
 
+void example_task_multi(void* args) {
+    struct SS_CAN_MSG_QUEUE *queue1;
+    struct SS_CAN_MSG_QUEUE *queue2;
+    struct SS_CAN_FRAME msg1;
+    struct SS_CAN_FRAME msg2;
+
+    ss_can_queue_add(1, 0x23, &queue1);
+    ss_can_queue_add(1, 0x24, &queue2);
+
+    for (;;) {
+        if (ss_can_queue_read(queue1, &msg1)) {
+            ss_printf(4, "ID 0x23: %x \r\n", msg1.std_id);
+            ss_led_dbg1_toggle();
+        }
+
+        if (ss_can_queue_read(queue2, &msg2)) {
+            ss_printf(4, "ID 0x24: %x \r\n", msg2.std_id);
+            ss_led_dbg2_toggle();
+        }
+
+        ss_rtos_delay_ms(100);
+    }
+}
+
 int main(void) {
     SS_ERROR_ASSERT(ss_init());
     SS_ERROR_ASSERT(ss_uart_init(4, 115200));
@@ -31,6 +55,7 @@ int main(void) {
     SS_ERROR_ASSERT(ss_can_init(1, 1000000));
 
     SS_ERROR_ASSERT(ss_rtos_task_add(example_task, NULL, 1, "example_task"));
+    SS_ERROR_ASSERT(ss_rtos_task_add(example_task_multi, NULL, 1, "example_task_multi"));
 
     ss_rtos_start();
 

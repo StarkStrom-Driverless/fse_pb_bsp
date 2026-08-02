@@ -1,6 +1,6 @@
 ROOT := $(abspath ../..)
 
-EXAMPLES := output input adc can_tx can_rx can_tod pwm spi iob eth_udp pid fm error uart printf
+EXAMPLES := output input adc can_tx can_rx can_tod pwm spi iob eth_udp pid fm fsm error uart printf
 
 .PHONY: $(EXAMPLES) clean
 

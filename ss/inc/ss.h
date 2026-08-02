@@ -31,5 +31,6 @@
 #include "ss_watchdog.h"
 #include "ss_uart.h"
 #include "ss_printf.h"
+#include "ss_fsm.h"
 
 #endif
