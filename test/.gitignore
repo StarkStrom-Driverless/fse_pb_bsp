@@ -7,3 +7,7 @@ libopencm3
 *.signed.confirmed.bin
 
 .venv/
+
+slprj/
+*.slxc
+*.autosave

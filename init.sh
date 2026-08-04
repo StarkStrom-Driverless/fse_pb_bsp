@@ -2,6 +2,7 @@
 
 mkdir -p ../usr/src
 mkdir -p ../usr/inc
+mkdir -p ../usr/simulink
 
 cp -n test/main.c ..
 cp -n test/Makefile ..

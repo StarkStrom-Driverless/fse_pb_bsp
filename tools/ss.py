@@ -14,6 +14,7 @@ import argparse
 from ss_flash import *
 from ss_oocd import *
 from ss_build import *
+from ss_matlab import *
 
 def main():
     parser = argparse.ArgumentParser()
@@ -22,6 +23,7 @@ def main():
     flash_add_sub(sub)
     build_add_sub(sub)
     oocd_add_sub(sub)
+    matlab_add_sub(sub)
 
     args = parser.parse_args()
 

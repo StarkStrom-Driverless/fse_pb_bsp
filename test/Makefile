@@ -1,12 +1,16 @@
 BINARY = bp_test
- 
+
 
 OBJS += main.o
 OBJS += $(patsubst %.c, %.o, $(wildcard usr/src/*.c))
 
+SIMULINK_DIRS = $(wildcard usr/simulink/*_ert_rtw)
+OBJS += $(patsubst %.c, %.o, $(wildcard usr/simulink/*_ert_rtw/*.c))
+
 
 
 TGT_CPPFLAGS	+= -Iusr/inc
+TGT_CPPFLAGS	+= $(addprefix -I,$(SIMULINK_DIRS))
 
 all:
 

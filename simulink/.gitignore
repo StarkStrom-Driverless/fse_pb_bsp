@@ -1,0 +1,10 @@
+slprj/
+*.slxc
+*.mexa64
+*.mexw64
+*.mexmaci64
+*_sfcn.c
+*_sfcn.tlc
+*_sfcn.tlc.bak
+*_lib.slx
+*.autosave

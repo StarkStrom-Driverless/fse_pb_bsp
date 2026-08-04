@@ -1,0 +1,188 @@
+"""
+@author  Maximilian Hoffmann <m.hoffmann@startstrom.de>
+@company Startstrom Augsburg
+@mail    <maximilian.hoffmann@startstrom-augsburg.de>
+
+Copyright (c) 2025 Startstrom Augsburg
+All rights reserved.
+"""
+
+from typing import List
+import argparse
+import os
+import re
+import shutil
+import subprocess
+import sys
+
+
+GCC_ENV_DEFAULT = "~/micromamba/envs/matlab-gcc13/bin"
+
+
+def repo_root() -> str:
+    here = os.path.dirname(os.path.abspath(__file__))
+    return os.path.abspath(os.path.join(here, "..", ".."))
+
+
+def simulink_dir() -> str:
+    return os.path.join(repo_root(), "fse_pb_bsp", "simulink")
+
+
+def model_dir() -> str:
+    return os.path.join(repo_root(), "usr", "simulink")
+
+
+def model_name(name: str = None) -> str:
+    if name:
+        base = name
+    else:
+        base = os.path.basename(repo_root())
+
+    mdl = re.sub(r"[^A-Za-z0-9_]", "_", base)
+    if not mdl or not mdl[0].isalpha():
+        mdl = "m_" + mdl
+
+    return mdl
+
+
+def matlab_env() -> dict:
+    env = os.environ.copy()
+
+    gcc = os.path.expanduser(os.environ.get("SS_MATLAB_GCC", GCC_ENV_DEFAULT))
+    if os.path.isdir(gcc):
+        env["PATH"] = gcc + os.pathsep + env["PATH"]
+    else:
+        print(f"warning: no matlab gcc env at {gcc}, using system compiler")
+
+    return env
+
+
+def matlab_run(statements: List[str], gui: bool = False) -> int:
+    exe = os.environ.get("SS_MATLAB", "matlab")
+
+    if shutil.which(exe) is None:
+        print(f"error: '{exe}' not found in PATH (override with SS_MATLAB)")
+        return 1
+
+    prolog = f"addpath(genpath('{simulink_dir()}'));"
+    cmd = " ".join([prolog] + statements)
+
+    args = [exe, "-sd", simulink_dir()]
+    if gui:
+        args += ["-desktop", "-r", cmd]
+    else:
+        args += ["-batch", cmd]
+
+    print(f">> matlab: {cmd}")
+
+    return subprocess.run(args, env=matlab_env()).returncode
+
+
+def handle_matlab_init(args):
+    mdl = model_name(args.name)
+
+    os.makedirs(model_dir(), exist_ok=True)
+
+    statements = ["ss_path_install;"]
+    if args.modules:
+        mods = ", ".join(f"'{m}'" for m in args.modules)
+        statements.append(f"ss_simulink_build({mods});")
+    else:
+        statements.append("ss_simulink_build;")
+    statements.append(f"ss_model_create('{mdl}');")
+
+    rc = matlab_run(statements)
+    if rc == 0:
+        print(f"\nmodel: {os.path.join(model_dir(), mdl + '.slx')}")
+        print("open it with: ./ss matlab_open")
+
+    sys.exit(rc)
+
+
+def handle_matlab_build(args):
+    mdl = model_name(args.name)
+    sys.exit(matlab_run([f"build_model('{mdl}');"]))
+
+
+def handle_matlab_libs(args):
+    if args.modules:
+        mods = ", ".join(f"'{m}'" for m in args.modules)
+        stmt = f"ss_simulink_build({mods});"
+    else:
+        stmt = "ss_simulink_build;"
+
+    sys.exit(matlab_run([stmt]))
+
+
+def handle_matlab_open(args):
+    mdl = model_name(args.name)
+    path = os.path.join(model_dir(), mdl + ".slx")
+
+    if not os.path.isfile(path):
+        print(f"error: {path} not found, run ./ss matlab_init first")
+        sys.exit(1)
+
+    sys.exit(matlab_run([f"open_system('{path}');"], gui=True))
+
+
+def handle_matlab_clean(args):
+    out = model_dir()
+    mdl = model_name(args.name)
+
+    targets = [
+        os.path.join(out, mdl + "_ert_rtw"),
+        os.path.join(out, "slprj"),
+        os.path.join(out, mdl + ".slxc"),
+    ]
+
+    for t in targets:
+        if os.path.isdir(t):
+            shutil.rmtree(t)
+            print(f"removed {t}")
+        elif os.path.isfile(t):
+            os.remove(t)
+            print(f"removed {t}")
+
+
+def matlab_add_sub(sub):
+    p_init = sub.add_parser("matlab_init",
+                            help="install matlab paths, build the ss block libraries and create the model")
+    p_init.add_argument("--name", help="model name (default: repository folder name)")
+    p_init.add_argument("--modules", nargs="*",
+                        help="only build these ss modules, e.g. ss_gpio")
+    p_init.set_defaults(func=handle_matlab_init)
+
+    p_build = sub.add_parser("matlab_build", help="generate c code from the simulink model")
+    p_build.add_argument("--name", help="model name (default: repository folder name)")
+    p_build.set_defaults(func=handle_matlab_build)
+
+    p_libs = sub.add_parser("matlab_libs", help="rebuild the ss block libraries only")
+    p_libs.add_argument("--modules", nargs="*",
+                        help="only build these ss modules, e.g. ss_gpio")
+    p_libs.set_defaults(func=handle_matlab_libs)
+
+    p_open = sub.add_parser("matlab_open", help="open the simulink model in the matlab gui")
+    p_open.add_argument("--name", help="model name (default: repository folder name)")
+    p_open.set_defaults(func=handle_matlab_open)
+
+    p_clean = sub.add_parser("matlab_clean", help="remove generated code and simulink build artifacts")
+    p_clean.add_argument("--name", help="model name (default: repository folder name)")
+    p_clean.set_defaults(func=handle_matlab_clean)
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    sub = parser.add_subparsers(dest="cmd")
+
+    matlab_add_sub(sub)
+
+    args = parser.parse_args()
+
+    if hasattr(args, 'func'):
+        args.func(args)
+    else:
+        parser.print_help()
+
+
+if __name__ == '__main__':
+    main()
