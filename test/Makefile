@@ -5,6 +5,7 @@ OBJS += main.o
 OBJS += $(patsubst %.c, %.o, $(wildcard usr/src/*.c))
 
 SIMULINK_DIRS = $(wildcard usr/simulink/*_ert_rtw)
+SIMULINK_DIRS += $(wildcard fse_pb_bsp/simulink/ss_*)
 OBJS += $(patsubst %.c, %.o, $(wildcard usr/simulink/*_ert_rtw/*.c))
 
 

@@ -9,6 +9,7 @@ All rights reserved.
 
 from typing import List
 import argparse
+import glob
 import os
 import re
 import shutil
@@ -65,6 +66,8 @@ def matlab_run(statements: List[str], gui: bool = False) -> int:
         return 1
 
     prolog = f"addpath(genpath('{simulink_dir()}'));"
+    if os.path.isdir(model_dir()):
+        prolog += f" addpath('{model_dir()}');"
     cmd = " ".join([prolog] + statements)
 
     args = [exe, "-sd", simulink_dir()]
@@ -76,6 +79,35 @@ def matlab_run(statements: List[str], gui: bool = False) -> int:
     print(f">> matlab: {cmd}")
 
     return subprocess.run(args, env=matlab_env()).returncode
+
+
+def matlab_running() -> bool:
+    try:
+        out = subprocess.run(["pgrep", "-f", "MATLAB.*glnxa64"],
+                             capture_output=True, text=True)
+        return out.returncode == 0
+    except FileNotFoundError:
+        return False
+
+
+def cache_clean() -> None:
+    caches = glob.glob(os.path.expanduser("~/.matlab/*/lbstream"))
+
+    if not caches:
+        print("no library browser cache found")
+        return
+
+    if matlab_running():
+        print("warning: matlab is still running, the cache will be rewritten on exit")
+        print("         close matlab and run ./ss matlab_cache_clean again")
+
+    for c in caches:
+        shutil.rmtree(c)
+        print(f"removed {c}")
+
+
+def handle_matlab_cache_clean(args):
+    cache_clean()
 
 
 def handle_matlab_init(args):
@@ -93,6 +125,7 @@ def handle_matlab_init(args):
 
     rc = matlab_run(statements)
     if rc == 0:
+        cache_clean()
         print(f"\nmodel: {os.path.join(model_dir(), mdl + '.slx')}")
         print("open it with: ./ss matlab_open")
 
@@ -111,7 +144,11 @@ def handle_matlab_libs(args):
     else:
         stmt = "ss_simulink_build;"
 
-    sys.exit(matlab_run([stmt]))
+    rc = matlab_run([stmt])
+    if rc == 0:
+        cache_clean()
+
+    sys.exit(rc)
 
 
 def handle_matlab_open(args):
@@ -164,6 +201,10 @@ def matlab_add_sub(sub):
     p_open = sub.add_parser("matlab_open", help="open the simulink model in the matlab gui")
     p_open.add_argument("--name", help="model name (default: repository folder name)")
     p_open.set_defaults(func=handle_matlab_open)
+
+    p_cache = sub.add_parser("matlab_cache_clean",
+                             help="drop the library browser icon cache (run with matlab closed)")
+    p_cache.set_defaults(func=handle_matlab_cache_clean)
 
     p_clean = sub.add_parser("matlab_clean", help="remove generated code and simulink build artifacts")
     p_clean.add_argument("--name", help="model name (default: repository folder name)")

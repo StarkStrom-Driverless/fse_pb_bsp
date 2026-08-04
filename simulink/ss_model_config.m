@@ -21,6 +21,8 @@ set_param(cs, 'ProdHWDeviceType', 'ARM Compatible->ARM Cortex-M');
 set_param(cs, 'GenerateSampleERTMain', 'off');
 set_param(cs, 'CodeInterfacePackaging', 'Nonreusable function');
 
+soft_set(cs, 'EnableMultiTasking', 'off');
+soft_set(cs, 'SingleTaskRateTransMsg', 'none');
 soft_set(cs, 'SupportNonFinite', 'off');
 soft_set(cs, 'SupportComplex', 'off');
 soft_set(cs, 'DefaultParameterBehavior', 'Inlined');

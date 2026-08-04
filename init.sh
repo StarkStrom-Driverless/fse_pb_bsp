@@ -31,4 +31,5 @@ pip install intelhex
 pip install cbor
 pip install pyyaml
 pip install python-can
+pip install cantools
 pip install telnetlib3

@@ -76,6 +76,13 @@ if isempty(hit)
           strjoin(cellfun(@(b) get_param(b, 'Name'), blocks, 'UniformOutput', false), ', '));
 end
 
+if isfield(spec, 'params')
+    for k = 1:numel(spec.params)
+        ss_simulink_mask_param(hit, spec.params(k).idx, ...
+                               spec.params(k).prompt, spec.params(k).value);
+    end
+end
+
 if spec.pin > 0
     ss_simulink_mask_pin(hit, spec.pin);
 end
