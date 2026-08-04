@@ -151,6 +151,10 @@ def handle_matlab_libs(args):
     sys.exit(rc)
 
 
+def handle_matlab_pins(args):
+    sys.exit(matlab_run(["ss_pin_list;"]))
+
+
 def handle_matlab_open(args):
     mdl = model_name(args.name)
     path = os.path.join(model_dir(), mdl + ".slx")
@@ -159,26 +163,46 @@ def handle_matlab_open(args):
         print(f"error: {path} not found, run ./ss matlab_init first")
         sys.exit(1)
 
-    sys.exit(matlab_run([f"open_system('{path}');"], gui=True))
+    sys.exit(matlab_run(["ss_config_load;", f"open_system('{path}');"], gui=True))
+
+
+def remove(path: str) -> None:
+    if os.path.isdir(path) and not os.path.islink(path):
+        shutil.rmtree(path)
+        print(f"removed {path}")
+    elif os.path.exists(path):
+        os.remove(path)
+        print(f"removed {path}")
 
 
 def handle_matlab_clean(args):
     out = model_dir()
-    mdl = model_name(args.name)
 
-    targets = [
-        os.path.join(out, mdl + "_ert_rtw"),
-        os.path.join(out, "slprj"),
-        os.path.join(out, mdl + ".slxc"),
-    ]
+    targets = []
+    targets += glob.glob(os.path.join(out, "*_ert_rtw"))
+    targets += glob.glob(os.path.join(out, "slprj"))
+    targets += glob.glob(os.path.join(out, "*.slxc"))
+    targets += glob.glob(os.path.join(out, "*.autosave"))
+    targets += glob.glob(os.path.join(out, "can_*_lib.slx"))
+    targets += glob.glob(os.path.join(out, "can_*_spec.json"))
+    targets += glob.glob(os.path.join(out, "slblocks.m"))
+
+    if args.libs:
+        sl = simulink_dir()
+        for pattern in ("*/*_sfcn.c", "*/*_sfcn.tlc", "*/*_sfcn.tlc.bak",
+                        "*/*.mexa64", "*/*.mexw64", "*/*.mexmaci64",
+                        "*/*_lib.slx", "*/*.slxc", "slprj", "*/slprj"):
+            targets += glob.glob(os.path.join(sl, pattern))
+
+    if not targets:
+        print("nothing to clean")
+        return
 
     for t in targets:
-        if os.path.isdir(t):
-            shutil.rmtree(t)
-            print(f"removed {t}")
-        elif os.path.isfile(t):
-            os.remove(t)
-            print(f"removed {t}")
+        remove(t)
+
+    if args.libs:
+        print("\nblock libraries removed, run ./ss matlab_init to rebuild them")
 
 
 def matlab_add_sub(sub):
@@ -202,12 +226,18 @@ def matlab_add_sub(sub):
     p_open.add_argument("--name", help="model name (default: repository folder name)")
     p_open.set_defaults(func=handle_matlab_open)
 
+    p_pins = sub.add_parser("matlab_pins",
+                            help="list the pin names the ss blocks accept")
+    p_pins.set_defaults(func=handle_matlab_pins)
+
     p_cache = sub.add_parser("matlab_cache_clean",
                              help="drop the library browser icon cache (run with matlab closed)")
     p_cache.set_defaults(func=handle_matlab_cache_clean)
 
-    p_clean = sub.add_parser("matlab_clean", help="remove generated code and simulink build artifacts")
-    p_clean.add_argument("--name", help="model name (default: repository folder name)")
+    p_clean = sub.add_parser("matlab_clean",
+                             help="remove generated code, caches and generated can libraries")
+    p_clean.add_argument("--libs", action="store_true",
+                         help="also remove the compiled ss block libraries in fse_pb_bsp/simulink")
     p_clean.set_defaults(func=handle_matlab_clean)
 
 

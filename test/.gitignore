@@ -11,3 +11,13 @@ libopencm3
 slprj/
 *.slxc
 *.autosave
+*.mexa64
+*.mexw64
+*.mexmaci64
+*_sfcn.c
+*_sfcn.tlc
+*_sfcn.tlc.bak
+*_lib.slx
+usr/simulink/*_ert_rtw/
+usr/simulink/can_*_spec.json
+usr/simulink/slblocks.m

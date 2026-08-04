@@ -28,7 +28,8 @@ def sanitize(name: str) -> str:
     return out
 
 
-def dbc_to_spec(path: str, channel: int, with_valid: bool, default_cycle_ms: int) -> dict:
+def dbc_to_spec(path: str, channel: int, with_valid: bool, default_cycle_ms: int,
+                poll_ms: int) -> dict:
     try:
         import cantools
     except ImportError:
@@ -39,7 +40,8 @@ def dbc_to_spec(path: str, channel: int, with_valid: bool, default_cycle_ms: int
 
     name = sanitize(os.path.splitext(os.path.basename(path))[0]).lower()
     spec = {"name": name, "channel": channel, "with_valid": with_valid,
-            "tx_cycle_ms": default_cycle_ms, "messages": []}
+            "tx_cycle_ms": default_cycle_ms, "rx_poll_ms": poll_ms,
+            "messages": []}
 
     for msg in db.messages:
         signals = []
@@ -91,7 +93,8 @@ def handle_can_gen(args):
         print(f"error: {args.dbc} not found")
         sys.exit(1)
 
-    spec = dbc_to_spec(args.dbc, args.channel, args.with_valid, args.tx_cycle_ms)
+    spec = dbc_to_spec(args.dbc, args.channel, args.with_valid, args.tx_cycle_ms,
+                       args.rx_poll_ms)
 
     out = model_dir()
     os.makedirs(out, exist_ok=True)
@@ -120,6 +123,9 @@ def dbc_add_sub(sub):
                        help="add a valid output port per rx block, useful for timeout supervision")
     p_gen.add_argument("--tx-cycle-ms", type=int, default=100,
                        help="default value of the tx block cycle time dialog field (default: 100)")
+    p_gen.add_argument("--rx-poll-ms", type=int, default=1,
+                       help="how often the rx blocks poll the queue, must match the "
+                            "model step to keep downstream signals smooth (default: 1)")
     p_gen.set_defaults(func=handle_can_gen)
 
 

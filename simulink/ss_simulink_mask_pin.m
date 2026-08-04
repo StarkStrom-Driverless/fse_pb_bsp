@@ -19,32 +19,22 @@ if isempty(p)
     error('Pin parameter %s not found on %s.', names{idx}, blk);
 end
 
-var = sprintf('ss_pin_id_%d', idx);
-str = sprintf('pin_str_%d', idx);
+pin = sprintf('pin_%d', idx);
 
-p.Name     = str;
-p.Prompt   = 'Pin (e.g. PA5)';
+p.Name     = pin;
+p.Prompt   = 'Pin';
 p.Type     = 'edit';
-p.Evaluate = 'off';
-p.Value    = 'PA0';
+p.Evaluate = 'on';
+p.Value    = 'PIN(''A'', 0)';
 
-init = [ ...
-    'if numel(' str ') < 3 || upper(' str '(1)) ~= ''P''' newline ...
-    '    error(''Pin must look like PA5.'');' newline ...
-    'end' newline ...
-    var ' = (double(upper(' str '(2))) - double(''A'')) * 16 + str2double(' str '(3:end));' newline ...
-    'if isnan(' var ') || ' var ' < 0 || ' var ' > 255' newline ...
-    '    error(''Pin must look like PA5.'');' newline ...
-    'end' ...
-];
-
+check = ['ss_pin_check(''' pin ''', ' pin ');'];
 if isempty(m.Initialization)
-    m.Initialization = init;
+    m.Initialization = check;
 else
-    m.Initialization = [m.Initialization newline init];
+    m.Initialization = [m.Initialization newline check];
 end
 
-names{idx} = var;
+names{idx} = pin;
 set_param(blk, 'Parameters', strjoin(names, ', '));
 
 end

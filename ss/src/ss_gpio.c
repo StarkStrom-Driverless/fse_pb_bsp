@@ -61,6 +61,6 @@ void ss_io_write(uint16_t pin_id, uint8_t value) {
 }
 
 uint16_t ss_io_read(uint16_t pin_id) {
-    return gpio_get(GPIO(PINBANK(pin_id)), BIT(PINNO(pin_id)));
+    return (gpio_get(GPIO(PINBANK(pin_id)), BIT(PINNO(pin_id))) > 0) ? 1 : 0;
 }
 #endif // COMPILE_SS_GPIO

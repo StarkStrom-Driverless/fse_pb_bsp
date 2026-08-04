@@ -9,6 +9,9 @@ end
 if ~isfield(spec, 'tx_cycle_ms')
     spec.tx_cycle_ms = 100;
 end
+if ~isfield(spec, 'rx_poll_ms')
+    spec.rx_poll_ms = 1;
+end
 
 out = ss_model_dir();
 lib_name = ['can_' spec.name '_lib'];
@@ -25,7 +28,7 @@ new_system(lib_name, 'Library');
 
 y = 0;
 for k = 1:numel(msgs)
-    build_rx(lib_name, msgs{k}, spec.channel, y, spec.with_valid);
+    build_rx(lib_name, msgs{k}, spec.channel, y, spec.with_valid, spec.rx_poll_ms);
     build_tx(lib_name, msgs{k}, spec.channel, y + 60, spec.tx_cycle_ms);
     y = y + 120;
 end
@@ -41,14 +44,15 @@ fprintf('generated %s with %d messages\n', lib_path, numel(msgs));
 end
 
 
-function build_rx(lib_name, msg, channel, y, with_valid)
+function build_rx(lib_name, msg, channel, y, with_valid, poll_ms)
 
 sub = [lib_name '/' msg.name ' RX'];
 add_block('built-in/Subsystem', sub, 'Position', [40, y, 240, y + 40]);
 
 rx = [sub '/CAN Frame'];
 add_block('ss_can_lib/SS CAN Receive', rx, 'Position', [60, 40, 200, 100], ...
-          'SParameter1', num2str(channel), 'SParameter2', num2str(msg.id));
+          'SParameter1', num2str(channel), 'SParameter2', num2str(msg.id), ...
+          'SampleTime', 'rx_sample_time');
 
 sigs = as_cell(msg.signals);
 
@@ -86,6 +90,18 @@ end
 term = [sub '/DLC Unused'];
 add_block('built-in/Terminator', term, 'Position', [280, py + 60, 300, py + 80]);
 add_line(sub, 'CAN Frame/2', 'DLC Unused/1');
+
+mask = Simulink.Mask.create(sub);
+mask.addParameter('Name', 'rx_poll_ms', 'Type', 'edit', 'Evaluate', 'on', ...
+                  'Prompt', 'Poll interval (ms), 0 = inherit', ...
+                  'Value', num2str(poll_ms));
+mask.Initialization = [ ...
+    'if rx_poll_ms > 0' newline ...
+    '    rx_sample_time = rx_poll_ms / 1000;' newline ...
+    'else' newline ...
+    '    rx_sample_time = -1;' newline ...
+    'end' ...
+];
 
 end
 
@@ -184,6 +200,16 @@ add_block('ss_can_lib/SS CAN Send', tx, 'Position', [440, 40, 580, 100], ...
           'SParameter1', num2str(channel), 'SParameter2', num2str(msg.id), ...
           'SParameter3', num2str(msg.dlc), 'SampleTime', 'tx_sample_time');
 add_line(sub, [last '/1'], 'CAN Frame/1');
+
+en = [sub '/enable'];
+add_block('built-in/Inport', en, 'Position', [280, py + 40, 310, py + 60], ...
+          'Port', num2str(numel(sigs) + 1));
+
+en_cast = [sub '/Enable Cast'];
+add_block('simulink/Signal Attributes/Data Type Conversion', en_cast, ...
+          'Position', [340, py + 30, 400, py + 70], 'OutDataTypeStr', 'uint8');
+add_line(sub, 'enable/1', 'Enable Cast/1');
+add_line(sub, 'Enable Cast/1', 'CAN Frame/2');
 
 mask = Simulink.Mask.create(sub);
 mask.addParameter('Name', 'tx_cycle_ms', 'Type', 'edit', 'Evaluate', 'on', ...

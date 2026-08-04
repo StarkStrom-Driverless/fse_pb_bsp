@@ -23,7 +23,7 @@ def3.OutputFcnSpec = 'void ss_can_sl_set_signal(uint8 u1[8], uint8 p1, uint8 p2,
 
 def4 = legacy_code('initialize');
 def4.SFunctionName = 'ss_can_send_sfcn';
-def4.OutputFcnSpec = 'void ss_can_sl_send(uint8 p1, uint32 p2, uint8 p3, uint8 u1[8])';
+def4.OutputFcnSpec = 'void ss_can_sl_send(uint8 p1, uint32 p2, uint8 p3, uint8 u1[8], uint8 u2)';
 
 defs = [def1, def2, def5, def3, def4];
 for k = 1:numel(defs)

@@ -14,6 +14,8 @@ end
 Simulink.fileGenControl('set', 'CodeGenFolder', out, 'CacheFolder', out, ...
                         'createDir', true);
 
+ss_config_load();
+
 load_system(mdl_path);
 guard = onCleanup(@() close_system(mdl, 0));
 
