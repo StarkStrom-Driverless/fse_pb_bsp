@@ -89,6 +89,38 @@ if spec.pin > 0
     ss_simulink_mask_pin(hit, spec.pin);
 end
 
+set_display(hit, spec);
+
 set_param(hit, 'Name', spec.name);
+
+end
+
+
+function set_display(blk, spec)
+
+m = Simulink.Mask.get(blk);
+
+lines = {sprintf('disp(''%s'');', spec.name)};
+
+if isfield(spec, 'inputs')
+    for k = 1:numel(spec.inputs)
+        lines{end+1} = sprintf('port_label(''input'', %d, ''%s'');', k, spec.inputs{k});
+    end
+end
+
+if isfield(spec, 'outputs')
+    for k = 1:numel(spec.outputs)
+        lines{end+1} = sprintf('port_label(''output'', %d, ''%s'');', k, spec.outputs{k});
+    end
+end
+
+m.Display = strjoin(lines, newline);
+
+for k = 1:numel(m.Parameters)
+    if strcmp(m.Parameters(k).Name, 'ShowSpec')
+        m.Parameters(k).Visible = 'off';
+        m.Parameters(k).Value = 'off';
+    end
+end
 
 end

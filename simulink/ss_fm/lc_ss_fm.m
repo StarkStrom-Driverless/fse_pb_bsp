@@ -20,6 +20,7 @@ m.defs = def1;
 m.blocks(1).sfcn = 'ss_fm_read_sfcn';
 m.blocks(1).name = 'SS FM Read';
 m.blocks(1).pin  = 1;
+m.blocks(1).outputs = {'freq'};
 m.blocks(1).params(1).idx    = 2;
 m.blocks(1).params(1).prompt = 'Resolution (Hz)';
 m.blocks(1).params(1).value  = '1000000';

@@ -20,6 +20,7 @@ m.defs = def1;
 m.blocks(1).sfcn = 'ss_iob_read_sfcn';
 m.blocks(1).name = 'SS IOB Read';
 m.blocks(1).pin  = 1;
+m.blocks(1).outputs = {'state'};
 m.blocks(1).params(1).idx    = 2;
 m.blocks(1).params(1).prompt = 'Polarity (0 = rising, 1 = falling)';
 m.blocks(1).params(1).value  = '0';

@@ -37,7 +37,7 @@ bool ss_clock_init(uint8_t config) {
                 ss_clock.ahb = 168;
                 ss_clock.apb1 = 42;
                 ss_clock.apb2 = 84;
-                rcc_clock_setup_pll(&rcc_hsi_configs[RCC_CLOCK_3V3_168MHZ]);
+                rcc_clock_setup_pll(&rcc_hse_8mhz_3v3[RCC_CLOCK_3V3_168MHZ]);
             }
         break;
 

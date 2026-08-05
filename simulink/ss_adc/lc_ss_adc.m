@@ -20,5 +20,6 @@ m.defs = def1;
 m.blocks(1).sfcn = 'ss_adc_read_sfcn';
 m.blocks(1).name = 'SS ADC Read';
 m.blocks(1).pin  = 1;
+m.blocks(1).outputs = {'raw'};
 
 end
