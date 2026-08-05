@@ -15,8 +15,7 @@ if ~exist(up, 'dir')
 end
 
 tag  = '% ss_simulink_path';
-line = sprintf('addpath(genpath(''%s'')); addpath(''%s''); %s', ...
-               here, ss_model_dir(), tag);
+line = sprintf('addpath(genpath(''%s'')); ss_path_add; %s', here, tag);
 
 f = fullfile(up, 'startup.m');
 keep = {};
@@ -38,9 +37,7 @@ fprintf(fid, '%s\n', line);
 fclose(fid);
 
 addpath(genpath(here));
-if exist(ss_model_dir(), 'dir')
-    addpath(ss_model_dir());
-end
+ss_path_add();
 
 fprintf('startup.m updated: %s\n', f);
 

@@ -51,7 +51,7 @@ add_block('built-in/Subsystem', sub, 'Position', [40, y, 240, y + 40]);
 
 rx = [sub '/CAN Frame'];
 add_block('ss_can_lib/SS CAN Receive', rx, 'Position', [60, 40, 200, 100], ...
-          'SParameter1', num2str(channel), 'SParameter2', num2str(msg.id), ...
+          'SParameter1', 'can_channel', 'SParameter2', num2str(msg.id), ...
           'SampleTime', 'rx_sample_time');
 
 sigs = as_cell(msg.signals);
@@ -92,6 +92,9 @@ add_block('built-in/Terminator', term, 'Position', [280, py + 60, 300, py + 80])
 add_line(sub, 'CAN Frame/2', 'DLC Unused/1');
 
 mask = Simulink.Mask.create(sub);
+mask.addParameter('Name', 'can_channel', 'Type', 'edit', 'Evaluate', 'on', ...
+                  'Prompt', 'CAN channel (1 or 2)', ...
+                  'Value', num2str(channel));
 mask.addParameter('Name', 'rx_poll_ms', 'Type', 'edit', 'Evaluate', 'on', ...
                   'Prompt', 'Poll interval (ms), 0 = inherit', ...
                   'Value', num2str(poll_ms));
@@ -116,7 +119,8 @@ end
 
 get = [dec '/' s.name '_get'];
 add_block(src, get, 'Position', [140, py, 280, py + 40], ...
-          'SParameter1', num2str(s.start), 'SParameter2', num2str(s.length));
+          'SParameter1', num2str(s.start), 'SParameter2', num2str(s.length), ...
+          'SParameter3', num2str(byte_order(s)));
 add_line(dec, 'Frame Data/1', [s.name '_get/1']);
 
 last = [s.name '_get'];
@@ -187,7 +191,8 @@ for k = 1:numel(sigs)
     set = [s.name '_set'];
     add_block('ss_can_lib/SS CAN Set Signal', [sub '/' set], ...
               'Position', [240, py, 380, py + 60], ...
-              'SParameter1', num2str(s.start), 'SParameter2', num2str(s.length));
+              'SParameter1', num2str(s.start), 'SParameter2', num2str(s.length), ...
+              'SParameter3', num2str(byte_order(s)));
     add_line(sub, [last '/1'], [set '/1']);
     add_line(sub, [cast '/1'], [set '/2']);
 
@@ -197,7 +202,7 @@ end
 
 tx = [sub '/CAN Frame'];
 add_block('ss_can_lib/SS CAN Send', tx, 'Position', [440, 40, 580, 100], ...
-          'SParameter1', num2str(channel), 'SParameter2', num2str(msg.id), ...
+          'SParameter1', 'can_channel', 'SParameter2', num2str(msg.id), ...
           'SParameter3', num2str(msg.dlc), 'SampleTime', 'tx_sample_time');
 add_line(sub, [last '/1'], 'CAN Frame/1');
 
@@ -212,6 +217,9 @@ add_line(sub, 'enable/1', 'Enable Cast/1');
 add_line(sub, 'Enable Cast/1', 'CAN Frame/2');
 
 mask = Simulink.Mask.create(sub);
+mask.addParameter('Name', 'can_channel', 'Type', 'edit', 'Evaluate', 'on', ...
+                  'Prompt', 'CAN channel (1 or 2)', ...
+                  'Value', num2str(channel));
 mask.addParameter('Name', 'tx_cycle_ms', 'Type', 'edit', 'Evaluate', 'on', ...
                   'Prompt', 'Cycle time (ms), 0 = every model step', ...
                   'Value', num2str(default_cycle_ms));
@@ -253,6 +261,17 @@ for k = 1:numel(libs)
 end
 fprintf(fid, 'blkStruct.Browser = Browser;\n\nend\n');
 fclose(fid);
+
+end
+
+
+function b = byte_order(s)
+
+if isfield(s, 'big_endian') && s.big_endian
+    b = 1;
+else
+    b = 0;
+end
 
 end
 

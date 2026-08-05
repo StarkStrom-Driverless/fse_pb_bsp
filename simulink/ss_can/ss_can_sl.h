@@ -2,6 +2,7 @@
 #define _SS_CAN_SL_H_
 
 #include <inttypes.h>
+#include "ss_bits.h"
 #include "ss_can.h"
 
 static inline void ss_can_sl_open(void **queue, uint8_t channel, uint32_t id) {
@@ -30,46 +31,26 @@ static inline void ss_can_sl_read(void *queue, uint8_t *data, uint8_t *dlc, uint
     *valid = 1;
 }
 
-static inline uint32_t ss_can_sl_get_signal(const uint8_t *data, uint8_t start_bit, uint8_t length) {
-    struct SS_CAN_FRAME frame;
-    uint8_t i;
-
-    for (i = 0; i < 8; i++) {
-        frame.data[i] = data[i];
-    }
-
-    return (uint32_t) ss_can_frame_get_signal(&frame, start_bit, length);
+static inline uint32_t ss_can_sl_get_signal(const uint8_t *data, uint8_t start_bit,
+                                            uint8_t length, uint8_t byte_order) {
+    return ss_bits_get(data, 8, start_bit, length, byte_order);
 }
 
 static inline int32_t ss_can_sl_get_signal_signed(const uint8_t *data, uint8_t start_bit,
-                                                  uint8_t length) {
-    uint32_t raw = ss_can_sl_get_signal(data, start_bit, length);
-
-    if (length >= 32) {
-        return (int32_t) raw;
-    }
-
-    if (raw & (1UL << (length - 1))) {
-        return (int32_t) (raw | (~0UL << length));
-    }
-
-    return (int32_t) raw;
+                                                  uint8_t length, uint8_t byte_order) {
+    return ss_bits_get_signed(data, 8, start_bit, length, byte_order);
 }
 
 static inline void ss_can_sl_set_signal(const uint8_t *data_in, uint8_t start_bit,
-                                        uint8_t length, uint32_t value, uint8_t *data_out) {
-    struct SS_CAN_FRAME frame;
+                                        uint8_t length, uint32_t value,
+                                        uint8_t byte_order, uint8_t *data_out) {
     uint8_t i;
 
     for (i = 0; i < 8; i++) {
-        frame.data[i] = data_in[i];
+        data_out[i] = data_in[i];
     }
 
-    ss_can_frame_set_signal(&frame, start_bit, length, (uint64_t) value);
-
-    for (i = 0; i < 8; i++) {
-        data_out[i] = frame.data[i];
-    }
+    ss_bits_set(data_out, 8, start_bit, length, value, byte_order);
 }
 
 static inline void ss_can_sl_send(uint8_t channel, uint32_t id, uint8_t dlc,

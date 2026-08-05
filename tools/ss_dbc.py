@@ -47,11 +47,6 @@ def dbc_to_spec(path: str, channel: int, with_valid: bool, default_cycle_ms: int
         signals = []
 
         for sig in msg.signals:
-            if sig.byte_order != "little_endian":
-                print(f"skipped {msg.name}.{sig.name}: motorola byte order "
-                      f"is not supported by ss_can_frame_get_signal")
-                continue
-
             if sig.multiplexer_ids is not None:
                 print(f"skipped {msg.name}.{sig.name}: multiplexed signals are not supported")
                 continue
@@ -66,6 +61,7 @@ def dbc_to_spec(path: str, channel: int, with_valid: bool, default_cycle_ms: int
                 "start": int(sig.start),
                 "length": int(sig.length),
                 "signed": bool(sig.is_signed),
+                "big_endian": sig.byte_order != "little_endian",
                 "scale": float(sig.scale),
                 "offset": float(sig.offset),
             })

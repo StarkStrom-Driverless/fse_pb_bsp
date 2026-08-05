@@ -1,44 +1,46 @@
 function ss_simulink_build(varargin)
 
-here = fileparts(mfilename('fullpath'));
 mods = ss_simulink_modules();
 
 if ~isempty(varargin)
-    mods = intersect(mods, varargin, 'stable');
+    keep = false(1, numel(mods));
+    for k = 1:numel(mods)
+        keep(k) = any(strcmp(mods(k).name, varargin));
+    end
+    mods = mods(keep);
 end
 
 if isempty(mods)
-    error('No simulink modules found in %s', here);
+    error('No simulink modules found.');
 end
 
 orig_dir = pwd;
 guard = onCleanup(@() cd(orig_dir));
 
 for k = 1:numel(mods)
-    fprintf('building %s\n', mods{k});
-    build_module(here, mods{k});
+    fprintf('building %s\n', mods(k).name);
+    build_module(mods(k));
 end
 
 sl_refresh_customizations;
 
-fprintf('done: %s\n', strjoin(mods, ', '));
+fprintf('done: %s\n', strjoin({mods.name}, ', '));
 
 end
 
 
-function build_module(root, name)
+function build_module(mod)
 
-mdir = fullfile(root, name);
-cd(mdir);
+cd(mod.dir);
 
-m = feval(['lc_' name]);
+m = feval(['lc_' mod.name]);
 
 legacy_code('sfcn_cmex_generate', m.defs);
 legacy_code('compile', m.defs);
 legacy_code('sfcn_tlc_generate', m.defs);
 
-lib_name = [name '_lib'];
-lib_path = fullfile(mdir, [lib_name '.slx']);
+lib_name = [mod.name '_lib'];
+lib_path = fullfile(mod.dir, [lib_name '.slx']);
 
 if bdIsLoaded(lib_name)
     close_system(lib_name, 0);

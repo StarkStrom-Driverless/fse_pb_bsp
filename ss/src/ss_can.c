@@ -42,31 +42,39 @@ struct SS_CAN ss_can;
  *      ISR
  * 
  */
+static void ss_can_isr_dispatch(uint8_t channel, BaseType_t* xHigherPriorityTaskWoken) {
+    struct SS_CAN_FRAME can_frame;
+    struct SS_CAN_MSG_QUEUE* queue;
+
+    ss_can_read(channel, &can_frame);
+
+    if (!ss_can_queue_get(channel, can_frame.std_id, &queue)) {
+        return;
+    }
+
+    int16_t parallel_count = queue->parallel_queue_id;
+
+    xQueueSendFromISR(queue->queue, &can_frame, xHigherPriorityTaskWoken);
+
+    for (int16_t i = 1; i <= parallel_count; i++) {
+        uint32_t id = SS_CAN_ID_PARALLEL(can_frame.std_id, i);
+
+        if (ss_can_queue_get(channel, id, &queue)) {
+            xQueueSendFromISR(queue->queue, &can_frame, xHigherPriorityTaskWoken);
+        }
+    }
+}
+
 void can_isr(uint8_t channel) {
     BaseType_t xHigherPriorityTaskWoken = pdFALSE;
     uint32_t port = ss_can_get_port_from_id(channel);
-    
+
 
     if (channel == 1) {
         if ((CAN_RF0R(port) & CAN_RF0R_FMP0_MASK) != 0) {
-            struct SS_CAN_FRAME can_frame;
-            struct SS_CAN_MSG_QUEUE* queue;
-            
-            ss_can_read(channel, &can_frame);
-            
-            if (ss_can_queue_get(channel, can_frame.std_id, &queue)) {
-                xQueueSendFromISR(queue->queue, &can_frame, &xHigherPriorityTaskWoken);
-
-                for (uint16_t i = 1; i <= queue->parallel_queue_id; i++) {
-                    uint32_t id = SS_CAN_ID_PARALLEL(can_frame.std_id, i);
-
-                    if (ss_can_queue_get(channel, id, &queue)) {
-                        xQueueSendFromISR(queue->queue, &can_frame, &xHigherPriorityTaskWoken);
-                    }
-                }
-            }
+            ss_can_isr_dispatch(channel, &xHigherPriorityTaskWoken);
         }
-        
+
 
         if (CAN_RF0R(port) & CAN_RF0R_FOVR0) {
             CAN_RF0R(port) &= ~CAN_RF0R_FOVR0;
@@ -74,21 +82,14 @@ void can_isr(uint8_t channel) {
     } else if (channel == 2) {
 
         if ((CAN_RF1R(port) & CAN_RF1R_FMP1_MASK) != 0) {
-            struct SS_CAN_FRAME can_frame;
-            struct SS_CAN_MSG_QUEUE* queue;
-            
-            ss_can_read(channel, &can_frame);
-            
-            if (ss_can_queue_get(channel, can_frame.std_id, &queue)) {
-                xQueueSendFromISR(queue->queue, &can_frame, &xHigherPriorityTaskWoken);
-            }
+            ss_can_isr_dispatch(channel, &xHigherPriorityTaskWoken);
         }
 
         if (CAN_RF1R(port) & CAN_RF1R_FOVR1) {
             CAN_RF1R(port) &= ~CAN_RF1R_FOVR1;
         }
     }
-    
+
     portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
 }
 
@@ -119,6 +120,7 @@ bool ss_can_enable_rcc(uint8_t can_interface_id) {
             break;
 
         case 2:
+            rcc_periph_clock_enable(RCC_CAN1);
             rcc_periph_clock_enable(RCC_CAN2);
             break;
 
@@ -515,9 +517,9 @@ bool ss_can_filter_add_msg_11(uint8_t channel, uint16_t id) {
 }
 
 bool ss_can_filter_add_msg_28(uint8_t channel, uint32_t ide) {
-    uint8_t offset = (channel == 1) ? SS_FILTER_BANKS : 0;
-
     channel--;
+
+    uint8_t offset = (channel == 1) ? SS_FILTER_BANKS : 0;
 
 
     if (channel != 0 && channel != 1) {
@@ -546,7 +548,7 @@ bool ss_can_filter_add_msg_28(uint8_t channel, uint32_t ide) {
     }
 
 
-    can_filter_id_list_32bit_init(  filters->free_ide_group,
+    can_filter_id_list_32bit_init(  filters->free_ide_group + offset,
                                     tmp[0],
                                     tmp[1],
                                     channel,

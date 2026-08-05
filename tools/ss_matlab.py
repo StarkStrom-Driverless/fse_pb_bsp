@@ -65,9 +65,7 @@ def matlab_run(statements: List[str], gui: bool = False) -> int:
         print(f"error: '{exe}' not found in PATH (override with SS_MATLAB)")
         return 1
 
-    prolog = f"addpath(genpath('{simulink_dir()}'));"
-    if os.path.isdir(model_dir()):
-        prolog += f" addpath('{model_dir()}');"
+    prolog = f"addpath(genpath('{simulink_dir()}')); ss_path_add;"
     cmd = " ".join([prolog] + statements)
 
     args = [exe, "-sd", simulink_dir()]

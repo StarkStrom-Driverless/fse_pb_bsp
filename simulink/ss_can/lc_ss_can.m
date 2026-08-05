@@ -11,15 +11,15 @@ def1.OutputFcnSpec = 'void ss_can_sl_read(void *work1, uint8 y1[8], uint8 y2[1],
 
 def2 = legacy_code('initialize');
 def2.SFunctionName = 'ss_can_get_signal_sfcn';
-def2.OutputFcnSpec = 'uint32 y1 = ss_can_sl_get_signal(uint8 u1[8], uint8 p1, uint8 p2)';
+def2.OutputFcnSpec = 'uint32 y1 = ss_can_sl_get_signal(uint8 u1[8], uint8 p1, uint8 p2, uint8 p3)';
 
 def5 = legacy_code('initialize');
 def5.SFunctionName = 'ss_can_get_signal_signed_sfcn';
-def5.OutputFcnSpec = 'int32 y1 = ss_can_sl_get_signal_signed(uint8 u1[8], uint8 p1, uint8 p2)';
+def5.OutputFcnSpec = 'int32 y1 = ss_can_sl_get_signal_signed(uint8 u1[8], uint8 p1, uint8 p2, uint8 p3)';
 
 def3 = legacy_code('initialize');
 def3.SFunctionName = 'ss_can_set_signal_sfcn';
-def3.OutputFcnSpec = 'void ss_can_sl_set_signal(uint8 u1[8], uint8 p1, uint8 p2, uint32 u2, uint8 y1[8])';
+def3.OutputFcnSpec = 'void ss_can_sl_set_signal(uint8 u1[8], uint8 p1, uint8 p2, uint32 u2, uint8 p3, uint8 y1[8])';
 
 def4 = legacy_code('initialize');
 def4.SFunctionName = 'ss_can_send_sfcn';
@@ -56,6 +56,9 @@ m.blocks(2).params(1).value  = '0';
 m.blocks(2).params(2).idx    = 2;
 m.blocks(2).params(2).prompt = 'Length (bits)';
 m.blocks(2).params(2).value  = '8';
+m.blocks(2).params(3).idx    = 3;
+m.blocks(2).params(3).prompt = 'Byte order (0 = intel, 1 = motorola)';
+m.blocks(2).params(3).value  = '0';
 
 m.blocks(5).sfcn = 'ss_can_get_signal_signed_sfcn';
 m.blocks(5).name = 'SS CAN Get Signal Signed';
@@ -66,6 +69,9 @@ m.blocks(5).params(1).value  = '0';
 m.blocks(5).params(2).idx    = 2;
 m.blocks(5).params(2).prompt = 'Length (bits)';
 m.blocks(5).params(2).value  = '8';
+m.blocks(5).params(3).idx    = 3;
+m.blocks(5).params(3).prompt = 'Byte order (0 = intel, 1 = motorola)';
+m.blocks(5).params(3).value  = '0';
 
 m.blocks(3).sfcn = 'ss_can_set_signal_sfcn';
 m.blocks(3).name = 'SS CAN Set Signal';
@@ -76,6 +82,9 @@ m.blocks(3).params(1).value  = '0';
 m.blocks(3).params(2).idx    = 2;
 m.blocks(3).params(2).prompt = 'Length (bits)';
 m.blocks(3).params(2).value  = '8';
+m.blocks(3).params(3).idx    = 3;
+m.blocks(3).params(3).prompt = 'Byte order (0 = intel, 1 = motorola)';
+m.blocks(3).params(3).value  = '0';
 
 m.blocks(4).sfcn = 'ss_can_send_sfcn';
 m.blocks(4).name = 'SS CAN Send';
