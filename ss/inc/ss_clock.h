@@ -29,6 +29,7 @@ struct SS_CLOCK {
     uint16_t ahb;
     uint16_t apb1;
     uint16_t apb2;
+    uint16_t hse;
 };
 
 struct SS_CLOCK_CAN {
@@ -42,6 +43,10 @@ extern struct SS_CLOCK ss_clock;
 
 #ifdef USE_PRIVATE
 bool ss_clock_init(uint8_t config);
+#endif
+
+#ifdef USE_PRIVATE
+bool ss_clock_hse(uint16_t* hse_mhz);
 #endif
 
 #ifdef USE_PRIVATE
