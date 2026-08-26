@@ -35,6 +35,7 @@ import subprocess
 import sys
 
 from ssw import SswError, repo_root
+from ss_matlab import handle_matlab_help
 
 
 MAX_SIGNAL_BITS = 32
@@ -437,6 +438,11 @@ def matlab_add_sub(sub) -> None:
     p_build = sub.add_parser("matlab_build", help="generate c code from the simulink model")
     p_build.add_argument("--name", help="model name (default: repository folder name)")
     p_build.set_defaults(func=handle_matlab_build)
+
+    p_help = sub.add_parser("matlab_help",
+                            help="show the simulink workflow overview")
+    p_help.add_argument("--name", help="model name (default: repository folder name)")
+    p_help.set_defaults(func=handle_matlab_help)
 
     p_libs = sub.add_parser("matlab_libs", help="rebuild the ss block libraries only")
     p_libs.add_argument("--modules", nargs="*",

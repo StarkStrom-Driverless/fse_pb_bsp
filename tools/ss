@@ -1,7 +1,6 @@
 #!/bin/bash
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-echo $SCRIPT_DIR
 
 PYTHON="python3"
 if [ -x "$SCRIPT_DIR/.venv/bin/python3" ]; then

@@ -7,10 +7,56 @@ Copyright (c) 2025 Startstrom Augsburg
 All rights reserved.
 """
 
-from typing import List, Dict
+from typing import List, Dict, Tuple
 import subprocess
 import argparse
 import os
+import sys
+import time
+
+
+ELF_NAME = "build/bp_test.elf"
+
+
+def ansi(code: str) -> str:
+    if not sys.stdout.isatty() or os.environ.get("NO_COLOR"):
+        return ""
+
+    return code
+
+
+def human_size(path: str) -> str:
+    try:
+        return f"{os.path.getsize(path) / 1024:.1f} kB"
+    except OSError:
+        return "missing"
+
+
+def build_status(rc: int, root: str, elf: str, seconds: float) -> None:
+    bold = ansi("\033[1m")
+    dim = ansi("\033[2m")
+    reset = ansi("\033[0m")
+
+    if rc == 0:
+        head = ansi("\033[32m") + bold + "build ok" + reset
+        target = f"{ELF_NAME}  {dim}{human_size(elf)}{reset}"
+        made = f"{seconds:.1f} s"
+    else:
+        head = ansi("\033[31m") + bold + "build failed" + reset
+        target = f"{ELF_NAME}  {dim}{human_size(elf)}{reset}"
+        made = f"exit {rc} after {seconds:.1f} s"
+
+    print(f"\n  {head}")
+    print(f"    location   {root}")
+    print(f"    target     {target}")
+    print(f"    make       {made}\n")
+
+
+def run(cmd: List[str], cwd: str) -> Tuple[int, float]:
+    start = time.monotonic()
+    rc = subprocess.run(cmd, cwd=cwd).returncode
+
+    return rc, time.monotonic() - start
 
 
 
@@ -19,23 +65,9 @@ def get_dir_of_file(file : str):
     return "/".join(parts[:len(parts)-1])
 
 def build(  make_file : str = "../../Makefile"):
-    cmd = [
-        "bear", "--", "make"
-    ]
-
     directory = get_dir_of_file(make_file)
 
-    print(directory)
-
-    result = subprocess.run(
-        cmd,
-        cwd=directory,
-        capture_output=True,
-        text=True
-    )
-
-    print(result.stdout)
-    print(result.stderr)
+    return run(["bear", "--", "make"], directory)
 
 def clean(make_file : str = "../../Makefile"):
     cmd = [
@@ -45,15 +77,7 @@ def clean(make_file : str = "../../Makefile"):
 
     directory = get_dir_of_file(make_file)
 
-    result = subprocess.run(
-        cmd,
-        cwd=directory,
-        capture_output=True,
-        text=True
-    )
-
-    print(result.stdout)
-    print(result.stderr)
+    run(cmd, directory)
 
     cmd = [
         "rm",
@@ -85,15 +109,7 @@ def example_build( target : str,
         target
     ]
 
-    result = subprocess.run(
-        cmd,
-        cwd=f"{directory}/fse_pb_bsp/examples",
-        capture_output=True,
-        text=True
-    )
-
-    print(result.stdout)
-    print(result.stderr)
+    run(cmd, f"{directory}/fse_pb_bsp/examples")
 
     c_file = os.path.abspath(f"{directory}/fse_pb_bsp/examples/{target}.c")
     print(f">> {c_file}")
@@ -116,9 +132,18 @@ def example_list(make_file : str = "../../Makefile") -> List[str]:
     return names
 
 def handle_build(args = None):
+    directory = get_dir_of_file("../../Makefile")
+    elf = os.path.join(directory, ELF_NAME)
+
     clean()
-    build()
-    create_bin()
+    rc, seconds = build()
+
+    if rc == 0:
+        create_bin()
+
+    build_status(rc, os.path.abspath(directory), elf, seconds)
+
+    sys.exit(rc)
 
 def handle_clean(args):
     clean()

@@ -5,6 +5,8 @@ if exist(out, 'dir')
     addpath(out);
 end
 
+ss_file_gen();
+
 mods = ss_simulink_modules();
 for k = 1:numel(mods)
     addpath(mods(k).dir);

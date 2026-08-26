@@ -1,4 +1,4 @@
-function build_model(mdl)
+function ss_model_config_save(mdl)
 
 if nargin < 1 || isempty(mdl)
     mdl = ss_model_name();
@@ -11,16 +11,18 @@ if ~exist(mdl_path, 'file')
     error('Model not found: %s\nRun ./ss matlab_init first.', mdl_path);
 end
 
-ss_file_gen();
-
-ss_config_load();
-
-load_system(mdl_path);
-guard = onCleanup(@() close_system(mdl, 0));
+was_loaded = bdIsLoaded(mdl);
+if ~was_loaded
+    load_system(mdl_path);
+end
 
 ss_model_config(mdl);
-slbuild(mdl);
+save_system(mdl, mdl_path);
 
-fprintf('\nGenerated into: %s\n', fullfile(out, [mdl '_ert_rtw']));
+if ~was_loaded
+    close_system(mdl, 0);
+end
+
+fprintf('config saved into %s\n', mdl_path);
 
 end

@@ -135,6 +135,129 @@ def handle_matlab_build(args):
     sys.exit(matlab_run([f"build_model('{mdl}');"]))
 
 
+ASCII_FALLBACK = {
+    "\u2550": "=", "\u2500": "-", "\u2502": "|", "\u251c": "+",
+    "\u2514": "+", "\u2510": "+", "\u2524": "+", "\u25bc": "v",
+}
+
+
+def write(text: str) -> None:
+    enc = sys.stdout.encoding or "ascii"
+
+    try:
+        text.encode(enc)
+    except UnicodeEncodeError:
+        for k, v in ASCII_FALLBACK.items():
+            text = text.replace(k, v)
+
+    print(text)
+
+
+def tree_entry(prefix: str, name: str, desc: str) -> str:
+    return ("      " + prefix + " " + name).ljust(33) + desc
+
+
+def matlab_help_text(mdl: str) -> str:
+    art = """    ./ss matlab_open           open the model in the matlab gui, runs
+         │                     usr/simulink/config.m (pin map, board version)
+         │
+         │   edit blocks, then generate code
+         │
+         ├── ctrl+B in simulink ────┐   needs ./ss matlab_config
+         │                          │   once, see below
+         ├── ./ss matlab_build ─────┘   always works by itself
+         │
+         ▼
+    usr/simulink/{mdl}_ert_rtw/*.c
+         │
+         │   ./ss build
+         ▼
+    build/bp_test.elf
+         │
+         │   ./ss flash
+         ▼
+    target""".replace("{mdl}", mdl)
+    cfg = """    ss_model_config.m          ert.tlc, GenCodeOnly, solver, include paths
+         │
+         ├── ./ss matlab_build ───>  set in memory for this one build,
+         │                           the .slx file is never touched
+         │
+         └── ./ss matlab_config ──>  written into the model and saved
+                                           │
+                                           ▼
+                                    ctrl+B reads it from there"""
+
+    tree = "\n".join([
+        "    usr/simulink/",
+        tree_entry("├─", mdl + ".slx", "the model"),
+        tree_entry("├─", "config.m", "pin map and board version"),
+        tree_entry("├─", "*_ert_rtw/", "generated c code, built by the makefile"),
+        tree_entry("└─", "slprj/", "simulink build cache, safe to delete"),
+        "    fse_pb_bsp/simulink/",
+        tree_entry("└─", "ss_*/", "legacy code tool wrappers, block libs"),
+    ])
+
+    return f"""
+  simulink workflow
+  ════════════════════════════════════════════════════════════════════════
+
+  once per checkout
+  ────────────────────────────────────────────────────────────────────────
+
+    ./ss matlab_init           matlab path + startup.m, build the ss block
+                               libraries, create the model
+    ./ss matlab_config         store the code generation settings in the model
+    ./ss can_gen <file.dbc>    turn a dbc into can message blocks
+                               -> usr/simulink/can_<bus>_lib.slx
+
+  every day
+  ────────────────────────────────────────────────────────────────────────
+
+{art}
+
+  when you need matlab_config
+  ────────────────────────────────────────────────────────────────────────
+
+    the settings come from fse_pb_bsp/simulink/ss_model_config.m, not from
+    usr/simulink/config.m, and reach a build on two paths
+
+{cfg}
+
+    run it once  after ./ss matlab_init or a fresh clone
+                 after ss_model_config.m changed
+                 after someone saved the model with different settings
+
+    skip it and ctrl+B keeps GenCodeOnly off: simulink hands the generated
+    code to gcc and the build dies on ss_can_sl.h and rt_main.c
+
+  where things live
+  ────────────────────────────────────────────────────────────────────────
+
+{tree}
+
+  when something is off
+  ────────────────────────────────────────────────────────────────────────
+
+    gui build runs gcc and dies on    ./ss matlab_config, then build again
+    ss_can_sl.h or rt_main.c
+    generated code in the wrong       restart matlab, ss_path_add sets the
+    folder                            code generation folder at startup
+    ss blocks missing in the          ./ss matlab_cache_clean   (matlab closed)
+    library browser
+    stale code or cache               ./ss matlab_clean
+    ss module changed in the bsp      ./ss matlab_libs
+    pin name rejected                 ./ss matlab_pins
+"""
+
+def handle_matlab_help(args):
+    write(matlab_help_text(model_name(getattr(args, "name", None))))
+
+
+def handle_matlab_config(args):
+    mdl = model_name(args.name)
+    sys.exit(matlab_run([f"ss_model_config_save('{mdl}');"]))
+
+
 def handle_matlab_libs(args):
     if args.modules:
         mods = ", ".join(f"'{m}'" for m in args.modules)
@@ -161,7 +284,8 @@ def handle_matlab_open(args):
         print(f"error: {path} not found, run ./ss matlab_init first")
         sys.exit(1)
 
-    sys.exit(matlab_run(["ss_config_load;", f"open_system('{path}');"], gui=True))
+    sys.exit(matlab_run(["ss_config_load;", f"open_system('{path}');",
+                         f"ss_model_config('{mdl}');"], gui=True))
 
 
 def remove(path: str) -> None:
@@ -177,8 +301,9 @@ def handle_matlab_clean(args):
     out = model_dir()
 
     targets = []
-    targets += glob.glob(os.path.join(out, "*_ert_rtw"))
-    targets += glob.glob(os.path.join(out, "slprj"))
+    for d in (out, repo_root(), simulink_dir()):
+        targets += glob.glob(os.path.join(d, "*_ert_rtw"))
+        targets += glob.glob(os.path.join(d, "slprj"))
     targets += glob.glob(os.path.join(out, "*.slxc"))
     targets += glob.glob(os.path.join(out, "*.autosave"))
     targets += glob.glob(os.path.join(out, "can_*_lib.slx"))
@@ -189,7 +314,7 @@ def handle_matlab_clean(args):
         sl = simulink_dir()
         for pattern in ("*/*_sfcn.c", "*/*_sfcn.tlc", "*/*_sfcn.tlc.bak",
                         "*/*.mexa64", "*/*.mexw64", "*/*.mexmaci64",
-                        "*/*_lib.slx", "*/*.slxc", "slprj", "*/slprj"):
+                        "*/*_lib.slx", "*/*.slxc", "*/slprj"):
             targets += glob.glob(os.path.join(sl, pattern))
 
     if not targets:
@@ -214,6 +339,16 @@ def matlab_add_sub(sub):
     p_build = sub.add_parser("matlab_build", help="generate c code from the simulink model")
     p_build.add_argument("--name", help="model name (default: repository folder name)")
     p_build.set_defaults(func=handle_matlab_build)
+
+    p_help = sub.add_parser("matlab_help",
+                            help="show the simulink workflow overview")
+    p_help.add_argument("--name", help="model name (default: repository folder name)")
+    p_help.set_defaults(func=handle_matlab_help)
+
+    p_config = sub.add_parser("matlab_config",
+                              help="write the code generation settings into the model and save it")
+    p_config.add_argument("--name", help="model name (default: repository folder name)")
+    p_config.set_defaults(func=handle_matlab_config)
 
     p_libs = sub.add_parser("matlab_libs", help="rebuild the ss block libraries only")
     p_libs.add_argument("--modules", nargs="*",
