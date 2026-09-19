@@ -11,6 +11,8 @@ if ~exist(mdl_path, 'file')
     error('Model not found: %s\nRun ./ss matlab_init first.', mdl_path);
 end
 
+ss_config_load();
+
 was_loaded = bdIsLoaded(mdl);
 if ~was_loaded
     load_system(mdl_path);

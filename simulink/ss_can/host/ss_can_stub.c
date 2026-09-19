@@ -21,6 +21,14 @@ bool ss_can_read(uint8_t can_interface_id, struct SS_CAN_FRAME* can_frame) {
     return false;
 }
 
+uint32_t ss_can_tx_pending(uint8_t can_interface_id) {
+    return 0;
+}
+
+uint32_t ss_can_tx_dropped(uint8_t can_interface_id) {
+    return 0;
+}
+
 bool ss_can_queue_add(uint8_t channel, uint32_t id, struct SS_CAN_MSG_QUEUE **queue) {
     if (sim_queue_count >= SIM_QUEUE_SLOTS) {
         return false;

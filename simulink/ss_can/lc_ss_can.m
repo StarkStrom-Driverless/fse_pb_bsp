@@ -25,7 +25,11 @@ def4 = legacy_code('initialize');
 def4.SFunctionName = 'ss_can_send_sfcn';
 def4.OutputFcnSpec = 'void ss_can_sl_send(uint8 p1, uint32 p2, uint8 p3, uint8 u1[8], uint8 u2)';
 
-defs = [def1, def2, def5, def3, def4];
+def6 = legacy_code('initialize');
+def6.SFunctionName = 'ss_can_tx_status_sfcn';
+def6.OutputFcnSpec = 'void ss_can_sl_tx_status(uint8 p1, uint32 y1[1], uint32 y2[1])';
+
+defs = [def1, def2, def5, def3, def4, def6];
 for k = 1:numel(defs)
     defs(k).HeaderFiles = {'ss_can_sl.h'};
     defs(k).SourceFiles = {'ss_can_stub.c'};
@@ -106,5 +110,16 @@ m.blocks(4).params(2).value  = '0x100';
 m.blocks(4).params(3).idx    = 3;
 m.blocks(4).params(3).prompt = 'DLC';
 m.blocks(4).params(3).value  = '8';
+
+m.blocks(6).sfcn = 'ss_can_tx_status_sfcn';
+m.blocks(6).name = 'SS CAN TX Status';
+m.blocks(6).pin  = 0;
+m.blocks(6).outputs = {'pending', 'dropped'};
+m.blocks(6).params(1).idx    = 1;
+m.blocks(6).params(1).prompt = 'CAN channel (1 or 2)';
+m.blocks(6).params(1).value  = '1';
+m.blocks(6).params(2).idx    = 2;
+m.blocks(6).params(2).prompt = 'Sample time (s)';
+m.blocks(6).params(2).value  = '0.1';
 
 end

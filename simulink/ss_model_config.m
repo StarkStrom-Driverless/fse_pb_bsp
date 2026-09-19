@@ -1,7 +1,13 @@
 function ss_model_config(mdl, step_s)
 
 if nargin < 2 || isempty(step_s)
-    step_s = 0.001;
+    step_ms = ss_define('SS_MODEL_STEP_MS');
+
+    if isempty(step_ms) || ~isfinite(step_ms) || step_ms <= 0
+        step_ms = 1;
+    end
+
+    step_s = step_ms / 1000;
 end
 
 here = fileparts(mfilename('fullpath'));

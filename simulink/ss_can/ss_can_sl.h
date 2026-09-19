@@ -53,6 +53,12 @@ static inline void ss_can_sl_set_signal(const uint8_t *data_in, uint8_t start_bi
     ss_bits_set(data_out, 8, start_bit, length, value, byte_order);
 }
 
+static inline void ss_can_sl_tx_status(uint8_t channel, unsigned int *pending,
+                                       unsigned int *dropped) {
+    *pending = (unsigned int) ss_can_tx_pending(channel);
+    *dropped = (unsigned int) ss_can_tx_dropped(channel);
+}
+
 static inline void ss_can_sl_send(uint8_t channel, uint32_t id, uint8_t dlc,
                                   const uint8_t *data, uint8_t enable) {
     struct SS_CAN_FRAME frame;

@@ -24,6 +24,11 @@
 
 #define MAX_PARALLEL_QUEUE 2
 #define FIFO_SIZE 10
+
+#ifndef SS_CAN_TX_QUEUE_DEPTH
+#define SS_CAN_TX_QUEUE_DEPTH 32
+#endif
+
 #define MAX_CAN_MSGS 10
 #define SS_FILTER_BANKS 14
 #define SS_FILTER_IDS (SS_FILTER_BANKS * 4)
@@ -84,6 +89,8 @@ struct CAN_Channel {
 	struct SS_TOD tod;
 	struct SS_CAN_ID_FILTERS filters;
 	struct SS_CAN_MSG_QUEUE std_msg_queue;
+	QueueHandle_t tx_queue;
+	uint32_t tx_dropped;
 	bool enabled;
 };
 
@@ -104,9 +111,19 @@ extern struct SS_CAN ss_can;
 
 bool ss_can_init(uint8_t can_interface_id, uint32_t baudrate);
 
+bool ss_can_init_opt(uint8_t can_interface_id, uint32_t baudrate, bool one_shot);
+
 bool ss_can_read(uint8_t can_interface_id, struct SS_CAN_FRAME* can_frame);
 
 bool ss_can_send(uint8_t can_interface_id, struct SS_CAN_FRAME* can_frame);
+
+uint32_t ss_can_tx_pending(uint8_t can_interface_id);
+
+uint32_t ss_can_tx_dropped(uint8_t can_interface_id);
+
+#ifdef USE_PRIVATE
+void ss_can_tx_kick(uint8_t can_interface_id);
+#endif
 
 
 

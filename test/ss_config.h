@@ -37,4 +37,6 @@
 #define COMPILE_SS_PRINTF       1
 #define COMPILE_SS_TUI          1
 
+#define SS_MODEL_STEP_MS        1
+
 #endif

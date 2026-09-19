@@ -14,7 +14,7 @@ import os
 import re
 import sys
 
-from ss_matlab import matlab_run, model_dir, cache_clean
+from ss_matlab import matlab_run, model_dir, cache_clean, repo_root
 
 
 MAX_SIGNAL_BITS = 32
@@ -84,7 +84,20 @@ def dbc_to_spec(path: str, channel: int, with_valid: bool, default_cycle_ms: int
     return spec
 
 
+def resolve_dbc(path: str) -> str:
+    if os.path.isfile(path):
+        return path
+
+    from_root = os.path.join(repo_root(), path)
+    if os.path.isfile(from_root):
+        return from_root
+
+    return path
+
+
 def handle_can_gen(args):
+    args.dbc = resolve_dbc(args.dbc)
+
     if not os.path.isfile(args.dbc):
         print(f"error: {args.dbc} not found")
         sys.exit(1)

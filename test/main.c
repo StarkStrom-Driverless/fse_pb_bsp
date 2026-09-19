@@ -1,7 +1,5 @@
 #include "ss.h"
 
-uint16_t led = PIN('C', 1);
-
 /*
  * Simulink model task.
  *
@@ -26,9 +24,6 @@ uint16_t led = PIN('C', 1);
 #define ss_model_initialize     SS_CAT(SS_SIMULINK_MODEL, _initialize)
 #define ss_model_step           SS_CAT(SS_SIMULINK_MODEL, _step)
 
-/* must match FixedStep in fse_pb_bsp/simulink/ss_model_config.m (0.001 s) */
-#define SIMULINK_STEP_MS        1
-
 static void simulink_task(void *args) {
     TickType_t last_wake = xTaskGetTickCount();
 
@@ -42,37 +37,17 @@ static void simulink_task(void *args) {
 
         /* absolute delay - with ss_rtos_delay_ms the period would drift by
            however long the step took, which a fixed step model cannot afford */
-        xTaskDelayUntil(&last_wake, pdMS_TO_TICKS(SIMULINK_STEP_MS));
+        xTaskDelayUntil(&last_wake, pdMS_TO_TICKS(SS_MODEL_STEP_MS));
     }
 }
 
 #endif /* SS_SIMULINK_MODEL */
 
-static void blinky_task(void *args) {
-    uint8_t value = 0;
-
-    for (;;) {
-        ss_io_write(led, value);
-
-        value = (value == SS_GPIO_ON) ? SS_GPIO_OFF : SS_GPIO_ON;
-
-        ss_rtos_delay_ms(500);
-    }
-}
-
 int main(void)
 {
     SS_ERROR_ASSERT(ss_init());
 
-    SS_ERROR_ASSERT(ss_io_init(led, SS_GPIO_MODE_OUTPUT));
-
-    SS_ERROR_ASSERT(ss_rtos_task_add(blinky_task, NULL, 1, "blinky_task"));
-
 #ifdef SS_SIMULINK_MODEL
-    /* above blinky: the model is the control loop and must not be delayed by
-       housekeeping. ss_rtos_task_add gives it 1024 words - swap in
-       ss_rtos_big_task_add (2048) if a growing model overflows the stack,
-       configCHECK_FOR_STACK_OVERFLOW is on and will land in the hook below */
     SS_ERROR_ASSERT(ss_rtos_task_add(simulink_task, NULL, 2, "simulink_task"));
 #endif
 

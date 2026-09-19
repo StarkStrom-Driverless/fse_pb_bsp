@@ -106,6 +106,90 @@ void can2_rx1_isr(void)
 }
 
 
+static uint32_t ss_can_tx_irq_from_id(uint8_t can_interface_id) {
+    switch (can_interface_id) {
+        case 1: return NVIC_CAN1_TX_IRQ;
+        case 2: return NVIC_CAN2_TX_IRQ;
+        default: return 0;
+    }
+}
+
+static bool ss_can_tx_mailbox_free(uint32_t can_port) {
+    return (CAN_TSR(can_port) & (CAN_TSR_TME0 | CAN_TSR_TME1 | CAN_TSR_TME2)) != 0;
+}
+
+static bool ss_can_tx_hw(uint32_t can_port, struct SS_CAN_FRAME* frame) {
+    return can_transmit(can_port,
+                        frame->std_id,
+                        frame->ide,
+                        frame->rtr,
+                        frame->dlc,
+                        frame->data) >= 0;
+}
+
+void ss_can_tx_kick(uint8_t can_interface_id) {
+    struct CAN_Channel* channel = &ss_can.channel[can_interface_id - 1];
+    uint32_t can_port = ss_can_get_port_from_id(can_interface_id);
+    uint32_t irq = ss_can_tx_irq_from_id(can_interface_id);
+    struct SS_CAN_FRAME frame;
+
+    if (channel->tx_queue == NULL) {
+        return;
+    }
+
+    nvic_disable_irq(irq);
+
+    while (ss_can_tx_mailbox_free(can_port)) {
+        if (xQueueReceive(channel->tx_queue, &frame, (TickType_t) 0) != pdPASS) {
+            break;
+        }
+
+        if (!ss_can_tx_hw(can_port, &frame)) {
+            xQueueSendToFront(channel->tx_queue, &frame, (TickType_t) 0);
+            break;
+        }
+    }
+
+    nvic_enable_irq(irq);
+}
+
+static void ss_can_tx_isr(uint8_t can_interface_id) {
+    struct CAN_Channel* channel = &ss_can.channel[can_interface_id - 1];
+    uint32_t can_port = ss_can_get_port_from_id(can_interface_id);
+    BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+    struct SS_CAN_FRAME frame;
+
+    CAN_TSR(can_port) = CAN_TSR_RQCP0 | CAN_TSR_RQCP1 | CAN_TSR_RQCP2;
+
+    if (channel->tx_queue != NULL) {
+        while (ss_can_tx_mailbox_free(can_port)) {
+            if (xQueueReceiveFromISR(channel->tx_queue, &frame,
+                                     &xHigherPriorityTaskWoken) != pdPASS) {
+                break;
+            }
+
+            if (!ss_can_tx_hw(can_port, &frame)) {
+                xQueueSendToFrontFromISR(channel->tx_queue, &frame,
+                                         &xHigherPriorityTaskWoken);
+                break;
+            }
+        }
+    }
+
+    portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+}
+
+void can1_tx_isr(void)
+{
+    ss_can_tx_isr(1);
+}
+
+void can2_tx_isr(void)
+{
+    ss_can_tx_isr(2);
+}
+
+
 
 /***
  * 
@@ -170,11 +254,15 @@ bool ss_can_nvic_init(uint8_t can_interface_id, uint8_t prio) {
         case 1:
             nvic_enable_irq(NVIC_CAN1_RX0_IRQ);
             nvic_set_priority(NVIC_CAN1_RX0_IRQ, prio);
+            nvic_enable_irq(NVIC_CAN1_TX_IRQ);
+            nvic_set_priority(NVIC_CAN1_TX_IRQ, prio);
             break;
 
         case 2:
             nvic_enable_irq(NVIC_CAN2_RX1_IRQ);
             nvic_set_priority(NVIC_CAN2_RX1_IRQ, prio);
+            nvic_enable_irq(NVIC_CAN2_TX_IRQ);
+            nvic_set_priority(NVIC_CAN2_TX_IRQ, prio);
             break;
 
         default:
@@ -247,6 +335,10 @@ bool ss_can_enable_pending_interrupt(uint8_t channel, uint32_t can_port) {
  */
 
 bool ss_can_init(uint8_t can_interface_id, uint32_t baudrate) {
+    return ss_can_init_opt(can_interface_id, baudrate, false);
+}
+
+bool ss_can_init_opt(uint8_t can_interface_id, uint32_t baudrate, bool one_shot) {
     struct SS_CLOCK_CAN config;
 
     uint32_t can_port = ss_can_get_port_from_id(can_interface_id);
@@ -264,7 +356,7 @@ bool ss_can_init(uint8_t can_interface_id, uint32_t baudrate) {
                             false,
                             true,
                             false,
-                            false,
+                            one_shot,
                             false,
                             false,
                             config.sjw,
@@ -279,6 +371,19 @@ bool ss_can_init(uint8_t can_interface_id, uint32_t baudrate) {
     if (!ss_can_nvic_init(can_interface_id, configMAX_SYSCALL_INTERRUPT_PRIORITY)) SS_ERROR(NULL);
 
     if (!ss_can_enable_pending_interrupt(can_interface_id - 1, can_port)) SS_ERROR(NULL);
+
+    if (ss_can.channel[can_interface_id - 1].tx_queue == NULL) {
+        ss_can.channel[can_interface_id - 1].tx_queue =
+            xQueueCreate(SS_CAN_TX_QUEUE_DEPTH, sizeof(struct SS_CAN_FRAME));
+
+        if (ss_can.channel[can_interface_id - 1].tx_queue == NULL) {
+            SS_ERROR("can tx queue create failed");
+        }
+    }
+
+    ss_can.channel[can_interface_id - 1].tx_dropped = 0;
+
+    can_enable_irq(can_port, CAN_IER_TMEIE);
 
     if (!ss_can_filter_init(can_interface_id - 1)) SS_ERROR(NULL);
 
@@ -312,15 +417,56 @@ bool ss_can_read(uint8_t can_interface_id, struct SS_CAN_FRAME* can_frame) {
 
 bool ss_can_send(uint8_t can_interface_id, struct SS_CAN_FRAME* can_frame) {
     uint32_t can_port = ss_can_get_port_from_id(can_interface_id);
+    struct CAN_Channel* channel;
 
-    int8_t ret =  can_transmit(   can_port,
-                    can_frame->std_id,
-                    can_frame->ide,
-                    can_frame->rtr,
-                    can_frame->dlc,
-                    can_frame->data);
+    if (can_port == 0) SS_ERROR("unknown can_interface_id");
+
+    channel = &ss_can.channel[can_interface_id - 1];
+
+    if (channel->tx_queue == NULL) {
+        return ss_can_tx_hw(can_port, can_frame);
+    }
+
+    if (xQueueSend(channel->tx_queue, can_frame, (TickType_t) 0) != pdPASS) {
+        channel->tx_dropped++;
+        return false;
+    }
+
+    ss_can_tx_kick(can_interface_id);
 
     return true;
+}
+
+uint32_t ss_can_tx_pending(uint8_t can_interface_id) {
+    struct CAN_Channel* channel;
+
+    if (can_interface_id < 1 || can_interface_id > 2) {
+        return 0;
+    }
+
+    channel = &ss_can.channel[can_interface_id - 1];
+
+    if (channel->tx_queue == NULL) {
+        return 0;
+    }
+
+    return uxQueueMessagesWaiting(channel->tx_queue);
+}
+
+uint32_t ss_can_tx_dropped(uint8_t can_interface_id) {
+    struct CAN_Channel* channel;
+    uint32_t dropped;
+
+    if (can_interface_id < 1 || can_interface_id > 2) {
+        return 0;
+    }
+
+    channel = &ss_can.channel[can_interface_id - 1];
+
+    dropped = channel->tx_dropped;
+    channel->tx_dropped = 0;
+
+    return dropped;
 }
 
 
