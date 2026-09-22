@@ -33,6 +33,7 @@ pip install pyyaml
 pip install python-can
 pip install cantools
 pip install telnetlib3
+pip install imgui-bundle
 
 
 # --- vscode -----------------------------------------------------------------

@@ -58,6 +58,7 @@ Running `./ss` with no arguments prints the full command overview. The main ones
 | `./ss canflash --bin_file <path> --id <hex id>` | flash a signed `.bin` over CAN |
 | `./ss bootloader --bin_file <path> --position <addr>` | flash a bootloader image (e.g. `zephyr.bin`) |
 | `./ss oocd_start` / `./ss oocd_stop` / `./ss oocd_state` | manage the OpenOCD server (`make gdb` then gives you a GDB TUI) |
+| `./ss` / `./ss gui` | the same commands in a window: build/flash/openocd with flash and ram usage, the examples with their source, the matlab workflow with a state overview, and `can_gen`. Running `./ss` without a command opens it, ctrl+c in the terminal closes it (needs `imgui-bundle`, `init.sh` installs it) |
 
 ### Peripheral examples
 

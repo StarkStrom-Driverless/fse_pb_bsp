@@ -22,12 +22,14 @@ def add_linux_subs(sub):
     from ss_build import build_add_sub
     from ss_matlab import matlab_add_sub
     from ss_dbc import dbc_add_sub
+    from ss_gui import gui_add_sub
 
     flash_add_sub(sub)
     build_add_sub(sub)
     oocd_add_sub(sub)
     matlab_add_sub(sub)
     dbc_add_sub(sub)
+    gui_add_sub(sub)
 
 
 def add_windows_subs(sub):
@@ -55,6 +57,12 @@ def main():
     args = parser.parse_args()
 
     if not hasattr(args, 'func'):
+        if not windows:
+            from ss_gui import gui_main
+
+            if gui_main() == 0:
+                return
+
         parser.print_help()
         return
 

@@ -224,9 +224,9 @@ def send_firmware_via_can(  binary_file,
 
     binary_file = signed_img_name
 
-    if flash_can_state() ==  False:
+    if flash_can_state(can_channel) ==  False:
         print("CAN UP")
-        enable_flash_can()
+        enable_flash_can(can_channel)
 
 
     try:
@@ -341,7 +341,7 @@ def bootloader_flash_handle(args):
 
 def can_flash_handle(args):
     can_id = int(args.id, 16)
-    send_firmware_via_can(args.bin_file, can_id)
+    send_firmware_via_can(args.bin_file, can_id, can_channel=args.interface)
 
 def flash_example(  target : str,
                     position : str = "0x08020000"):
@@ -374,6 +374,7 @@ def flash_add_sub(sub):
     parser_canflash = sub.add_parser("canflash", help="flash via can")
     parser_canflash.add_argument("--bin_file", default="../../build/bp_test.bin", help="signed bin file such as ../../build/bp_test.bin")
     parser_canflash.add_argument("--id", type=str, help="can id to send image")
+    parser_canflash.add_argument("--interface", default="can0", help="socketcan interface such as can0")
     parser_canflash.set_defaults(func=can_flash_handle)
 
 
