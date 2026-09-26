@@ -29,6 +29,7 @@
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; scroll-padding-top: 76px; }
 body {
+  overflow-x: clip;
   margin: 0; background: var(--bg); color: var(--text);
   font: 16px/1.65 var(--sans); -webkit-font-smoothing: antialiased;
   background-image:
@@ -215,7 +216,6 @@ main { max-width: 1160px; margin: 0 auto; padding: 0 clamp(1rem, 4vw, 2rem); }
   .facts div:nth-child(2) { border-right: 0; }
   .facts div:nth-child(-n+2) { border-bottom: 1px solid var(--line); }
   .cmd-grid, .cmd-grid.three { grid-template-columns: 1fr; }
-  .nav nav a:not(.btn) { display: none; }
 }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
@@ -317,3 +317,69 @@ main { max-width: 1160px; margin: 0 auto; padding: 0 clamp(1rem, 4vw, 2rem); }
 .lang button { font: 700 .72rem var(--mono); letter-spacing: .06em; padding: .28rem .6rem; border: 0; border-radius: 999px; background: none; color: var(--muted); cursor: pointer; }
 .lang button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
 .col.right .lay-row { width: 78%; margin: 0 auto; }
+
+/* nav: scrollspy + menu */
+.nav nav { margin-left: auto; }
+.nav nav a.active:not(.btn) { color: var(--accent); }
+.menu-btn { display: none; width: 42px; height: 38px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); cursor: pointer; padding: 0; flex-direction: column; align-items: center; justify-content: center; gap: 4px; }
+.menu-btn span { display: block; width: 18px; height: 2px; background: var(--text); border-radius: 2px; transition: transform .2s, opacity .2s; }
+.menu-btn[aria-expanded="true"] span:nth-child(1) { transform: translateY(6px) rotate(45deg); }
+.menu-btn[aria-expanded="true"] span:nth-child(2) { opacity: 0; }
+.menu-btn[aria-expanded="true"] span:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
+
+/* long tables scroll inside their box instead of stretching the page */
+.table-scroll { max-height: 30rem; overflow-y: auto; }
+
+/* phones */
+@media (max-width: 900px) {
+  .nav { gap: .6rem; padding: .6rem 1rem; }
+  .nav .brand { margin-right: auto; }
+  .menu-btn { display: flex; }
+  .nav nav { display: none; position: absolute; top: 100%; left: 0; right: 0; margin: 0; flex-direction: column; align-items: stretch; gap: 0; padding: .4rem 1rem 1rem; background: var(--bg); border-bottom: 1px solid var(--line); box-shadow: 0 20px 40px -20px rgba(0,0,0,.4); }
+  .nav nav.open { display: flex; }
+  .nav nav a { padding: .8rem .2rem; font-size: 1rem; border-bottom: 1px solid var(--line); }
+  .nav nav a.btn { margin-top: .8rem; text-align: center; border-bottom: 0; padding: .7rem; }
+  .hero { padding-top: 2.2rem; gap: 2rem; }
+  .terminal { order: 2; }
+  #term { font-size: .78rem; min-height: 16em; }
+  .block { padding: 2.6rem 0; }
+  .block-head { margin-bottom: 1.4rem; }
+  .cta .btn { flex: 1 1 100%; text-align: center; }
+  .stack { padding: 1rem; }
+  .lay { font-size: .78rem; padding: .7rem .4rem; }
+  .card, .under, .sim { padding: 1.1rem; }
+  .tab-list { display: flex; width: 100%; overflow-x: auto; }
+  .tab-list button { flex: 1 0 auto; white-space: nowrap; padding: .55rem .8rem; }
+  .code, .code.big { font-size: .76rem; padding: 1rem; }
+  .copy { opacity: 1; }
+  .gui-body { padding: .9rem; min-height: 0; }
+  .gui-bar { padding: .4rem .5rem; }
+  .gui-title { display: none; }
+  .fb { flex-basis: 100%; }
+  .ex-pick button { font-size: .74rem; padding: .35rem .6rem; }
+  .table-scroll { max-height: 24rem; }
+  .facts b { font-size: 1.7rem; }
+  .facts div { padding: 1rem; }
+  .closing { margin-bottom: 2rem; border-radius: 16px; }
+  .cmd-grid { gap: .7rem; }
+}
+@media (max-width: 480px) {
+  main { padding: 0 1rem; }
+  h2 { font-size: 1.7rem; }
+  .lead { font-size: 1.02rem; }
+  .facts { grid-template-columns: 1fr 1fr; }
+  .nd { padding: .55rem .7rem; }
+  .arr span { font-size: .6rem; }
+  .lane { padding: .8rem; }
+  .split { gap: 1.2rem; }
+  .foot { flex-direction: column; text-align: center; }
+}
+
+/* overflow safety */
+.split > *, .hero > *, .stack-wrap > *, .cards > *, .gui-body > *, .ex-lanes > *, .cmd-grid > * { min-width: 0; }
+p code, li code, td code, .callout code, .cmd code, .nd code { overflow-wrap: anywhere; }
+@media (max-width: 900px) {
+  .col.right .lay-row { width: 100%; }
+  .lay-row { gap: 6px; }
+  .l-app, .l-sim { font-size: .72rem; }
+}

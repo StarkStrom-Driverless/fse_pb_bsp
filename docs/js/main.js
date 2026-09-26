@@ -423,6 +423,37 @@
   langHooks.push(function () { showEx(curEx); });
   showEx("can_rx");
 
+
+  /* ---------- nav: menu + scrollspy ---------- */
+  (function () {
+    var btn = document.querySelector(".menu-btn");
+    var nav = document.getElementById("mainNav");
+    var links = nav.querySelectorAll('a[href^="#"]');
+    function close() { nav.classList.remove("open"); btn.setAttribute("aria-expanded", "false"); }
+    btn.addEventListener("click", function () {
+      var open = nav.classList.toggle("open");
+      btn.setAttribute("aria-expanded", open);
+    });
+    links.forEach(function (a) { a.addEventListener("click", close); });
+    document.addEventListener("keydown", function (e) { if (e.key === "Escape") close(); });
+
+    if (!("IntersectionObserver" in window)) return;
+    var map = {};
+    links.forEach(function (a) { map[a.getAttribute("href").slice(1)] = a; });
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        if (!en.isIntersecting) return;
+        links.forEach(function (a) { a.classList.remove("active"); });
+        var a = map[en.target.id];
+        if (a) a.classList.add("active");
+      });
+    }, { rootMargin: "-40% 0px -55% 0px" });
+    Object.keys(map).forEach(function (id) {
+      var s = document.getElementById(id);
+      if (s) io.observe(s);
+    });
+  })();
+
   /* ---------- pin explorer ---------- */
   // [pin, gpio, pwm, can, spi1, spi2, spi3, uart, adc]
   var T = 1;
