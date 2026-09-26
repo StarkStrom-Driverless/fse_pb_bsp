@@ -28,9 +28,29 @@ window.SS_EN = {
     sim: ["Simulink", "Alternative to a C application: ./ss matlab_build generates C code from the model. A dedicated task calls <model>_initialize() and then <model>_step() every SS_MODEL_STEP_MS. Underneath, the ss_* blocks call the fse_pb_bsp API."]
   },
 
+  pages: {
+    index: ["fse_pb_bsp – Board support library for STM32F405", "Board support library for the STM32F405RTGE, used in the control units of StarkStrom Augsburg Driverless."],
+    architecture: ["Architecture – fse_pb_bsp", "Bootloader and application stack, Simulink integration and the path from model to firmware."],
+    quickstart: ["Quickstart – fse_pb_bsp", "Create a new fse_pb_bsp project: init.sh on Linux, init.ps1 on Windows."],
+    tooling: ["Tooling – fse_pb_bsp", "Build, flash, OpenOCD, CAN flash and bootloader with the ss tool."],
+    gui: ["GUI – fse_pb_bsp", "The ss window: build, examples and Matlab workflow."],
+    examples: ["Examples – fse_pb_bsp", "Peripheral examples and what happens in the system underneath."],
+    pins: ["Pin capabilities – fse_pb_bsp", "Which pin of the STM32F405 can do GPIO, PWM, CAN, SPI, UART or ADC."],
+    install: ["Installation – fse_pb_bsp", "Set up the toolchain on Ubuntu, Fedora and Windows."]
+  },
+
   tag: { hw: "Hardware", isr: "ISR", obj: "RTOS", api: "bsp", task: "Task" },
 
   html: {
+    n1: "Previous", n2: "Next", n3: "Home",
+    h0: "Chapters", h00: "Where do you want to start?",
+    h1: "Bootloader and application stack, Simulink and the path from model to firmware.",
+    h2: "Create a project and run init.sh or init.ps1.",
+    h3: "Build, flash, OpenOCD and bootloader with the ss tool.",
+    h4: "The ss window: build, examples and Matlab workflow.",
+    h5: "16 peripheral examples and what happens in the system underneath.",
+    h6: "Which pin can do GPIO, PWM, CAN, SPI, UART or ADC?",
+    h7: "Toolchain on Ubuntu, Fedora and Windows.",
     c1: "Message blocks", c2: "Pins &amp; peripherals",
     t2: "Architecture", t3: "Quickstart", t4: "Tooling", t5: "GUI", t6: "Examples", t7: "Pins", t8: "Installation",
     t10: "StarkStrom Augsburg · Driverless",

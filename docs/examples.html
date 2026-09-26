@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Beispiele – fse_pb_bsp</title>
+<meta name="description" content="Peripherie-Beispiele und was darunter im System passiert.">
+<meta name="theme-color" content="#0b1210">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230b1210'/%3E%3Cpath d='M8 22V10h8a4 4 0 010 8H8' fill='none' stroke='%2333e6a0' stroke-width='3'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body data-page="examples">
+
+<header class="nav">
+  <a data-i="t1" class="brand" href="index.html"><span class="brand-mark"></span>fse_pb_bsp</a>
+  <nav id="mainNav">
+    <a data-i="t2" href="architecture.html">Architektur</a>
+    <a data-i="t3" href="quickstart.html">Quickstart</a>
+    <a data-i="t4" href="tooling.html">Tooling</a>
+    <a data-i="t5" href="gui.html">GUI</a>
+    <a data-i="t6" class="active" href="examples.html">Beispiele</a>
+    <a data-i="t7" href="pins.html">Pins</a>
+    <a data-i="t8" href="install.html">Installation</a>
+    <a data-i="t9" class="btn btn-small" href="https://github.com/StarkStrom-Driverless/fse_pb_bsp">GitHub</a>
+  </nav>
+  <div class="lang" role="group" aria-label="Sprache / Language">
+      <button type="button" data-lang="de" aria-pressed="true">DE</button>
+      <button type="button" data-lang="en" aria-pressed="false">EN</button>
+    </div>
+  <button class="menu-btn" type="button" aria-label="Menu" aria-expanded="false" aria-controls="mainNav"><span></span><span></span><span></span></button>
+</header>
+
+<main id="top">
+
+<section id="examples" class="block page">
+  <div class="block-head">
+    <p data-i="t209" class="eyebrow">Beispiele</p>
+    <h2 data-i="t210">Eine Peripherie, eine Datei.</h2>
+    <p data-i="t211"><code>fse_pb_bsp/examples/</code> enthält pro Peripherie ein minimales <code>.c</code>. Sie werden unabhängig von der Firmware gebaut und brauchen kein <code>usr/</code>. Am schnellsten geht es in der <a data-i="t212" href="gui.html">GUI</a>: Beispiel wählen, Quelltext ansehen, mit einem Klick bauen und flashen.</p>
+  </div>
+
+  <div class="cmd-grid three">
+    <div class="cmd"><code>./ss example_list</code><p data-i="t213">Alle verfügbaren Beispiele auflisten.</p></div>
+    <div class="cmd"><code>./ss example_build &lt;name&gt;</code><p data-i="t214">Ein Beispiel bauen, z. B. <code>adc</code> → <code>examples/build/adc.elf</code>.</p></div>
+    <div class="cmd hot"><code>./ss flash_example &lt;name&gt;</code><p data-i="t215">Bauen, signieren und via OpenOCD/telnet flashen.</p></div>
+  </div>
+  <p data-i="t216" class="note">Beide Build-Befehle geben den Pfad zur <code>.c</code>-Quelle aus, so springst du direkt in den Code. Ohne <code>./ss</code> geht es auch:
+    <code>cd fse_pb_bsp/examples &amp;&amp; make adc</code>, <code>make clean</code> räumt auf.</p>
+
+  <div class="under">
+    <h3 data-i="t217">Was unter dem Beispiel passiert</h3>
+    <p data-i="t218" class="muted">Wähle ein Beispiel. Das Diagramm zeigt, wie Daten zwischen Hardware, Interrupt, RTOS-Objekten und deinem Task fließen.</p>
+    <div class="ex-pick" id="exPick" role="tablist" aria-label="Beispiel wählen"></div>
+    <div class="ex-view" id="exView" aria-live="polite"></div>
+    <div class="ex-legend">
+      <span data-i="t219"><i class="n-hw"></i>Hardware</span>
+      <span data-i="t220"><i class="n-isr"></i>Interrupt (ISR)</span>
+      <span data-i="t221"><i class="n-obj"></i>RTOS-Objekt / Speicher</span>
+      <span data-i="t222"><i class="n-api"></i>bsp-Funktion</span>
+      <span data-i="t223"><i class="n-task"></i>dein Task</span>
+    </div>
+  </div>
+</section>
+
+<nav class="pager" aria-label="Kapitel"><a class="prev" href="gui.html"><small data-i="n1">Zurück</small><span data-i="t5">GUI</span></a><a class="next" href="pins.html"><small data-i="n2">Weiter</small><span data-i="t7">Pins</span></a></nav>
+
+</main>
+
+<footer class="foot">
+  <span data-i="t271">fse_pb_bsp · StarkStrom Augsburg Driverless</span>
+  <a data-i="t272" href="#top">Nach oben ↑</a>
+</footer>
+
+<script src="js/i18n.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Installation – fse_pb_bsp</title>
+<meta name="description" content="Toolchain einrichten unter Ubuntu, Fedora und Windows.">
+<meta name="theme-color" content="#0b1210">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230b1210'/%3E%3Cpath d='M8 22V10h8a4 4 0 010 8H8' fill='none' stroke='%2333e6a0' stroke-width='3'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body data-page="install">
+
+<header class="nav">
+  <a data-i="t1" class="brand" href="index.html"><span class="brand-mark"></span>fse_pb_bsp</a>
+  <nav id="mainNav">
+    <a data-i="t2" href="architecture.html">Architektur</a>
+    <a data-i="t3" href="quickstart.html">Quickstart</a>
+    <a data-i="t4" href="tooling.html">Tooling</a>
+    <a data-i="t5" href="gui.html">GUI</a>
+    <a data-i="t6" href="examples.html">Beispiele</a>
+    <a data-i="t7" href="pins.html">Pins</a>
+    <a data-i="t8" class="active" href="install.html">Installation</a>
+    <a data-i="t9" class="btn btn-small" href="https://github.com/StarkStrom-Driverless/fse_pb_bsp">GitHub</a>
+  </nav>
+  <div class="lang" role="group" aria-label="Sprache / Language">
+      <button type="button" data-lang="de" aria-pressed="true">DE</button>
+      <button type="button" data-lang="en" aria-pressed="false">EN</button>
+    </div>
+  <button class="menu-btn" type="button" aria-label="Menu" aria-expanded="false" aria-controls="mainNav"><span></span><span></span><span></span></button>
+</header>
+
+<main id="top">
+
+<section id="install" class="block page">
+  <div class="block-head">
+    <p data-i="t236" class="eyebrow">Installation</p>
+    <h2 data-i="t237">Toolchain einrichten.</h2>
+    <p data-i="t238">Am besten getestet unter Linux. Windows läuft nativ mit STM32CubeCLT (Build, Flash, Bootloader, MATLAB-Workflow), alternativ über WSL2. Dort kann USB-Passthrough beim Flashen Probleme machen; Fallback ist ein Release-Binary, das du direkt per st-link aus dem abgeleiteten Steuergeräte-Repo flashst.</p>
+  </div>
+
+  <div class="tabs" data-tabs>
+    <div class="tab-list" role="tablist">
+      <button data-i="t239" role="tab" aria-selected="true" data-tab="ubuntu">Ubuntu</button>
+      <button data-i="t240" role="tab" aria-selected="false" data-tab="fedora">Fedora</button>
+      <button data-i="t241" role="tab" aria-selected="false" data-tab="windows">Windows</button>
+    </div>
+
+    <div class="tab-panel" data-panel="windows" hidden>
+      <div class="split">
+        <div>
+          <h3 data-i="t242">Voraussetzungen</h3>
+          <ol class="steps compact">
+            <li><span data-i="t243">1</span><div data-i="t244"><strong data-i="t245">STM32CubeCLT</strong> von st.com. Liefert <code>arm-none-eabi-*</code> und <code>STM32_Programmer_CLI</code>. Gesucht wird unter <code>C:\ST</code> und <code>Program Files\ST</code>, sonst per <code>STM32CUBECLT_PATH</code> setzen.</div></li>
+            <li><span data-i="t246">2</span><div data-i="t247"><strong data-i="t248">make.exe und sh.exe</strong>, z. B. aus dem <a data-i="t249" href="https://github.com/xpack-dev-tools/windows-build-tools-xpack/releases">xpack windows-build-tools</a>-Archiv. Entpacken und <code>bin\</code> in den PATH legen oder <code>SS_MAKE</code> auf <code>make.exe</code> zeigen lassen.</div></li>
+            <li><span data-i="t250">3</span><div data-i="t251"><strong data-i="t252">Python 3.10+</strong> von python.org. Der Microsoft-Store-Stub funktioniert nicht.</div></li>
+            <li><span data-i="t253">4</span><div data-i="t254"><strong data-i="t255">Git</strong> für das Submodule.</div></li>
+          </ol>
+        </div>
+        <div>
+          <h3 data-i="t256">Ablauf</h3>
+<pre class="code" data-copy><code><span data-i="t257" class="c"># im Projektordner, nach dem Quickstart (init.ps1)</span>
+.\ss.cmd build
+.\ss.cmd flash
+.\ss.cmd bootloader --bin_file zephyr.bin
+.\ss.cmd clean
+
+<span data-i="t258" class="c"># optional: F5-Debugging in VS Code</span>
+code --install-extension marus25.cortex-debug</code></pre>
+          <p data-i="t259" class="callout"><strong data-i="t260">Flashen</strong> läuft über <code>STM32_Programmer_CLI</code> statt OpenOCD. Nur unter Linux gibt es <code>canflash</code>, die OpenOCD-Befehle, die Beispiel-Befehle und die GUI, dafür fehlt Windows SocketCAN. Bei langen Projektpfaden (&gt; 80 Zeichen) kommt es zu MAX_PATH-Fehlern: Projekt näher an die Laufwerkswurzel legen oder Long Paths aktivieren.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="tab-panel" data-panel="ubuntu">
+<pre class="code big" data-copy><code>sudo apt install binutils-arm-none-eabi gcc-arm-none-eabi
+sudo apt install gdb-multiarch
+cd /usr/bin
+sudo ln -s gdb-multiarch arm-none-eabi-gdb
+
+<span data-i="t261" class="c"># Download arm-gnu-toolchain-14.3.rel1-x86_64-arm-none-eabi.tar.xz from</span>
+<span data-i="t262" class="c"># https://developer.arm.com/downloads/-/arm-gnu-toolchain-downloads</span>
+
+cd /opt
+sudo tar Jxvf ~/Downloads/arm-gnu-toolchain-14.3.rel1-x86_64-arm-none-eabi.tar.xz
+
+<span data-i="t263" class="c"># add to .bashrc</span>
+export PATH=$PATH:/opt/arm-gnu-toolchain-14.3.rel1-x86_64-arm-none-eabi/bin
+
+source .bashrc
+
+sudo add-apt-repository ppa:deadsnakes/ppa
+sudo apt update
+sudo apt install python3.8
+
+sudo apt install openocd
+
+sudo cp /lib/udev/rules.d/60-openocd.rules /etc/udev/rules.d/
+
+sudo reboot
+
+sudo apt install can-utils</code></pre>
+    </div>
+
+    <div class="tab-panel" data-panel="fedora" hidden>
+<pre class="code big" data-copy><code>sudo dnf install arm-none-eabi-binutils-cs gdb openocd can-utils xz git make
+
+<span data-i="t264" class="c"># create a sym link from gdb to arm-none-eabi-gdb</span>
+sudo ln -s gdb gdb-multiarch
+
+<span data-i="t265" class="c"># Download arm-gnu-toolchain-15.2.rel1-x86_64-arm-none-eabi.tar.xz from</span>
+<span data-i="t266" class="c"># https://developer.arm.com/downloads/-/arm-gnu-toolchain-downloads</span>
+
+cd /opt
+sudo tar Jxvf ~/Downloads/arm-gnu-toolchain-15.2.rel1-x86_64-arm-none-eabi.tar.xz
+
+export PATH=$PATH:/opt/arm-gnu-toolchain-15.2.rel1-x86_64-arm-none-eabi/bin
+
+sudo cp /lib/udev/rules.d/60-openocd.rules /etc/udev/rules.d/</code></pre>
+    </div>
+  </div>
+</section>
+
+<nav class="pager" aria-label="Kapitel"><a class="prev" href="pins.html"><small data-i="n1">Zurück</small><span data-i="t7">Pins</span></a><a class="next" href="index.html"><small data-i="n2">Weiter</small><span data-i="n3">Startseite</span></a></nav>
+
+</main>
+
+<footer class="foot">
+  <span data-i="t271">fse_pb_bsp · StarkStrom Augsburg Driverless</span>
+  <a data-i="t272" href="#top">Nach oben ↑</a>
+</footer>
+
+<script src="js/i18n.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>

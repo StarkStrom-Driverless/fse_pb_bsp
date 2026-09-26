@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tooling – fse_pb_bsp</title>
+<meta name="description" content="Build, Flash, OpenOCD, CAN-Flash und Bootloader mit dem ss-Tool.">
+<meta name="theme-color" content="#0b1210">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230b1210'/%3E%3Cpath d='M8 22V10h8a4 4 0 010 8H8' fill='none' stroke='%2333e6a0' stroke-width='3'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body data-page="tooling">
+
+<header class="nav">
+  <a data-i="t1" class="brand" href="index.html"><span class="brand-mark"></span>fse_pb_bsp</a>
+  <nav id="mainNav">
+    <a data-i="t2" href="architecture.html">Architektur</a>
+    <a data-i="t3" href="quickstart.html">Quickstart</a>
+    <a data-i="t4" class="active" href="tooling.html">Tooling</a>
+    <a data-i="t5" href="gui.html">GUI</a>
+    <a data-i="t6" href="examples.html">Beispiele</a>
+    <a data-i="t7" href="pins.html">Pins</a>
+    <a data-i="t8" href="install.html">Installation</a>
+    <a data-i="t9" class="btn btn-small" href="https://github.com/StarkStrom-Driverless/fse_pb_bsp">GitHub</a>
+  </nav>
+  <div class="lang" role="group" aria-label="Sprache / Language">
+      <button type="button" data-lang="de" aria-pressed="true">DE</button>
+      <button type="button" data-lang="en" aria-pressed="false">EN</button>
+    </div>
+  <button class="menu-btn" type="button" aria-label="Menu" aria-expanded="false" aria-controls="mainNav"><span></span><span></span><span></span></button>
+</header>
+
+<main id="top">
+
+<section id="tooling" class="block page">
+  <div class="block-head">
+    <p data-i="t116" class="eyebrow">Tooling</p>
+    <h2 data-i="t117">Alles läuft über <code>./ss</code>.</h2>
+    <p data-i="t118">Einmal pro Terminal-Sitzung das venv aktivieren, dann übernimmt <code>./ss</code>. Ohne Argumente zeigt es die komplette Befehlsübersicht.</p>
+    <pre class="code inline" data-copy><code>source .venv/bin/activate</code></pre>
+  </div>
+
+  <div class="cmd-grid">
+    <div class="cmd"><code>./ss build</code><p data-i="t119">Baut die Haupt-Firmware (<code>build/bp_test.elf</code>).</p></div>
+    <div class="cmd"><code>./ss clean</code><p data-i="t120">Räumt den Build-Output der Haupt-Firmware auf.</p></div>
+    <div class="cmd hot"><code>./ss flash</code><p data-i="t121">Build, Signatur und Flash via OpenOCD/telnet in einem Schritt.</p></div>
+    <div class="cmd"><code>./ss canflash --bin_file &lt;path&gt; --id &lt;hex id&gt;</code><p data-i="t122">Flasht ein signiertes <code>.bin</code> über CAN.</p></div>
+    <div class="cmd"><code>./ss bootloader --bin_file &lt;path&gt; --position &lt;addr&gt;</code><p data-i="t123">Flasht ein Bootloader-Image, z. B. <code>zephyr.bin</code>.</p></div>
+    <div class="cmd"><code>./ss oocd_start | oocd_stop | oocd_state</code><p data-i="t124">Verwaltet den OpenOCD-Server. Danach öffnet <code>make gdb</code> ein GDB-TUI.</p></div>
+    <div class="cmd wide"><code>./ss &nbsp;·&nbsp; ./ss gui</code>
+      <p data-i="t125">Dieselben Befehle als Fenster: Build, Flash und OpenOCD mit Flash- und RAM-Auslastung, die Beispiele samt Quelltext,
+      der MATLAB-Workflow mit Statusübersicht und <code>can_gen</code>. Strg+C im Terminal schließt es.
+      Benötigt <code>imgui-bundle</code>, das <code>init.sh</code> installiert.</p></div>
+  </div>
+</section>
+
+<nav class="pager" aria-label="Kapitel"><a class="prev" href="quickstart.html"><small data-i="n1">Zurück</small><span data-i="t3">Quickstart</span></a><a class="next" href="gui.html"><small data-i="n2">Weiter</small><span data-i="t5">GUI</span></a></nav>
+
+</main>
+
+<footer class="foot">
+  <span data-i="t271">fse_pb_bsp · StarkStrom Augsburg Driverless</span>
+  <a data-i="t272" href="#top">Nach oben ↑</a>
+</footer>
+
+<script src="js/i18n.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>

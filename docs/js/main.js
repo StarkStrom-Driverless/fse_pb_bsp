@@ -17,15 +17,17 @@
   var lang = "de", translated = false, langHooks = [];
 
   function tt(k) { return lang === "en" && EN.ui[k] !== undefined ? EN.ui[k] : DE_UI[k]; }
+  function esc(s) { return s.replace(/&/g, "&amp;").replace(/</g, "&lt;"); }
   function tr(s) { return lang === "en" && EN.ex[s] !== undefined ? EN.ex[s] : s; }
 
   function setLang(l, persist) {
     lang = l;
     document.documentElement.lang = l;
     if (persist) { try { localStorage.setItem("ss-lang", l); } catch (e) {} }
-    document.title = tt("title");
+    var pg = (EN.pages || {})[document.body.getAttribute("data-page")];
+    document.title = l === "en" && pg ? pg[0] : DE_UI.title;
     var md = document.querySelector('meta[name="description"]');
-    if (md) md.setAttribute("content", tt("desc"));
+    if (md) md.setAttribute("content", l === "en" && pg ? pg[1] : DE_UI.desc);
     document.querySelectorAll("[data-lang]").forEach(function (b) { b.setAttribute("aria-pressed", b.dataset.lang === l); });
 
     if (l === "en" || translated) {
@@ -47,6 +49,7 @@
 
   /* ---------- hero terminal typing ---------- */
   var term = document.getElementById("term");
+  if (term) {
   var script = [
     ["p", "$ source .venv/bin/activate"],
     ["p", "$ ./ss example_list"],
@@ -56,8 +59,6 @@
     ["o", "signing image (MCUboot) ..."],
     ["ok", "flashed via OpenOCD  ✓"]
   ];
-
-  function esc(s) { return s.replace(/&/g, "&amp;").replace(/</g, "&lt;"); }
 
   function renderStatic() {
     term.innerHTML = script.map(function (l) {
@@ -87,6 +88,8 @@
   }
 
   if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) renderStatic(); else play();
+  langHooks.push(function () { term.parentNode.setAttribute("aria-label", tt("termAria")); });
+  }
 
   /* ---------- tabs ---------- */
   document.querySelectorAll("[data-tabs]").forEach(function (root) {
@@ -114,6 +117,7 @@
   });
 
   /* ---------- stack diagram ---------- */
+  if (document.getElementById("stackInfo")) {
   var info = {
     mcu: ["STM32F405RTGE", "Das Fundament. Beide Stacks laufen auf demselben Chip."],
     zephyr: ["Zephyr", "Embedded-Betriebssystem, auf dem der Bootloader aufbaut. Eigenes Repo: fse_pb_bootloader."],
@@ -142,8 +146,10 @@
     l.addEventListener("mouseenter", function () { show(l); });
     l.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); show(l); } });
   });
+  }
 
   /* ---------- example internals ---------- */
+  if (document.getElementById("exPick")) {
   // node: [type, label, sub, arrowLabelBefore]  type: hw | isr | obj | api | task
   var EX = {
     can_rx: {
@@ -420,15 +426,18 @@
     b.addEventListener("click", function () { showEx(k); });
     exPick.appendChild(b);
   });
-  langHooks.push(function () { showEx(curEx); });
+  langHooks.push(function () { showEx(curEx); exPick.setAttribute("aria-label", tt("exAria")); });
   showEx("can_rx");
+  }
 
 
-  /* ---------- nav: menu + scrollspy ---------- */
+
+  /* ---------- nav: menu ---------- */
   (function () {
     var btn = document.querySelector(".menu-btn");
     var nav = document.getElementById("mainNav");
-    var links = nav.querySelectorAll('a[href^="#"]');
+    if (!btn || !nav) return;
+    var links = nav.querySelectorAll("a");
     function close() { nav.classList.remove("open"); btn.setAttribute("aria-expanded", "false"); }
     btn.addEventListener("click", function () {
       var open = nav.classList.toggle("open");
@@ -436,25 +445,10 @@
     });
     links.forEach(function (a) { a.addEventListener("click", close); });
     document.addEventListener("keydown", function (e) { if (e.key === "Escape") close(); });
-
-    if (!("IntersectionObserver" in window)) return;
-    var map = {};
-    links.forEach(function (a) { map[a.getAttribute("href").slice(1)] = a; });
-    var io = new IntersectionObserver(function (entries) {
-      entries.forEach(function (en) {
-        if (!en.isIntersecting) return;
-        links.forEach(function (a) { a.classList.remove("active"); });
-        var a = map[en.target.id];
-        if (a) a.classList.add("active");
-      });
-    }, { rootMargin: "-40% 0px -55% 0px" });
-    Object.keys(map).forEach(function (id) {
-      var s = document.getElementById(id);
-      if (s) io.observe(s);
-    });
   })();
 
   /* ---------- pin explorer ---------- */
+  if (document.getElementById("pinTable")) {
   // [pin, gpio, pwm, can, spi1, spi2, spi3, uart, adc]
   var T = 1;
   var pins = [
@@ -547,11 +541,9 @@
     fWrap.setAttribute("aria-label", tt("filterAria"));
     pWrap.setAttribute("aria-label", tt("portAria"));
     pWrap.firstChild.textContent = tt("all");
-    exPick.setAttribute("aria-label", tt("exAria"));
-    var term = document.querySelector(".terminal");
-    if (term) term.setAttribute("aria-label", tt("termAria"));
     render();
   });
+  }
 
   var saved = null;
   try { saved = localStorage.getItem("ss-lang"); } catch (e) {}

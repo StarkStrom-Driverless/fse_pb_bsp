@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quickstart – fse_pb_bsp</title>
+<meta name="description" content="Ein neues fse_pb_bsp-Projekt anlegen: init.sh unter Linux, init.ps1 unter Windows.">
+<meta name="theme-color" content="#0b1210">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230b1210'/%3E%3Cpath d='M8 22V10h8a4 4 0 010 8H8' fill='none' stroke='%2333e6a0' stroke-width='3'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body data-page="quickstart">
+
+<header class="nav">
+  <a data-i="t1" class="brand" href="index.html"><span class="brand-mark"></span>fse_pb_bsp</a>
+  <nav id="mainNav">
+    <a data-i="t2" href="architecture.html">Architektur</a>
+    <a data-i="t3" class="active" href="quickstart.html">Quickstart</a>
+    <a data-i="t4" href="tooling.html">Tooling</a>
+    <a data-i="t5" href="gui.html">GUI</a>
+    <a data-i="t6" href="examples.html">Beispiele</a>
+    <a data-i="t7" href="pins.html">Pins</a>
+    <a data-i="t8" href="install.html">Installation</a>
+    <a data-i="t9" class="btn btn-small" href="https://github.com/StarkStrom-Driverless/fse_pb_bsp">GitHub</a>
+  </nav>
+  <div class="lang" role="group" aria-label="Sprache / Language">
+      <button type="button" data-lang="de" aria-pressed="true">DE</button>
+      <button type="button" data-lang="en" aria-pressed="false">EN</button>
+    </div>
+  <button class="menu-btn" type="button" aria-label="Menu" aria-expanded="false" aria-controls="mainNav"><span></span><span></span><span></span></button>
+</header>
+
+<main id="top">
+
+<section id="start" class="block page">
+  <div class="block-head">
+    <p data-i="t92" class="eyebrow">Quickstart</p>
+    <h2 data-i="t93">Vom leeren Ordner zur Firmware.</h2>
+  </div>
+
+  <div class="tabs" data-tabs>
+    <div class="tab-list" role="tablist">
+      <button data-i="t94" role="tab" aria-selected="true" data-tab="new">Neues Projekt</button>
+      <button data-i="t95" role="tab" aria-selected="false" data-tab="init">Bestehendes Projekt</button>
+      <button data-i="t96" role="tab" aria-selected="false" data-tab="win">Windows</button>
+    </div>
+
+    <div class="tab-panel" data-panel="win" hidden>
+      <div class="split">
+        <div>
+<pre class="code" data-copy><code><span data-i="t97" class="c"># PowerShell, gleiche Schritte wie unter Linux</span>
+mkdir my_project
+cd my_project
+
+git submodule add git@github.com:StarkStrom-Driverless/fse_pb_bsp.git
+
+cd fse_pb_bsp
+git checkout &lt;version&gt;
+
+powershell -ExecutionPolicy Bypass -File .\init.ps1
+
+cd ..
+.\ss.cmd build</code></pre>
+        </div>
+        <div>
+          <h3 data-i="t98"><code>init.ps1</code> statt <code>init.sh</code></h3>
+          <ul class="ticks">
+            <li data-i="t99">legt <code>usr\src</code>, <code>usr\inc</code>, <code>usr\simulink</code> an und kopiert die Starter-Dateien</li>
+            <li data-i="t100">legt <code>ss.cmd</code> in den Projektordner, denn Symlinks brauchen unter Windows Admin-Rechte</li>
+            <li data-i="t101">erstellt das venv (<code>cryptography</code>, <code>click</code>, <code>intelhex</code>, <code>pyyaml</code>, <code>cbor2</code>, <code>cantools</code>)</li>
+            <li data-i="t102">baut <code>libopencm3</code> und schreibt die <code>.vscode</code>-Konfiguration</li>
+          </ul>
+          <p data-i="t103" class="callout">Erneut ausführbar, nichts Vorhandenes wird überschrieben. Mit <code>-SkipLibopencm3</code> oder <code>-SkipVenv</code> lassen sich Schritte überspringen. Voraussetzungen siehe <a data-i="t104" href="install.html">Installation</a>.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="tab-panel" data-panel="new">
+      <div class="split">
+        <div>
+<pre class="code" data-copy><code><span data-i="t105" class="c"># Projektordner anlegen</span>
+mkdir my_project
+cd my_project
+
+git submodule add git@github.com:StarkStrom-Driverless/fse_pb_bsp.git
+
+<span data-i="t106" class="c"># die Version wählen, gegen die gebaut wird</span>
+cd fse_pb_bsp
+git checkout &lt;version&gt;
+
+./init.sh
+
+cd ..</code></pre>
+        </div>
+        <div>
+          <h3 data-i="t107">Was <code>init.sh</code> für dich erledigt</h3>
+          <ul class="ticks">
+            <li data-i="t108">legt <code>usr/src</code> und <code>usr/inc</code> an</li>
+            <li data-i="t109">kopiert Starter-Dateien aus <code>fse_pb_bsp/test</code>: <code>main.c</code>, <code>Makefile</code>, <code>.gitignore</code>, <code>FreeRTOSConfig.h</code>, <code>ss_config.h</code></li>
+            <li data-i="t110">baut <code>libopencm3</code></li>
+            <li data-i="t111">erzeugt den Symlink <code>./ss</code> → <code>fse_pb_bsp/tools/ss</code></li>
+            <li data-i="t112">richtet ein Python-venv ein (<code>python-can</code>, <code>telnetlib3</code>, <code>cryptography</code>, <code>intelhex</code> …)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="tab-panel" data-panel="init" hidden>
+      <div class="split">
+        <div>
+<pre class="code" data-copy><code>cd my_project
+
+git submodule update
+
+cd fse_pb_bsp
+git checkout &lt;version&gt;
+
+./init.sh
+
+cd ..</code></pre>
+        </div>
+        <div>
+          <h3 data-i="t113">Frisch geklont oder Version gebumpt?</h3>
+          <p data-i="t114">Dieselben Schritte gegen den vorhandenen Checkout.</p>
+          <p data-i="t115" class="callout"><code>init.sh</code> ist gefahrlos wiederholbar: Starter-Dateien werden nur kopiert, wenn sie fehlen
+          (<code>cp -n</code>), Symlink und venv nur bei Bedarf neu erzeugt.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<nav class="pager" aria-label="Kapitel"><a class="prev" href="architecture.html"><small data-i="n1">Zurück</small><span data-i="t2">Architektur</span></a><a class="next" href="tooling.html"><small data-i="n2">Weiter</small><span data-i="t4">Tooling</span></a></nav>
+
+</main>
+
+<footer class="foot">
+  <span data-i="t271">fse_pb_bsp · StarkStrom Augsburg Driverless</span>
+  <a data-i="t272" href="#top">Nach oben ↑</a>
+</footer>
+
+<script src="js/i18n.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>

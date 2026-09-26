@@ -383,3 +383,22 @@ p code, li code, td code, .callout code, .cmd code, .nd code { overflow-wrap: an
   .lay-row { gap: 6px; }
   .l-app, .l-sim { font-size: .72rem; }
 }
+
+/* chapter pages */
+.block.page { padding-top: clamp(2.5rem, 6vw, 4.5rem); }
+.chap-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr)); gap: 1rem; }
+.chap { position: relative; display: block; padding: 1.4rem 1.4rem 1.5rem; background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); color: var(--text); transition: transform .15s, border-color .15s, box-shadow .15s; }
+.chap:hover { text-decoration: none; transform: translateY(-3px); border-color: var(--accent); box-shadow: 0 14px 34px -18px var(--accent); }
+.chap .num { display: block; font: 700 .78rem var(--mono); color: var(--accent); letter-spacing: .12em; margin-bottom: .8rem; }
+.chap h3 { font-size: 1.25rem; margin-bottom: .4rem; }
+.chap p { color: var(--muted); font-size: .92rem; margin: 0; }
+.chap::after { content: "→"; position: absolute; right: 1.2rem; top: 1.2rem; color: var(--muted); transition: transform .15s, color .15s; }
+.chap:hover::after { transform: translateX(4px); color: var(--accent); }
+.pager { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1rem 0 3.5rem; }
+.pager a { display: flex; flex-direction: column; gap: .2rem; padding: 1rem 1.2rem; background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); color: var(--text); font-weight: 600; transition: border-color .15s, transform .15s; }
+.pager a:hover { text-decoration: none; border-color: var(--accent); transform: translateY(-2px); }
+.pager small { font: .72rem var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); font-weight: 400; }
+.pager .next { text-align: right; align-items: flex-end; }
+.pager .prev small::before { content: "← "; } .pager .next small::after { content: " →"; }
+.nav nav a.active:not(.btn) { color: var(--accent); font-weight: 600; }
+@media (max-width: 480px) { .pager { grid-template-columns: 1fr; } .pager .next { text-align: left; align-items: flex-start; } }

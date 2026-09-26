@@ -9,18 +9,18 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230b1210'/%3E%3Cpath d='M8 22V10h8a4 4 0 010 8H8' fill='none' stroke='%2333e6a0' stroke-width='3'/%3E%3C/svg%3E">
 <link rel="stylesheet" href="css/style.css">
 </head>
-<body>
+<body data-page="index">
 
 <header class="nav">
-  <a data-i="t1" class="brand" href="#top"><span class="brand-mark"></span>fse_pb_bsp</a>
+  <a data-i="t1" class="brand" href="index.html"><span class="brand-mark"></span>fse_pb_bsp</a>
   <nav id="mainNav">
-    <a data-i="t2" href="#stack">Architektur</a>
-    <a data-i="t3" href="#start">Quickstart</a>
-    <a data-i="t4" href="#tooling">Tooling</a>
-    <a data-i="t5" href="#gui">GUI</a>
-    <a data-i="t6" href="#examples">Beispiele</a>
-    <a data-i="t7" href="#pins">Pins</a>
-    <a data-i="t8" href="#install">Installation</a>
+    <a data-i="t2" href="architecture.html">Architektur</a>
+    <a data-i="t3" href="quickstart.html">Quickstart</a>
+    <a data-i="t4" href="tooling.html">Tooling</a>
+    <a data-i="t5" href="gui.html">GUI</a>
+    <a data-i="t6" href="examples.html">Beispiele</a>
+    <a data-i="t7" href="pins.html">Pins</a>
+    <a data-i="t8" href="install.html">Installation</a>
     <a data-i="t9" class="btn btn-small" href="https://github.com/StarkStrom-Driverless/fse_pb_bsp">GitHub</a>
   </nav>
   <div class="lang" role="group" aria-label="Sprache / Language">
@@ -42,7 +42,7 @@
       auf einen Befehl reduziert.
     </p>
     <div class="cta">
-      <a data-i="t15" class="btn" href="#start">Projekt starten</a>
+      <a data-i="t15" class="btn" href="quickstart.html">Projekt starten</a>
       <a data-i="t16" class="btn btn-ghost" href="https://github.com/StarkStrom-Driverless/fse_pb_bsp">Repository ansehen</a>
     </div>
     <ul class="chips">
@@ -55,7 +55,6 @@
     <pre id="term" aria-live="off"></pre>
   </div>
 </section>
-
 <section class="facts">
   <div><b data-i="t24">1</b><span data-i="t25">MCU-Familie, einheitlich abstrahiert</span></div>
   <div><b data-i="t26">3</b><span data-i="t27">Flash-Wege: OpenOCD, CAN, Bootloader</span></div>
@@ -63,449 +62,19 @@
   <div><b data-i="t30">0</b><span data-i="t31">Compile-Duplikate zwischen Beispielen und Firmware</span></div>
 </section>
 
-<section id="stack" class="block">
+<section class="block chapters" id="chapters">
   <div class="block-head">
-    <p data-i="t32" class="eyebrow">Architektur</p>
-    <h2 data-i="t33">Zwei Stacks, ein Chip.</h2>
-    <p data-i="t34">Die Library hängt am MCU-Bootloader. Deshalb gibt es zwei Pyramiden: links der Bootloader, rechts die Anwendung. Diese schreibst du in C oder baust sie als Simulink-Modell, das als generierter C-Code auf denselben Schichten läuft.</p>
+    <p class="eyebrow" data-i="h0">Kapitel</p>
+    <h2 data-i="h00">Wo möchtest du anfangen?</h2>
   </div>
-
-  <div class="stack-wrap">
-    <div class="stack" role="img" aria-label="Software-Pyramide: STM32F405RTGE als Basis, darauf links Zephyr und MCUboot, rechts libopenCM3, FreeRTOS, fse_pb_bsp und darüber application oder Simulink-Modell">
-      <div class="col left">
-        <div data-i="t35" class="lay l-boot" data-k="mcuboot">MCUboot</div>
-        <div data-i="t36" class="lay l-boot" data-k="zephyr">Zephyr</div>
-      </div>
-      <div class="col right">
-        <div class="lay-row">
-          <div data-i="t37" class="lay l-app" data-k="app">application</div>
-          <div data-i="t38" class="lay l-sim" data-k="sim">Simulink</div>
-        </div>
-        <div data-i="t39" class="lay l-bsp" data-k="bsp">fse_pb_bsp</div>
-        <div data-i="t40" class="lay l-3p" data-k="rtos">FreeRTOS</div>
-        <div data-i="t41" class="lay l-3p" data-k="ocm3">libopenCM3</div>
-      </div>
-      <div data-i="t42" class="lay l-hw" data-k="mcu">STM32F405RTGE</div>
-    </div>
-
-    <div class="stack-info" id="stackInfo">
-      <h3 data-i="t43">STM32F405RTGE</h3>
-      <p data-i="t44">Das Fundament. Beide Stacks laufen auf demselben Chip. Tippe auf eine Schicht, um zu sehen, was sie tut.</p>
-    </div>
-  </div>
-
-  <div class="cards two">
-    <article class="card">
-      <h3 data-i="t45">Bootloader</h3>
-      <p data-i="t46">Basiert auf <strong data-i="t47">Zephyr</strong> mit <strong data-i="t48">MCUboot</strong>, gepflegt im eigenen Repo <code>fse_pb_bootloader</code>.
-         Einmal geflasht, muss er normalerweise nie wieder angefasst werden.</p>
-      <div class="slots">
-        <div data-i="t49" class="slot boot">Bootloader</div>
-        <div data-i="t50" class="slot s0">Slot 0 <small data-i="t51">läuft</small></div>
-        <div data-i="t52" class="slot s1">Slot 1 <small data-i="t53">Update</small></div>
-      </div>
-      <p data-i="t54" class="muted">Liegt in Slot 1 ein gültiges, korrekt signiertes Image, tauscht der Bootloader Slot 0 und Slot 1 und startet dann. Standardmäßig läuft er aus Slot 0.</p>
-    </article>
-    <article class="card">
-      <h3 data-i="t55">Anwendungs-Stack</h3>
-      <p data-i="t56"><strong data-i="t57">libopencm3</strong> konfiguriert die Hardware auf niedriger Ebene. <code>fse_pb_bsp</code> liefert
-         darüber die Abstraktion für Controller-Konfiguration und kapselt außerdem <strong data-i="t58">FreeRTOS</strong>.</p>
-      <p data-i="t59" class="muted">Darauf entsteht die eigentliche Anwendung, ohne Register oder RTOS-Details direkt anzufassen.</p>
-    </article>
-  </div>
-
-  <div class="sim">
-    <h3 data-i="t60">Simulink: vom Modell zur Firmware</h3>
-    <p data-i="t61" class="muted">Statt C zu schreiben, kannst du die Anwendung als Simulink-Modell bauen. Eigene <code>ss_*</code>-Blöcke (GPIO, ADC, PWM, CAN, Frequenzmessung, IOB, Queue) rufen im generierten Code die <code>fse_pb_bsp</code>-API auf. Das Modell läuft in einem eigenen RTOS-Task.</p>
-    <div class="ex-lanes">
-      <div class="lane">
-        <div data-i="t62" class="lane-t">Modell bauen</div>
-        <div class="lane-row">
-          <div class="nd n-obj"><span data-i="t63" class="tag">Datei</span><code>usr/simulink/&lt;model&gt;.slx</code><small data-i="t64">Modell mit ss_*-Blöcken</small></div>
-          <div class="arr"><span data-i="t65">./ss matlab_build</span></div>
-          <div class="nd n-obj"><span data-i="t66" class="tag">Datei</span><code>&lt;model&gt;_ert_rtw/*.c</code><small data-i="t67">generierter C-Code (ert, nur Code)</small></div>
-          <div class="arr"><span data-i="t68">./ss build</span></div>
-          <div class="nd n-api"><span data-i="t69" class="tag">Firmware</span><code>bp_test.elf</code><small data-i="t70">Code wird automatisch mitkompiliert</small></div>
-        </div>
-      </div>
-      <div class="lane">
-        <div data-i="t71" class="lane-t">CAN aus DBC</div>
-        <div class="lane-row">
-          <div class="nd n-obj"><span data-i="t72" class="tag">Datei</span><code>usr/dbc/*.dbc</code><small data-i="t73">Botschaften und Signale</small></div>
-          <div class="arr"><span data-i="t74">./ss can_gen</span></div>
-          <div class="nd n-obj"><span data-i="t75" class="tag">Datei</span><code data-i="c1">Message-Blöcke</code><small data-i="t76">RX/TX-Blöcke pro Botschaft</small></div>
-          <div class="arr"><span data-i="t77">im Modell</span></div>
-          <div class="nd n-api"><span data-i="t78" class="tag">bsp</span><code>ss_can_*</code><small data-i="t79">Queue lesen, Frame senden</small></div>
-        </div>
-      </div>
-      <div class="lane">
-        <div data-i="t80" class="lane-t">Zur Laufzeit</div>
-        <div class="lane-row">
-          <div class="nd n-task"><span data-i="t81" class="tag">Task</span><code>simulink_task</code><small data-i="t82">Priorität 2, ruft <code>&lt;model&gt;_initialize()</code> einmal auf</small></div>
-          <div class="arr"><span data-i="t83">alle SS_MODEL_STEP_MS</span></div>
-          <div class="nd n-obj"><span data-i="t84" class="tag">Modell</span><code>&lt;model&gt;_step()</code><small data-i="t85">xTaskDelayUntil, kein Drift</small></div>
-          <div class="arr"><span data-i="t86">Block-Code ruft</span></div>
-          <div class="nd n-api"><span data-i="t87" class="tag">bsp</span><code>ss_io_*, ss_adc_*, ss_pwm_*, …</code><small data-i="t88">wie in handgeschriebenem C</small></div>
-          <div class="arr"><span></span></div>
-          <div class="nd n-hw"><span data-i="t89" class="tag">Hardware</span><code data-i="c2">Pins &amp; Peripherie</code></div>
-        </div>
-      </div>
-    </div>
-    <p data-i="t90" class="note">Einrichtung mit <code>./ss matlab_init</code> (Libraries und Modell), <code>./ss matlab_config</code> (Code-Generierung) und <code>./ss matlab_open</code> zum Bearbeiten. Der Ablauf ist auch im Matlab-Tab der <a data-i="t91" href="#gui">GUI</a> zu sehen.</p>
-  </div>
-</section>
-
-<section id="start" class="block alt">
-  <div class="block-head">
-    <p data-i="t92" class="eyebrow">Quickstart</p>
-    <h2 data-i="t93">Vom leeren Ordner zur Firmware.</h2>
-  </div>
-
-  <div class="tabs" data-tabs>
-    <div class="tab-list" role="tablist">
-      <button data-i="t94" role="tab" aria-selected="true" data-tab="new">Neues Projekt</button>
-      <button data-i="t95" role="tab" aria-selected="false" data-tab="init">Bestehendes Projekt</button>
-      <button data-i="t96" role="tab" aria-selected="false" data-tab="win">Windows</button>
-    </div>
-
-    <div class="tab-panel" data-panel="win" hidden>
-      <div class="split">
-        <div>
-<pre class="code" data-copy><code><span data-i="t97" class="c"># PowerShell, gleiche Schritte wie unter Linux</span>
-mkdir my_project
-cd my_project
-
-git submodule add git@github.com:StarkStrom-Driverless/fse_pb_bsp.git
-
-cd fse_pb_bsp
-git checkout &lt;version&gt;
-
-powershell -ExecutionPolicy Bypass -File .\init.ps1
-
-cd ..
-.\ss.cmd build</code></pre>
-        </div>
-        <div>
-          <h3 data-i="t98"><code>init.ps1</code> statt <code>init.sh</code></h3>
-          <ul class="ticks">
-            <li data-i="t99">legt <code>usr\src</code>, <code>usr\inc</code>, <code>usr\simulink</code> an und kopiert die Starter-Dateien</li>
-            <li data-i="t100">legt <code>ss.cmd</code> in den Projektordner, denn Symlinks brauchen unter Windows Admin-Rechte</li>
-            <li data-i="t101">erstellt das venv (<code>cryptography</code>, <code>click</code>, <code>intelhex</code>, <code>pyyaml</code>, <code>cbor2</code>, <code>cantools</code>)</li>
-            <li data-i="t102">baut <code>libopencm3</code> und schreibt die <code>.vscode</code>-Konfiguration</li>
-          </ul>
-          <p data-i="t103" class="callout">Erneut ausführbar, nichts Vorhandenes wird überschrieben. Mit <code>-SkipLibopencm3</code> oder <code>-SkipVenv</code> lassen sich Schritte überspringen. Voraussetzungen siehe <a data-i="t104" href="#install">Installation</a>.</p>
-        </div>
-      </div>
-    </div>
-
-    <div class="tab-panel" data-panel="new">
-      <div class="split">
-        <div>
-<pre class="code" data-copy><code><span data-i="t105" class="c"># Projektordner anlegen</span>
-mkdir my_project
-cd my_project
-
-git submodule add git@github.com:StarkStrom-Driverless/fse_pb_bsp.git
-
-<span data-i="t106" class="c"># die Version wählen, gegen die gebaut wird</span>
-cd fse_pb_bsp
-git checkout &lt;version&gt;
-
-./init.sh
-
-cd ..</code></pre>
-        </div>
-        <div>
-          <h3 data-i="t107">Was <code>init.sh</code> für dich erledigt</h3>
-          <ul class="ticks">
-            <li data-i="t108">legt <code>usr/src</code> und <code>usr/inc</code> an</li>
-            <li data-i="t109">kopiert Starter-Dateien aus <code>fse_pb_bsp/test</code>: <code>main.c</code>, <code>Makefile</code>, <code>.gitignore</code>, <code>FreeRTOSConfig.h</code>, <code>ss_config.h</code></li>
-            <li data-i="t110">baut <code>libopencm3</code></li>
-            <li data-i="t111">erzeugt den Symlink <code>./ss</code> → <code>fse_pb_bsp/tools/ss</code></li>
-            <li data-i="t112">richtet ein Python-venv ein (<code>python-can</code>, <code>telnetlib3</code>, <code>cryptography</code>, <code>intelhex</code> …)</li>
-          </ul>
-        </div>
-      </div>
-    </div>
-
-    <div class="tab-panel" data-panel="init" hidden>
-      <div class="split">
-        <div>
-<pre class="code" data-copy><code>cd my_project
-
-git submodule update
-
-cd fse_pb_bsp
-git checkout &lt;version&gt;
-
-./init.sh
-
-cd ..</code></pre>
-        </div>
-        <div>
-          <h3 data-i="t113">Frisch geklont oder Version gebumpt?</h3>
-          <p data-i="t114">Dieselben Schritte gegen den vorhandenen Checkout.</p>
-          <p data-i="t115" class="callout"><code>init.sh</code> ist gefahrlos wiederholbar: Starter-Dateien werden nur kopiert, wenn sie fehlen
-          (<code>cp -n</code>), Symlink und venv nur bei Bedarf neu erzeugt.</p>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section id="tooling" class="block">
-  <div class="block-head">
-    <p data-i="t116" class="eyebrow">Tooling</p>
-    <h2 data-i="t117">Alles läuft über <code>./ss</code>.</h2>
-    <p data-i="t118">Einmal pro Terminal-Sitzung das venv aktivieren, dann übernimmt <code>./ss</code>. Ohne Argumente zeigt es die komplette Befehlsübersicht.</p>
-    <pre class="code inline" data-copy><code>source .venv/bin/activate</code></pre>
-  </div>
-
-  <div class="cmd-grid">
-    <div class="cmd"><code>./ss build</code><p data-i="t119">Baut die Haupt-Firmware (<code>build/bp_test.elf</code>).</p></div>
-    <div class="cmd"><code>./ss clean</code><p data-i="t120">Räumt den Build-Output der Haupt-Firmware auf.</p></div>
-    <div class="cmd hot"><code>./ss flash</code><p data-i="t121">Build, Signatur und Flash via OpenOCD/telnet in einem Schritt.</p></div>
-    <div class="cmd"><code>./ss canflash --bin_file &lt;path&gt; --id &lt;hex id&gt;</code><p data-i="t122">Flasht ein signiertes <code>.bin</code> über CAN.</p></div>
-    <div class="cmd"><code>./ss bootloader --bin_file &lt;path&gt; --position &lt;addr&gt;</code><p data-i="t123">Flasht ein Bootloader-Image, z. B. <code>zephyr.bin</code>.</p></div>
-    <div class="cmd"><code>./ss oocd_start | oocd_stop | oocd_state</code><p data-i="t124">Verwaltet den OpenOCD-Server. Danach öffnet <code>make gdb</code> ein GDB-TUI.</p></div>
-    <div class="cmd wide"><code>./ss &nbsp;·&nbsp; ./ss gui</code>
-      <p data-i="t125">Dieselben Befehle als Fenster: Build, Flash und OpenOCD mit Flash- und RAM-Auslastung, die Beispiele samt Quelltext,
-      der MATLAB-Workflow mit Statusübersicht und <code>can_gen</code>. Strg+C im Terminal schließt es.
-      Benötigt <code>imgui-bundle</code>, das <code>init.sh</code> installiert.</p></div>
-  </div>
-</section>
-
-<section id="gui" class="block alt">
-  <div class="block-head">
-    <p data-i="t126" class="eyebrow">GUI</p>
-    <h2 data-i="t127">Dieselben Befehle, als Fenster.</h2>
-    <p data-i="t128">Ein Aufruf von <code>./ss</code> ohne Argumente (oder <code>./ss gui</code>) öffnet die grafische Oberfläche. Strg+C im Terminal schließt sie wieder.
-       Sie braucht <code>imgui-bundle</code>, das <code>init.sh</code> installiert. Nachgebaut zur Orientierung, das echte Fenster sieht im Detail anders aus.</p>
-  </div>
-
-  <div class="gui-win" data-tabs>
-    <div class="gui-bar">
-      <div class="tab-list gui-tabs" role="tablist">
-        <button data-i="t129" role="tab" aria-selected="true" data-tab="g-build">Build</button>
-        <button data-i="t130" role="tab" aria-selected="false" data-tab="g-ex">Examples</button>
-        <button data-i="t131" role="tab" aria-selected="false" data-tab="g-mat">Matlab</button>
-      </div>
-      <span data-i="t132" class="gui-title">ss gui</span>
-    </div>
-
-    <div class="gui-body" data-panel="g-build">
-      <div class="gui-col">
-        <h4 data-i="t133">tools</h4>
-        <p data-i="t134"><i class="dot ok"></i>arm-none-eabi-gcc <i class="dot ok"></i>openocd <i class="dot ok"></i>gdb</p>
-        <h4 data-i="t135">firmware</h4>
-        <div class="meter"><label data-i="t136">flash</label><div class="bar"><b style="width:38%"></b></div><span data-i="t137">38 %</span></div>
-        <div class="meter"><label data-i="t138">ram</label><div class="bar"><b style="width:21%"></b></div><span data-i="t139">21 %</span></div>
-        <p data-i="t140" class="kv"><span data-i="t141">elf</span>bp_test.elf <em data-i="t142">vor 2 min</em></p>
-        <p data-i="t143" class="kv"><span data-i="t144">signed image</span>bp_test.signed.bin</p>
-        <div class="btnrow"><u data-i="t145">build</u><u data-i="t146">clean</u><u data-i="t147" class="hot">flash</u></div>
-      </div>
-      <div class="gui-col">
-        <h4 data-i="t148">openocd</h4>
-        <p data-i="t149"><i class="dot ok"></i>openocd active</p>
-        <div class="btnrow"><u data-i="t150">oocd_start</u><u data-i="t151">oocd_stop</u><u data-i="t152">oocd_state</u></div>
-        <h4 data-i="t153">bootloader</h4>
-        <p class="kv"><span data-i="t154">bin</span><em data-i="t155">zephyr.bin</em></p>
-        <p class="kv"><span data-i="t156">position</span><em data-i="t157">0x08000000</em></p>
-        <div class="btnrow"><u data-i="t158">bootloader</u></div>
-        <h4 data-i="t159">canflash</h4>
-        <p data-i="t160"><i class="dot ok"></i>can0 up</p>
-        <p class="kv"><span data-i="t161">can id</span><em data-i="t162">&lt;hex id&gt;</em></p>
-        <div class="btnrow"><u data-i="t163">canflash</u></div>
-      </div>
-    </div>
-
-    <div class="gui-body gui-ex" data-panel="g-ex" hidden>
-      <div class="ex-side">
-        <u data-i="t164" class="sel">adc</u><u data-i="t165">can_rx</u><u data-i="t166">can_tx</u><u data-i="t167">can_tod</u><u data-i="t168">error</u><u data-i="t169">eth_udp</u><u data-i="t170">fm</u><u data-i="t171">fsm</u>
-        <u data-i="t172">input</u><u data-i="t173">iob</u><u data-i="t174">output</u><u data-i="t175">pid</u><u data-i="t176">printf</u><u data-i="t177">pwm</u><u data-i="t178">spi</u><u data-i="t179">uart</u>
-      </div>
-      <div class="ex-main">
-        <div class="ex-top"><span data-i="t180" class="path">fse_pb_bsp/examples/adc.c</span><u data-i="t181">example_build</u><u data-i="t182" class="hot">flash_example</u></div>
-<pre class="ex-src"><span class="k">#include</span> <span class="s">"ss.h"</span>
-<span class="k">#include</span> <span class="s">"pins.h"</span>
-
-<span class="t">void</span> <span class="f">example_task</span>(<span class="t">void</span>* args) {
-    <span class="t">uint16_t</span> value = 0;
-    <span class="k">for</span> (;;) {
-        <span class="f">ss_adc_read</span>(adc_pin, &amp;value);
-        <span class="f">ss_printf</span>(4, <span class="s">"ADC: %d 
-
-"</span>, value);
-        <span class="f">ss_rtos_delay_ms</span>(500);
-    }
-}</pre>
-      </div>
-    </div>
-
-    <div class="gui-body single" data-panel="g-mat" hidden>
-      <div class="gui-col">
-        <h4 data-i="t183">workflow <small data-i="t184">Box anklicken führt den Schritt aus</small></h4>
-        <div class="flow">
-          <div class="fb ok"><b data-i="t185">matlab_init</b><small data-i="t186">libraries + model</small></div>
-          <i data-i="t187">→</i>
-          <div class="fb ok"><b data-i="t188">matlab_config</b><small data-i="t189">ert.tlc, step 0.001 s</small></div>
-          <i data-i="t190">→</i>
-          <div class="fb idle"><b data-i="t191">matlab_open</b><small data-i="t192">edit the model</small></div>
-          <i data-i="t193">→</i>
-          <div class="fb warn"><b data-i="t194">matlab_build</b><small data-i="t195">model is newer</small></div>
-          <i data-i="t196">→</i>
-          <div class="fb bad"><b data-i="t197">build</b><small data-i="t198">no elf</small></div>
-          <i data-i="t199">→</i>
-          <div class="fb idle"><b data-i="t200">flash</b><small data-i="t201">openocd down</small></div>
-        </div>
-        <p data-i="t202" class="legend"><i class="dot ok"></i>aktuell <i class="dot warn"></i>veraltet <i class="dot bad"></i>fehlt <i class="dot idle"></i>neutral</p>
-        <p data-i="t203" class="muted">Der Status ergibt sich aus Dateizeiten und Einstellungen: ist das Modell neuer als der generierte Code, wird <code>matlab_build</code> gelb.
-        Unter <strong data-i="t204">Config</strong> laufen Einrichtung, Libraries und Cleanup, unter <strong data-i="t205">CAN</strong> die generierten Message-Libraries und <code>can_gen</code>.</p>
-      </div>
-    </div>
-
-    <div data-i="t206" class="gui-log"><span data-i="t207" class="p">$</span> ./ss flash <span data-i="t208" class="ok">… flashed via OpenOCD ✓</span></div>
-  </div>
-</section>
-
-<section id="examples" class="block">
-  <div class="block-head">
-    <p data-i="t209" class="eyebrow">Beispiele</p>
-    <h2 data-i="t210">Eine Peripherie, eine Datei.</h2>
-    <p data-i="t211"><code>fse_pb_bsp/examples/</code> enthält pro Peripherie ein minimales <code>.c</code>. Sie werden unabhängig von der Firmware gebaut und brauchen kein <code>usr/</code>. Am schnellsten geht es in der <a data-i="t212" href="#gui">GUI</a>: Beispiel wählen, Quelltext ansehen, mit einem Klick bauen und flashen.</p>
-  </div>
-
-  <div class="cmd-grid three">
-    <div class="cmd"><code>./ss example_list</code><p data-i="t213">Alle verfügbaren Beispiele auflisten.</p></div>
-    <div class="cmd"><code>./ss example_build &lt;name&gt;</code><p data-i="t214">Ein Beispiel bauen, z. B. <code>adc</code> → <code>examples/build/adc.elf</code>.</p></div>
-    <div class="cmd hot"><code>./ss flash_example &lt;name&gt;</code><p data-i="t215">Bauen, signieren und via OpenOCD/telnet flashen.</p></div>
-  </div>
-  <p data-i="t216" class="note">Beide Build-Befehle geben den Pfad zur <code>.c</code>-Quelle aus, so springst du direkt in den Code. Ohne <code>./ss</code> geht es auch:
-    <code>cd fse_pb_bsp/examples &amp;&amp; make adc</code>, <code>make clean</code> räumt auf.</p>
-
-  <div class="under">
-    <h3 data-i="t217">Was unter dem Beispiel passiert</h3>
-    <p data-i="t218" class="muted">Wähle ein Beispiel. Das Diagramm zeigt, wie Daten zwischen Hardware, Interrupt, RTOS-Objekten und deinem Task fließen.</p>
-    <div class="ex-pick" id="exPick" role="tablist" aria-label="Beispiel wählen"></div>
-    <div class="ex-view" id="exView" aria-live="polite"></div>
-    <div class="ex-legend">
-      <span data-i="t219"><i class="n-hw"></i>Hardware</span>
-      <span data-i="t220"><i class="n-isr"></i>Interrupt (ISR)</span>
-      <span data-i="t221"><i class="n-obj"></i>RTOS-Objekt / Speicher</span>
-      <span data-i="t222"><i class="n-api"></i>bsp-Funktion</span>
-      <span data-i="t223"><i class="n-task"></i>dein Task</span>
-    </div>
-  </div>
-</section>
-
-<section id="pins" class="block">
-  <div class="block-head">
-    <p data-i="t224" class="eyebrow">Pin-Fähigkeiten</p>
-    <h2 data-i="t225">Was kann welcher Pin?</h2>
-    <p data-i="t226">Filtere nach Funktion oder suche einen Pin. Die Daten stammen aus der Pin-Tabelle der Library.</p>
-  </div>
-
-  <div class="pin-tools">
-    <input id="pinSearch" type="search" placeholder="Pin suchen, z. B. PB5 oder SPI3" aria-label="Pin suchen" autocomplete="off">
-    <div class="filters" id="pinFilters" role="group" aria-label="Funktion filtern"></div>
-    <div class="ports" id="pinPorts" role="group" aria-label="Port wählen"></div>
-  </div>
-
-  <div class="table-scroll">
-    <table class="pins" id="pinTable">
-      <thead><tr><th data-i="t227">Pin</th><th data-i="t228">GPIO</th><th data-i="t229">PWM</th><th data-i="t230">CAN</th><th data-i="t231">SPI1</th><th data-i="t232">SPI2</th><th data-i="t233">SPI3</th><th data-i="t234">UART</th><th data-i="t235">ADC</th></tr></thead>
-      <tbody></tbody>
-    </table>
-  </div>
-  <p class="note" id="pinCount"></p>
-</section>
-
-<section id="install" class="block alt">
-  <div class="block-head">
-    <p data-i="t236" class="eyebrow">Installation</p>
-    <h2 data-i="t237">Toolchain einrichten.</h2>
-    <p data-i="t238">Am besten getestet unter Linux. Windows läuft nativ mit STM32CubeCLT (Build, Flash, Bootloader, MATLAB-Workflow), alternativ über WSL2. Dort kann USB-Passthrough beim Flashen Probleme machen; Fallback ist ein Release-Binary, das du direkt per st-link aus dem abgeleiteten Steuergeräte-Repo flashst.</p>
-  </div>
-
-  <div class="tabs" data-tabs>
-    <div class="tab-list" role="tablist">
-      <button data-i="t239" role="tab" aria-selected="true" data-tab="ubuntu">Ubuntu</button>
-      <button data-i="t240" role="tab" aria-selected="false" data-tab="fedora">Fedora</button>
-      <button data-i="t241" role="tab" aria-selected="false" data-tab="windows">Windows</button>
-    </div>
-
-    <div class="tab-panel" data-panel="windows" hidden>
-      <div class="split">
-        <div>
-          <h3 data-i="t242">Voraussetzungen</h3>
-          <ol class="steps compact">
-            <li><span data-i="t243">1</span><div data-i="t244"><strong data-i="t245">STM32CubeCLT</strong> von st.com. Liefert <code>arm-none-eabi-*</code> und <code>STM32_Programmer_CLI</code>. Gesucht wird unter <code>C:\ST</code> und <code>Program Files\ST</code>, sonst per <code>STM32CUBECLT_PATH</code> setzen.</div></li>
-            <li><span data-i="t246">2</span><div data-i="t247"><strong data-i="t248">make.exe und sh.exe</strong>, z. B. aus dem <a data-i="t249" href="https://github.com/xpack-dev-tools/windows-build-tools-xpack/releases">xpack windows-build-tools</a>-Archiv. Entpacken und <code>bin\</code> in den PATH legen oder <code>SS_MAKE</code> auf <code>make.exe</code> zeigen lassen.</div></li>
-            <li><span data-i="t250">3</span><div data-i="t251"><strong data-i="t252">Python 3.10+</strong> von python.org. Der Microsoft-Store-Stub funktioniert nicht.</div></li>
-            <li><span data-i="t253">4</span><div data-i="t254"><strong data-i="t255">Git</strong> für das Submodule.</div></li>
-          </ol>
-        </div>
-        <div>
-          <h3 data-i="t256">Ablauf</h3>
-<pre class="code" data-copy><code><span data-i="t257" class="c"># im Projektordner, nach dem Quickstart (init.ps1)</span>
-.\ss.cmd build
-.\ss.cmd flash
-.\ss.cmd bootloader --bin_file zephyr.bin
-.\ss.cmd clean
-
-<span data-i="t258" class="c"># optional: F5-Debugging in VS Code</span>
-code --install-extension marus25.cortex-debug</code></pre>
-          <p data-i="t259" class="callout"><strong data-i="t260">Flashen</strong> läuft über <code>STM32_Programmer_CLI</code> statt OpenOCD. Nur unter Linux gibt es <code>canflash</code>, die OpenOCD-Befehle, die Beispiel-Befehle und die GUI, dafür fehlt Windows SocketCAN. Bei langen Projektpfaden (&gt; 80 Zeichen) kommt es zu MAX_PATH-Fehlern: Projekt näher an die Laufwerkswurzel legen oder Long Paths aktivieren.</p>
-        </div>
-      </div>
-    </div>
-
-    <div class="tab-panel" data-panel="ubuntu">
-<pre class="code big" data-copy><code>sudo apt install binutils-arm-none-eabi gcc-arm-none-eabi
-sudo apt install gdb-multiarch
-cd /usr/bin
-sudo ln -s gdb-multiarch arm-none-eabi-gdb
-
-<span data-i="t261" class="c"># Download arm-gnu-toolchain-14.3.rel1-x86_64-arm-none-eabi.tar.xz from</span>
-<span data-i="t262" class="c"># https://developer.arm.com/downloads/-/arm-gnu-toolchain-downloads</span>
-
-cd /opt
-sudo tar Jxvf ~/Downloads/arm-gnu-toolchain-14.3.rel1-x86_64-arm-none-eabi.tar.xz
-
-<span data-i="t263" class="c"># add to .bashrc</span>
-export PATH=$PATH:/opt/arm-gnu-toolchain-14.3.rel1-x86_64-arm-none-eabi/bin
-
-source .bashrc
-
-sudo add-apt-repository ppa:deadsnakes/ppa
-sudo apt update
-sudo apt install python3.8
-
-sudo apt install openocd
-
-sudo cp /lib/udev/rules.d/60-openocd.rules /etc/udev/rules.d/
-
-sudo reboot
-
-sudo apt install can-utils</code></pre>
-    </div>
-
-    <div class="tab-panel" data-panel="fedora" hidden>
-<pre class="code big" data-copy><code>sudo dnf install arm-none-eabi-binutils-cs gdb openocd can-utils xz git make
-
-<span data-i="t264" class="c"># create a sym link from gdb to arm-none-eabi-gdb</span>
-sudo ln -s gdb gdb-multiarch
-
-<span data-i="t265" class="c"># Download arm-gnu-toolchain-15.2.rel1-x86_64-arm-none-eabi.tar.xz from</span>
-<span data-i="t266" class="c"># https://developer.arm.com/downloads/-/arm-gnu-toolchain-downloads</span>
-
-cd /opt
-sudo tar Jxvf ~/Downloads/arm-gnu-toolchain-15.2.rel1-x86_64-arm-none-eabi.tar.xz
-
-export PATH=$PATH:/opt/arm-gnu-toolchain-15.2.rel1-x86_64-arm-none-eabi/bin
-
-sudo cp /lib/udev/rules.d/60-openocd.rules /etc/udev/rules.d/</code></pre>
-    </div>
+  <div class="chap-grid">
+    <a class="chap" href="architecture.html"><span class="num">01</span><h3 data-i="t2">Architektur</h3><p data-i="h1">Bootloader- und Anwendungs-Stack, Simulink und der Weg vom Modell zur Firmware.</p></a>
+    <a class="chap" href="quickstart.html"><span class="num">02</span><h3 data-i="t3">Quickstart</h3><p data-i="h2">Projekt anlegen und init.sh bzw. init.ps1 ausführen.</p></a>
+    <a class="chap" href="tooling.html"><span class="num">03</span><h3 data-i="t4">Tooling</h3><p data-i="h3">Build, Flash, OpenOCD und Bootloader mit dem ss-Tool.</p></a>
+    <a class="chap" href="gui.html"><span class="num">04</span><h3 data-i="t5">GUI</h3><p data-i="h4">Das ss-Fenster: Build, Beispiele und Matlab-Workflow.</p></a>
+    <a class="chap" href="examples.html"><span class="num">05</span><h3 data-i="t6">Beispiele</h3><p data-i="h5">16 Peripherie-Beispiele und was darunter im System passiert.</p></a>
+    <a class="chap" href="pins.html"><span class="num">06</span><h3 data-i="t7">Pins</h3><p data-i="h6">Welcher Pin kann GPIO, PWM, CAN, SPI, UART oder ADC?</p></a>
+    <a class="chap" href="install.html"><span class="num">07</span><h3 data-i="t8">Installation</h3><p data-i="h7">Toolchain unter Ubuntu, Fedora und Windows.</p></a>
   </div>
 </section>
 

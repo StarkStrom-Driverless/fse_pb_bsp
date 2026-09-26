@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Architektur – fse_pb_bsp</title>
+<meta name="description" content="Bootloader- und Anwendungs-Stack, Simulink-Anbindung und der Weg vom Modell zur Firmware.">
+<meta name="theme-color" content="#0b1210">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230b1210'/%3E%3Cpath d='M8 22V10h8a4 4 0 010 8H8' fill='none' stroke='%2333e6a0' stroke-width='3'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body data-page="architecture">
+
+<header class="nav">
+  <a data-i="t1" class="brand" href="index.html"><span class="brand-mark"></span>fse_pb_bsp</a>
+  <nav id="mainNav">
+    <a data-i="t2" class="active" href="architecture.html">Architektur</a>
+    <a data-i="t3" href="quickstart.html">Quickstart</a>
+    <a data-i="t4" href="tooling.html">Tooling</a>
+    <a data-i="t5" href="gui.html">GUI</a>
+    <a data-i="t6" href="examples.html">Beispiele</a>
+    <a data-i="t7" href="pins.html">Pins</a>
+    <a data-i="t8" href="install.html">Installation</a>
+    <a data-i="t9" class="btn btn-small" href="https://github.com/StarkStrom-Driverless/fse_pb_bsp">GitHub</a>
+  </nav>
+  <div class="lang" role="group" aria-label="Sprache / Language">
+      <button type="button" data-lang="de" aria-pressed="true">DE</button>
+      <button type="button" data-lang="en" aria-pressed="false">EN</button>
+    </div>
+  <button class="menu-btn" type="button" aria-label="Menu" aria-expanded="false" aria-controls="mainNav"><span></span><span></span><span></span></button>
+</header>
+
+<main id="top">
+
+<section id="stack" class="block page">
+  <div class="block-head">
+    <p data-i="t32" class="eyebrow">Architektur</p>
+    <h2 data-i="t33">Zwei Stacks, ein Chip.</h2>
+    <p data-i="t34">Die Library hängt am MCU-Bootloader. Deshalb gibt es zwei Pyramiden: links der Bootloader, rechts die Anwendung. Diese schreibst du in C oder baust sie als Simulink-Modell, das als generierter C-Code auf denselben Schichten läuft.</p>
+  </div>
+
+  <div class="stack-wrap">
+    <div class="stack" role="img" aria-label="Software-Pyramide: STM32F405RTGE als Basis, darauf links Zephyr und MCUboot, rechts libopenCM3, FreeRTOS, fse_pb_bsp und darüber application oder Simulink-Modell">
+      <div class="col left">
+        <div data-i="t35" class="lay l-boot" data-k="mcuboot">MCUboot</div>
+        <div data-i="t36" class="lay l-boot" data-k="zephyr">Zephyr</div>
+      </div>
+      <div class="col right">
+        <div class="lay-row">
+          <div data-i="t37" class="lay l-app" data-k="app">application</div>
+          <div data-i="t38" class="lay l-sim" data-k="sim">Simulink</div>
+        </div>
+        <div data-i="t39" class="lay l-bsp" data-k="bsp">fse_pb_bsp</div>
+        <div data-i="t40" class="lay l-3p" data-k="rtos">FreeRTOS</div>
+        <div data-i="t41" class="lay l-3p" data-k="ocm3">libopenCM3</div>
+      </div>
+      <div data-i="t42" class="lay l-hw" data-k="mcu">STM32F405RTGE</div>
+    </div>
+
+    <div class="stack-info" id="stackInfo">
+      <h3 data-i="t43">STM32F405RTGE</h3>
+      <p data-i="t44">Das Fundament. Beide Stacks laufen auf demselben Chip. Tippe auf eine Schicht, um zu sehen, was sie tut.</p>
+    </div>
+  </div>
+
+  <div class="cards two">
+    <article class="card">
+      <h3 data-i="t45">Bootloader</h3>
+      <p data-i="t46">Basiert auf <strong data-i="t47">Zephyr</strong> mit <strong data-i="t48">MCUboot</strong>, gepflegt im eigenen Repo <code>fse_pb_bootloader</code>.
+         Einmal geflasht, muss er normalerweise nie wieder angefasst werden.</p>
+      <div class="slots">
+        <div data-i="t49" class="slot boot">Bootloader</div>
+        <div data-i="t50" class="slot s0">Slot 0 <small data-i="t51">läuft</small></div>
+        <div data-i="t52" class="slot s1">Slot 1 <small data-i="t53">Update</small></div>
+      </div>
+      <p data-i="t54" class="muted">Liegt in Slot 1 ein gültiges, korrekt signiertes Image, tauscht der Bootloader Slot 0 und Slot 1 und startet dann. Standardmäßig läuft er aus Slot 0.</p>
+    </article>
+    <article class="card">
+      <h3 data-i="t55">Anwendungs-Stack</h3>
+      <p data-i="t56"><strong data-i="t57">libopencm3</strong> konfiguriert die Hardware auf niedriger Ebene. <code>fse_pb_bsp</code> liefert
+         darüber die Abstraktion für Controller-Konfiguration und kapselt außerdem <strong data-i="t58">FreeRTOS</strong>.</p>
+      <p data-i="t59" class="muted">Darauf entsteht die eigentliche Anwendung, ohne Register oder RTOS-Details direkt anzufassen.</p>
+    </article>
+  </div>
+
+  <div class="sim">
+    <h3 data-i="t60">Simulink: vom Modell zur Firmware</h3>
+    <p data-i="t61" class="muted">Statt C zu schreiben, kannst du die Anwendung als Simulink-Modell bauen. Eigene <code>ss_*</code>-Blöcke (GPIO, ADC, PWM, CAN, Frequenzmessung, IOB, Queue) rufen im generierten Code die <code>fse_pb_bsp</code>-API auf. Das Modell läuft in einem eigenen RTOS-Task.</p>
+    <div class="ex-lanes">
+      <div class="lane">
+        <div data-i="t62" class="lane-t">Modell bauen</div>
+        <div class="lane-row">
+          <div class="nd n-obj"><span data-i="t63" class="tag">Datei</span><code>usr/simulink/&lt;model&gt;.slx</code><small data-i="t64">Modell mit ss_*-Blöcken</small></div>
+          <div class="arr"><span data-i="t65">./ss matlab_build</span></div>
+          <div class="nd n-obj"><span data-i="t66" class="tag">Datei</span><code>&lt;model&gt;_ert_rtw/*.c</code><small data-i="t67">generierter C-Code (ert, nur Code)</small></div>
+          <div class="arr"><span data-i="t68">./ss build</span></div>
+          <div class="nd n-api"><span data-i="t69" class="tag">Firmware</span><code>bp_test.elf</code><small data-i="t70">Code wird automatisch mitkompiliert</small></div>
+        </div>
+      </div>
+      <div class="lane">
+        <div data-i="t71" class="lane-t">CAN aus DBC</div>
+        <div class="lane-row">
+          <div class="nd n-obj"><span data-i="t72" class="tag">Datei</span><code>usr/dbc/*.dbc</code><small data-i="t73">Botschaften und Signale</small></div>
+          <div class="arr"><span data-i="t74">./ss can_gen</span></div>
+          <div class="nd n-obj"><span data-i="t75" class="tag">Datei</span><code data-i="c1">Message-Blöcke</code><small data-i="t76">RX/TX-Blöcke pro Botschaft</small></div>
+          <div class="arr"><span data-i="t77">im Modell</span></div>
+          <div class="nd n-api"><span data-i="t78" class="tag">bsp</span><code>ss_can_*</code><small data-i="t79">Queue lesen, Frame senden</small></div>
+        </div>
+      </div>
+      <div class="lane">
+        <div data-i="t80" class="lane-t">Zur Laufzeit</div>
+        <div class="lane-row">
+          <div class="nd n-task"><span data-i="t81" class="tag">Task</span><code>simulink_task</code><small data-i="t82">Priorität 2, ruft <code>&lt;model&gt;_initialize()</code> einmal auf</small></div>
+          <div class="arr"><span data-i="t83">alle SS_MODEL_STEP_MS</span></div>
+          <div class="nd n-obj"><span data-i="t84" class="tag">Modell</span><code>&lt;model&gt;_step()</code><small data-i="t85">xTaskDelayUntil, kein Drift</small></div>
+          <div class="arr"><span data-i="t86">Block-Code ruft</span></div>
+          <div class="nd n-api"><span data-i="t87" class="tag">bsp</span><code>ss_io_*, ss_adc_*, ss_pwm_*, …</code><small data-i="t88">wie in handgeschriebenem C</small></div>
+          <div class="arr"><span></span></div>
+          <div class="nd n-hw"><span data-i="t89" class="tag">Hardware</span><code data-i="c2">Pins &amp; Peripherie</code></div>
+        </div>
+      </div>
+    </div>
+    <p data-i="t90" class="note">Einrichtung mit <code>./ss matlab_init</code> (Libraries und Modell), <code>./ss matlab_config</code> (Code-Generierung) und <code>./ss matlab_open</code> zum Bearbeiten. Der Ablauf ist auch im Matlab-Tab der <a data-i="t91" href="gui.html">GUI</a> zu sehen.</p>
+  </div>
+</section>
+
+<nav class="pager" aria-label="Kapitel"><a class="prev" href="index.html"><small data-i="n1">Zurück</small><span data-i="n3">Startseite</span></a><a class="next" href="quickstart.html"><small data-i="n2">Weiter</small><span data-i="t3">Quickstart</span></a></nav>
+
+</main>
+
+<footer class="foot">
+  <span data-i="t271">fse_pb_bsp · StarkStrom Augsburg Driverless</span>
+  <a data-i="t272" href="#top">Nach oben ↑</a>
+</footer>
+
+<script src="js/i18n.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
