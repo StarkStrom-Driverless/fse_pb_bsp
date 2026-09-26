@@ -321,6 +321,7 @@
       note: "ss_fsm_event_receive liest zuerst die Prio-Queue und erst danach die normale Queue, und wartet nie: gibt es kein Event, kommt -1 zurück."
     }
   };
+  var TAG = { hw: "Hardware", isr: "ISR", obj: "RTOS", api: "bsp", task: "Task" };
   var ORDER = ["can_rx", "can_tx", "can_tod", "adc", "pwm", "input", "output", "iob", "fm", "spi", "uart", "printf", "error", "eth_udp", "pid", "fsm"];
   var exPick = document.getElementById("exPick");
   var exView = document.getElementById("exView");
@@ -337,6 +338,8 @@
     exPick.querySelectorAll("button").forEach(function (b) { b.setAttribute("aria-selected", b.dataset.k === name); });
     exView.textContent = "";
     exView.appendChild(mk("p", "ex-sum", d.sum));
+    var lanes = mk("div", "ex-lanes");
+    exView.appendChild(lanes);
     d.lanes.forEach(function (lane) {
       var wrap = mk("div", "lane");
       wrap.appendChild(mk("div", "lane-t", lane.t));
@@ -349,12 +352,13 @@
           row.appendChild(ar);
         }
         var box = mk("div", "nd n-" + n[0]);
+        box.appendChild(mk("span", "tag", TAG[n[0]]));
         box.appendChild(mk("code", "", n[1]));
         if (n[2]) box.appendChild(mk("small", "", n[2]));
         row.appendChild(box);
       });
       wrap.appendChild(row);
-      exView.appendChild(wrap);
+      lanes.appendChild(wrap);
     });
     if (d.note) exView.appendChild(mk("p", "ex-note", d.note));
   }

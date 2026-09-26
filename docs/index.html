@@ -271,14 +271,25 @@ cd ..</code></pre>
       </div>
     </div>
 
-    <div class="gui-body single" data-panel="g-ex" hidden>
-      <div class="gui-col">
-        <h4>examples</h4>
-        <div class="ex-list">
-          <u>adc</u><u>can_rx</u><u>can_tx</u><u>can_tod</u><u>error</u><u>eth_udp</u><u>fm</u><u>fsm</u>
-          <u>input</u><u>iob</u><u>output</u><u>pid</u><u>printf</u><u>pwm</u><u>spi</u><u>uart</u>
-        </div>
-        <p class="muted">Ein Beispiel auswählen zeigt seinen Quelltext. Von dort aus lässt es sich bauen (<code>example_build</code>) und flashen (<code>flash_example</code>).</p>
+    <div class="gui-body gui-ex" data-panel="g-ex" hidden>
+      <div class="ex-side">
+        <u class="sel">adc</u><u>can_rx</u><u>can_tx</u><u>can_tod</u><u>error</u><u>eth_udp</u><u>fm</u><u>fsm</u>
+        <u>input</u><u>iob</u><u>output</u><u>pid</u><u>printf</u><u>pwm</u><u>spi</u><u>uart</u>
+      </div>
+      <div class="ex-main">
+        <div class="ex-top"><span class="path">fse_pb_bsp/examples/adc.c</span><u>example_build</u><u class="hot">flash_example</u></div>
+<pre class="ex-src"><span class="k">#include</span> <span class="s">"ss.h"</span>
+<span class="k">#include</span> <span class="s">"pins.h"</span>
+
+<span class="t">void</span> <span class="f">example_task</span>(<span class="t">void</span>* args) {
+    <span class="t">uint16_t</span> value = 0;
+    <span class="k">for</span> (;;) {
+        <span class="f">ss_adc_read</span>(adc_pin, &amp;value);
+        <span class="f">ss_printf</span>(4, <span class="s">"ADC: %d 
+"</span>, value);
+        <span class="f">ss_rtos_delay_ms</span>(500);
+    }
+}</pre>
       </div>
     </div>
 
@@ -312,7 +323,7 @@ cd ..</code></pre>
   <div class="block-head">
     <p class="eyebrow">Beispiele</p>
     <h2>Eine Peripherie, eine Datei.</h2>
-    <p><code>fse_pb_bsp/examples/</code> enthält pro Peripherie ein minimales <code>.c</code>. Sie werden unabhängig von der Firmware gebaut und brauchen kein <code>usr/</code>.</p>
+    <p><code>fse_pb_bsp/examples/</code> enthält pro Peripherie ein minimales <code>.c</code>. Sie werden unabhängig von der Firmware gebaut und brauchen kein <code>usr/</code>. Am schnellsten geht es in der <a href="#gui">GUI</a>: Beispiel wählen, Quelltext ansehen, mit einem Klick bauen und flashen.</p>
   </div>
 
   <div class="cmd-grid three">
@@ -335,54 +346,6 @@ cd ..</code></pre>
       <span><i class="n-api"></i>bsp-Funktion</span>
       <span><i class="n-task"></i>dein Task</span>
     </div>
-  </div>
-
-  <div class="ex-wrap">
-    <h3>Ein neues Beispiel in zwei Schritten</h3>
-    <ol class="steps">
-      <li><span>1</span><div>Lege <code>fse_pb_bsp/examples/&lt;name&gt;.c</code> an. Halte es minimal: <code>ss_init()</code>, Init/Task der Peripherie, <code>ss_error_fail()</code>, <code>vApplicationStackOverflowHook()</code>.</div></li>
-      <li><span>2</span><div>Trage <code>&lt;name&gt;</code> in die <code>EXAMPLES</code>-Liste in <code>fse_pb_bsp/examples/Makefile</code> ein.</div></li>
-    </ol>
-    <p class="muted">Danach greifen <code>make &lt;name&gt;</code>, <code>./ss example_build</code> und <code>./ss example_list</code> automatisch. Die Objektdateien werden mit dem Firmware-Build geteilt, nichts wird doppelt kompiliert.
-    Braucht das Beispiel eigene Pins, gehört ein <code>EXAMPLE_&lt;NAME&gt;_PIN</code>-Define nach <code>examples/pins.h</code>, kein hartkodiertes <code>PIN(...)</code>.</p>
-
-<pre class="code big" data-copy><code><span class="k">#include</span> <span class="s">"ss.h"</span>
-
-<span class="t">void</span> <span class="f">example_task</span>(<span class="t">void</span>* args) {
-    <span class="k">for</span> (;;) {
-        <span class="c">// ...</span>
-        <span class="f">ss_rtos_delay_ms</span>(500);
-    }
-}
-
-<span class="t">int</span> <span class="f">main</span>(<span class="t">void</span>) {
-    <span class="f">SS_ERROR_ASSERT</span>(<span class="f">ss_init</span>());
-
-    <span class="c">// peripheral-specific SS_ERROR_ASSERT(ss_..._init(...)) calls go here</span>
-
-    <span class="f">SS_ERROR_ASSERT</span>(<span class="f">ss_rtos_task_add</span>(example_task, NULL, 1, <span class="s">"example_task"</span>));
-
-    <span class="f">ss_rtos_start</span>();
-
-    <span class="k">while</span> (1) {
-    }
-
-    <span class="k">return</span> 0;
-}
-
-<span class="t">void</span> <span class="f">ss_error_fail</span>(<span class="t">void</span>) {
-    <span class="k">while</span> (1) {
-        <span class="f">ss_led_error_toggle</span>();
-        <span class="f">ss_delay</span>(1000);
-    }
-}
-
-<span class="t">void</span> <span class="f">vApplicationStackOverflowHook</span>(TaskHandle_t xTask, <span class="t">char</span> * pcTaskName) {
-    <span class="k">while</span>(1) {
-        <span class="f">ss_led_error_toggle</span>();
-        <span class="f">ss_delay</span>(500);
-    }
-}</code></pre>
   </div>
 </section>
 
