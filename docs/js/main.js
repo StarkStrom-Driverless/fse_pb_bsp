@@ -39,6 +39,10 @@
       });
       translated = l === "en";
     }
+    document.querySelectorAll("img[data-alt-en]").forEach(function (im) {
+      if (!im.dataset.altDe) im.dataset.altDe = im.alt;
+      im.alt = l === "en" ? im.dataset.altEn : im.dataset.altDe;
+    });
     langHooks.forEach(function (h) { h(); });
   }
 

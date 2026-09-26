@@ -402,3 +402,15 @@ p code, li code, td code, .callout code, .cmd code, .nd code { overflow-wrap: an
 .pager .prev small::before { content: "← "; } .pager .next small::after { content: " →"; }
 .nav nav a.active:not(.btn) { color: var(--accent); font-weight: 600; }
 @media (max-width: 480px) { .pager { grid-template-columns: 1fr; } .pager .next { text-align: left; align-items: flex-start; } }
+
+/* figures */
+.fig { margin: 0; background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; }
+.fig img { display: block; width: 100%; height: auto; }
+.fig.light { background: #fff; }
+.fig figcaption { padding: .9rem 1.1rem 1.1rem; color: var(--muted); font-size: .9rem; border-top: 1px solid var(--line); background: var(--panel); }
+.sim-figs { display: grid; grid-template-columns: 1.4fr 1fr; gap: 1rem; margin-top: 1.4rem; align-items: start; }
+.sim-figs .fig:nth-child(2) img { background: #fff; }
+.chips.blocks { margin-top: 1.1rem; }
+.board-grid { display: grid; grid-template-columns: 1.5fr 1fr; gap: 2rem; align-items: start; }
+.board-info h3 { margin-top: 1.4rem; } .board-info h3:first-child { margin-top: 0; }
+@media (max-width: 900px) { .sim-figs, .board-grid { grid-template-columns: 1fr; } }

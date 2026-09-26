@@ -120,7 +120,50 @@
         </div>
       </div>
     </div>
+
+    <div class="sim-figs">
+      <figure class="fig">
+        <a href="assets/simulink-model.jpg" target="_blank" rel="noopener"><img src="assets/simulink-model.jpg" width="1800" height="958" loading="lazy" alt="Simulink Library Browser mit den SS-Bibliotheken und einem Modell aus Input, InputProcessing, Processing und Output" data-alt-en="Simulink library browser with the SS libraries and a model made of Input, InputProcessing, Processing and Output"></a>
+        <figcaption data-i="s1">Im Library Browser erscheinen die <code>ss_*</code>-Blöcke als eigene Bibliotheken: SS ADC, SS CAN, SS FM, SS GPIO, SS IOB, SS PWM und SS QUEUE. Rechts ein Modell mit der Struktur Input → InputProcessing → Processing → Output.</figcaption>
+      </figure>
+      <figure class="fig">
+        <a href="assets/simulink-can-block.jpg" target="_blank" rel="noopener"><img src="assets/simulink-can-block.jpg" width="1448" height="992" loading="lazy" alt="Aus einer DBC-Datei generierter CAN-Block mit Signalausgängen" data-alt-en="CAN block generated from a DBC file with signal outputs"></a>
+        <figcaption data-i="s2">Aus einer <code>.dbc</code>-Datei erzeugt <code>./ss can_gen</code> einen fertigen CAN-Block mit allen Signalen und Timeouts der Botschaften.</figcaption>
+      </figure>
+    </div>
+    <ul class="chips blocks">
+      <li data-i="s3">Input</li><li data-i="s4">Output</li><li>PWM</li><li data-i="s5">Frequenzmessung</li><li data-i="s6">Input Observation</li><li>ADC</li><li data-i="s7">CAN (Blöcke aus .dbc)</li>
+    </ul>
     <p data-i="t90" class="note">Einrichtung mit <code>./ss matlab_init</code> (Libraries und Modell), <code>./ss matlab_config</code> (Code-Generierung) und <code>./ss matlab_open</code> zum Bearbeiten. Der Ablauf ist auch im Matlab-Tab der <a data-i="t91" href="gui.html">GUI</a> zu sehen.</p>
+  </div>
+</section>
+
+<section id="board" class="block board">
+  <div class="block-head">
+    <p class="eyebrow" data-i="b0">Hardware</p>
+    <h2 data-i="b1">Das Prozessorboard.</h2>
+    <p data-i="b2">Alle Steuergeräte teilen sich dasselbe kleine Board mit dem STM32F405RTGE. Die Library ist die Software-Grundlage dafür.</p>
+  </div>
+  <div class="board-grid">
+    <figure class="fig light">
+      <a href="assets/processorboard.jpg" target="_blank" rel="noopener"><img src="assets/processorboard.jpg" width="1760" height="769" loading="lazy" alt="Prozessorboard mit Beschriftung: SWD-Programmierstecker, STM32F405RTGE, Spannungsversorgung, 2 x CAN, E-Fuse und m.2-Steckplatz" data-alt-en="Processor board with labels: SWD programming connector, STM32F405RTGE, power supply, 2 x CAN, e-fuse and m.2 slot"></a>
+    </figure>
+    <div class="board-info">
+      <h3 data-i="b3">Auf dem Board</h3>
+      <ul class="ticks">
+        <li data-i="b4"><strong>STM32F405RTGE</strong> mit 192 kB RAM und 1 MB Flash</li>
+        <li data-i="b5"><strong>SWD</strong>-Stecker zum Programmieren</li>
+        <li data-i="b6"><strong>Spannungsversorgung</strong> mit 5 V und 3,3 V</li>
+        <li data-i="b7"><strong>2 × CAN</strong></li>
+        <li data-i="b8"><strong>E-Fuse</strong></li>
+        <li data-i="b9"><strong>m.2-Steckplatz</strong></li>
+      </ul>
+      <h3 data-i="b10">Im Einsatz in</h3>
+      <ul class="chips">
+        <li data-i="b11">HV Accumulator (BMAS)</li><li data-i="b12">LV Accumulator</li><li data-i="b13">Steering Controller</li><li>DCU</li><li data-i="b14">CAN Interface</li>
+      </ul>
+      <p class="note"><a href="Embedded_Software.pdf" data-i="b15">Foliensatz zur Embedded Software (PDF)</a></p>
+    </div>
   </div>
 </section>
 
