@@ -414,3 +414,11 @@ p code, li code, td code, .callout code, .cmd code, .nd code { overflow-wrap: an
 .board-grid { display: grid; grid-template-columns: 1.5fr 1fr; gap: 2rem; align-items: start; }
 .board-info h3 { margin-top: 1.4rem; } .board-info h3:first-child { margin-top: 0; }
 @media (max-width: 900px) { .sim-figs, .board-grid { grid-template-columns: 1fr; } }
+
+/* tooling -> gui */
+.cmd.gui-link { display: block; color: var(--text); position: relative; border-color: color-mix(in srgb, var(--accent) 60%, var(--line)); background: color-mix(in srgb, var(--accent) 7%, var(--panel)); }
+.cmd.gui-link:hover { text-decoration: none; }
+.cmd.gui-link .go { display: inline-block; margin-top: .8rem; font: 700 .82rem var(--mono); color: var(--accent); }
+.cmd.gui-link:hover .go { text-decoration: underline; }
+.block.gui-sec { padding-top: 1rem; }
+.code.inline { padding-right: 5.6rem; }
