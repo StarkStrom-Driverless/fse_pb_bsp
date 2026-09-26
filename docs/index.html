@@ -1,0 +1,364 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>fse_pb_bsp – Board Support Library für STM32F405</title>
+<meta name="description" content="Board Support Library für den STM32F405RTGE, eingesetzt in den Steuergeräten von StarkStrom Augsburg Driverless.">
+<meta name="theme-color" content="#0b1210">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230b1210'/%3E%3Cpath d='M8 22V10h8a4 4 0 010 8H8' fill='none' stroke='%2333e6a0' stroke-width='3'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="nav">
+  <a class="brand" href="#top"><span class="brand-mark"></span>fse_pb_bsp</a>
+  <nav>
+    <a href="#stack">Architektur</a>
+    <a href="#start">Quickstart</a>
+    <a href="#tooling">Tooling</a>
+    <a href="#examples">Beispiele</a>
+    <a href="#pins">Pins</a>
+    <a href="#install">Installation</a>
+    <a class="btn btn-small" href="https://github.com/StarkStrom-Driverless/fse_pb_bsp">GitHub</a>
+  </nav>
+</header>
+
+<main id="top">
+
+<section class="hero">
+  <div class="hero-text">
+    <p class="eyebrow">StarkStrom Augsburg · Driverless</p>
+    <h1>Ein Fundament für jedes<br><span class="grad">Steuergerät.</span></h1>
+    <p class="lead">
+      <code>fse_pb_bsp</code> ist die Board Support Library für den <strong>STM32F405RTGE</strong>:
+      Peripherie-Abstraktion, FreeRTOS, sicherer Bootloader und ein Tool, das Build, Flash und Debug
+      auf einen Befehl reduziert.
+    </p>
+    <div class="cta">
+      <a class="btn" href="#start">Projekt starten</a>
+      <a class="btn btn-ghost" href="https://github.com/StarkStrom-Driverless/fse_pb_bsp">Repository ansehen</a>
+    </div>
+    <ul class="chips">
+      <li>STM32F405RTGE</li><li>libopencm3</li><li>FreeRTOS</li><li>MCUboot / Zephyr</li><li>CAN</li><li>Simulink</li>
+    </ul>
+  </div>
+
+  <div class="terminal" aria-label="Beispiel-Terminal">
+    <div class="term-bar"><i></i><i></i><i></i><span>my_project</span></div>
+    <pre id="term" aria-live="off"></pre>
+  </div>
+</section>
+
+<section class="facts">
+  <div><b>1</b><span>MCU-Familie, einheitlich abstrahiert</span></div>
+  <div><b>3</b><span>Flash-Wege: OpenOCD, CAN, Bootloader</span></div>
+  <div><b>16+</b><span>Peripherie-Beispiele zum Kopieren</span></div>
+  <div><b>0</b><span>Compile-Duplikate zwischen Beispielen und Firmware</span></div>
+</section>
+
+<section id="stack" class="block">
+  <div class="block-head">
+    <p class="eyebrow">Architektur</p>
+    <h2>Zwei Stacks, ein Chip.</h2>
+    <p>Die Library hängt am MCU-Bootloader. Deshalb gibt es zwei Pyramiden: links der Bootloader, rechts die Anwendung.</p>
+  </div>
+
+  <div class="stack-wrap">
+    <div class="stack" role="img" aria-label="Software-Pyramide: STM32F405RTGE als Basis, darauf links Zephyr und MCUboot, rechts libopenCM3, FreeRTOS, fse_pb_bsp und application">
+      <div class="col left">
+        <div class="lay l-boot" data-k="mcuboot">MCUboot</div>
+        <div class="lay l-boot" data-k="zephyr">Zephyr</div>
+      </div>
+      <div class="col right">
+        <div class="lay l-app" data-k="app">application</div>
+        <div class="lay l-bsp" data-k="bsp">fse_pb_bsp</div>
+        <div class="lay l-3p" data-k="rtos">FreeRTOS</div>
+        <div class="lay l-3p" data-k="ocm3">libopenCM3</div>
+      </div>
+      <div class="lay l-hw" data-k="mcu">STM32F405RTGE</div>
+    </div>
+
+    <div class="stack-info" id="stackInfo">
+      <h3>STM32F405RTGE</h3>
+      <p>Das Fundament. Beide Stacks laufen auf demselben Chip. Tippe auf eine Schicht, um zu sehen, was sie tut.</p>
+    </div>
+  </div>
+
+  <div class="cards two">
+    <article class="card">
+      <h3>Bootloader</h3>
+      <p>Basiert auf <strong>Zephyr</strong> mit <strong>MCUboot</strong>, gepflegt im eigenen Repo <code>fse_pb_bootloader</code>.
+         Einmal geflasht, muss er normalerweise nie wieder angefasst werden.</p>
+      <div class="slots">
+        <div class="slot boot">Bootloader</div>
+        <div class="slot s0">Slot 0 <small>läuft</small></div>
+        <div class="slot s1">Slot 1 <small>Update</small></div>
+      </div>
+      <p class="muted">Liegt in Slot 1 ein gültiges, korrekt signiertes Image, tauscht der Bootloader Slot 0 und Slot 1 und startet dann. Standardmäßig läuft er aus Slot 0.</p>
+    </article>
+    <article class="card">
+      <h3>Anwendungs-Stack</h3>
+      <p><strong>libopencm3</strong> konfiguriert die Hardware auf niedriger Ebene. <code>fse_pb_bsp</code> liefert
+         darüber die Abstraktion für Controller-Konfiguration und kapselt außerdem <strong>FreeRTOS</strong>.</p>
+      <p class="muted">Darauf entsteht die eigentliche Anwendung, ohne Register oder RTOS-Details direkt anzufassen.</p>
+    </article>
+  </div>
+</section>
+
+<section id="start" class="block alt">
+  <div class="block-head">
+    <p class="eyebrow">Quickstart</p>
+    <h2>Vom leeren Ordner zur Firmware.</h2>
+  </div>
+
+  <div class="tabs" data-tabs>
+    <div class="tab-list" role="tablist">
+      <button role="tab" aria-selected="true" data-tab="new">Neues Projekt</button>
+      <button role="tab" aria-selected="false" data-tab="init">Bestehendes Projekt</button>
+    </div>
+
+    <div class="tab-panel" data-panel="new">
+      <div class="split">
+        <div>
+<pre class="code" data-copy><code><span class="c"># Projektordner anlegen</span>
+mkdir my_project
+cd my_project
+
+git submodule add git@github.com:StarkStrom-Driverless/fse_pb_bsp.git
+
+<span class="c"># die Version wählen, gegen die gebaut wird</span>
+cd fse_pb_bsp
+git checkout &lt;version&gt;
+
+./init.sh
+
+cd ..</code></pre>
+        </div>
+        <div>
+          <h3>Was <code>init.sh</code> für dich erledigt</h3>
+          <ul class="ticks">
+            <li>legt <code>usr/src</code> und <code>usr/inc</code> an</li>
+            <li>kopiert Starter-Dateien aus <code>fse_pb_bsp/test</code>: <code>main.c</code>, <code>Makefile</code>, <code>.gitignore</code>, <code>FreeRTOSConfig.h</code>, <code>ss_config.h</code></li>
+            <li>baut <code>libopencm3</code></li>
+            <li>erzeugt den Symlink <code>./ss</code> → <code>fse_pb_bsp/tools/ss</code></li>
+            <li>richtet ein Python-venv ein (<code>python-can</code>, <code>telnetlib3</code>, <code>cryptography</code>, <code>intelhex</code> …)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="tab-panel" data-panel="init" hidden>
+      <div class="split">
+        <div>
+<pre class="code" data-copy><code>cd my_project
+
+git submodule update
+
+cd fse_pb_bsp
+git checkout &lt;version&gt;
+
+./init.sh
+
+cd ..</code></pre>
+        </div>
+        <div>
+          <h3>Frisch geklont oder Version gebumpt?</h3>
+          <p>Dieselben Schritte gegen den vorhandenen Checkout.</p>
+          <p class="callout"><code>init.sh</code> ist gefahrlos wiederholbar: Starter-Dateien werden nur kopiert, wenn sie fehlen
+          (<code>cp -n</code>), Symlink und venv nur bei Bedarf neu erzeugt.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="tooling" class="block">
+  <div class="block-head">
+    <p class="eyebrow">Tooling</p>
+    <h2>Alles läuft über <code>./ss</code>.</h2>
+    <p>Einmal pro Terminal-Sitzung das venv aktivieren, dann übernimmt <code>./ss</code>. Ohne Argumente zeigt es die komplette Befehlsübersicht.</p>
+    <pre class="code inline" data-copy><code>source .venv/bin/activate</code></pre>
+  </div>
+
+  <div class="cmd-grid">
+    <div class="cmd"><code>./ss build</code><p>Baut die Haupt-Firmware (<code>build/bp_test.elf</code>).</p></div>
+    <div class="cmd"><code>./ss clean</code><p>Räumt den Build-Output der Haupt-Firmware auf.</p></div>
+    <div class="cmd hot"><code>./ss flash</code><p>Build, Signatur und Flash via OpenOCD/telnet in einem Schritt.</p></div>
+    <div class="cmd"><code>./ss canflash --bin_file &lt;path&gt; --id &lt;hex id&gt;</code><p>Flasht ein signiertes <code>.bin</code> über CAN.</p></div>
+    <div class="cmd"><code>./ss bootloader --bin_file &lt;path&gt; --position &lt;addr&gt;</code><p>Flasht ein Bootloader-Image, z. B. <code>zephyr.bin</code>.</p></div>
+    <div class="cmd"><code>./ss oocd_start | oocd_stop | oocd_state</code><p>Verwaltet den OpenOCD-Server. Danach öffnet <code>make gdb</code> ein GDB-TUI.</p></div>
+    <div class="cmd wide"><code>./ss &nbsp;·&nbsp; ./ss gui</code>
+      <p>Dieselben Befehle als Fenster: Build, Flash und OpenOCD mit Flash- und RAM-Auslastung, die Beispiele samt Quelltext,
+      der MATLAB-Workflow mit Statusübersicht und <code>can_gen</code>. Strg+C im Terminal schließt es.
+      Benötigt <code>imgui-bundle</code>, das <code>init.sh</code> installiert.</p></div>
+  </div>
+</section>
+
+<section id="examples" class="block alt">
+  <div class="block-head">
+    <p class="eyebrow">Beispiele</p>
+    <h2>Eine Peripherie, eine Datei.</h2>
+    <p><code>fse_pb_bsp/examples/</code> enthält pro Peripherie ein minimales <code>.c</code>. Sie werden unabhängig von der Firmware gebaut und brauchen kein <code>usr/</code>.</p>
+  </div>
+
+  <div class="cmd-grid three">
+    <div class="cmd"><code>./ss example_list</code><p>Alle verfügbaren Beispiele auflisten.</p></div>
+    <div class="cmd"><code>./ss example_build &lt;name&gt;</code><p>Ein Beispiel bauen, z. B. <code>adc</code> → <code>examples/build/adc.elf</code>.</p></div>
+    <div class="cmd hot"><code>./ss flash_example &lt;name&gt;</code><p>Bauen, signieren und via OpenOCD/telnet flashen.</p></div>
+  </div>
+  <p class="note">Beide Build-Befehle geben den Pfad zur <code>.c</code>-Quelle aus, so springst du direkt in den Code. Ohne <code>./ss</code> geht es auch:
+    <code>cd fse_pb_bsp/examples &amp;&amp; make adc</code>, <code>make clean</code> räumt auf.</p>
+
+  <div class="ex-wrap">
+    <h3>Ein neues Beispiel in zwei Schritten</h3>
+    <ol class="steps">
+      <li><span>1</span><div>Lege <code>fse_pb_bsp/examples/&lt;name&gt;.c</code> an. Halte es minimal: <code>ss_init()</code>, Init/Task der Peripherie, <code>ss_error_fail()</code>, <code>vApplicationStackOverflowHook()</code>.</div></li>
+      <li><span>2</span><div>Trage <code>&lt;name&gt;</code> in die <code>EXAMPLES</code>-Liste in <code>fse_pb_bsp/examples/Makefile</code> ein.</div></li>
+    </ol>
+    <p class="muted">Danach greifen <code>make &lt;name&gt;</code>, <code>./ss example_build</code> und <code>./ss example_list</code> automatisch. Die Objektdateien werden mit dem Firmware-Build geteilt, nichts wird doppelt kompiliert.
+    Braucht das Beispiel eigene Pins, gehört ein <code>EXAMPLE_&lt;NAME&gt;_PIN</code>-Define nach <code>examples/pins.h</code>, kein hartkodiertes <code>PIN(...)</code>.</p>
+
+<pre class="code big" data-copy><code><span class="k">#include</span> <span class="s">"ss.h"</span>
+
+<span class="t">void</span> <span class="f">example_task</span>(<span class="t">void</span>* args) {
+    <span class="k">for</span> (;;) {
+        <span class="c">// ...</span>
+        <span class="f">ss_rtos_delay_ms</span>(500);
+    }
+}
+
+<span class="t">int</span> <span class="f">main</span>(<span class="t">void</span>) {
+    <span class="f">SS_ERROR_ASSERT</span>(<span class="f">ss_init</span>());
+
+    <span class="c">// peripheral-specific SS_ERROR_ASSERT(ss_..._init(...)) calls go here</span>
+
+    <span class="f">SS_ERROR_ASSERT</span>(<span class="f">ss_rtos_task_add</span>(example_task, NULL, 1, <span class="s">"example_task"</span>));
+
+    <span class="f">ss_rtos_start</span>();
+
+    <span class="k">while</span> (1) {
+    }
+
+    <span class="k">return</span> 0;
+}
+
+<span class="t">void</span> <span class="f">ss_error_fail</span>(<span class="t">void</span>) {
+    <span class="k">while</span> (1) {
+        <span class="f">ss_led_error_toggle</span>();
+        <span class="f">ss_delay</span>(1000);
+    }
+}
+
+<span class="t">void</span> <span class="f">vApplicationStackOverflowHook</span>(TaskHandle_t xTask, <span class="t">char</span> * pcTaskName) {
+    <span class="k">while</span>(1) {
+        <span class="f">ss_led_error_toggle</span>();
+        <span class="f">ss_delay</span>(500);
+    }
+}</code></pre>
+  </div>
+</section>
+
+<section id="pins" class="block">
+  <div class="block-head">
+    <p class="eyebrow">Pin-Fähigkeiten</p>
+    <h2>Was kann welcher Pin?</h2>
+    <p>Filtere nach Funktion oder suche einen Pin. Die Daten stammen aus der Pin-Tabelle der Library.</p>
+  </div>
+
+  <div class="pin-tools">
+    <input id="pinSearch" type="search" placeholder="Pin suchen, z. B. PB5 oder SPI3" aria-label="Pin suchen" autocomplete="off">
+    <div class="filters" id="pinFilters" role="group" aria-label="Funktion filtern"></div>
+    <div class="ports" id="pinPorts" role="group" aria-label="Port wählen"></div>
+  </div>
+
+  <div class="table-scroll">
+    <table class="pins" id="pinTable">
+      <thead><tr><th>Pin</th><th>GPIO</th><th>PWM</th><th>CAN</th><th>SPI1</th><th>SPI2</th><th>SPI3</th><th>UART</th><th>ADC</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+  <p class="note" id="pinCount"></p>
+</section>
+
+<section id="install" class="block alt">
+  <div class="block-head">
+    <p class="eyebrow">Installation</p>
+    <h2>Toolchain einrichten.</h2>
+    <p>Getestet unter Linux. Unter Windows läuft es nicht direkt, nutze WSL2. Beim Flashen kann dort USB-Passthrough Probleme machen; Fallback ist ein Release-Binary, das du direkt per st-link aus dem abgeleiteten Steuergeräte-Repo flashst.</p>
+  </div>
+
+  <div class="tabs" data-tabs>
+    <div class="tab-list" role="tablist">
+      <button role="tab" aria-selected="true" data-tab="ubuntu">Ubuntu</button>
+      <button role="tab" aria-selected="false" data-tab="fedora">Fedora</button>
+    </div>
+
+    <div class="tab-panel" data-panel="ubuntu">
+<pre class="code big" data-copy><code>sudo apt install binutils-arm-none-eabi gcc-arm-none-eabi
+sudo apt install gdb-multiarch
+cd /usr/bin
+sudo ln -s gdb-multiarch arm-none-eabi-gdb
+
+<span class="c"># Download arm-gnu-toolchain-14.3.rel1-x86_64-arm-none-eabi.tar.xz from</span>
+<span class="c"># https://developer.arm.com/downloads/-/arm-gnu-toolchain-downloads</span>
+
+cd /opt
+sudo tar Jxvf ~/Downloads/arm-gnu-toolchain-14.3.rel1-x86_64-arm-none-eabi.tar.xz
+
+<span class="c"># add to .bashrc</span>
+export PATH=$PATH:/opt/arm-gnu-toolchain-14.3.rel1-x86_64-arm-none-eabi/bin
+
+source .bashrc
+
+sudo add-apt-repository ppa:deadsnakes/ppa
+sudo apt update
+sudo apt install python3.8
+
+sudo apt install openocd
+
+sudo cp /lib/udev/rules.d/60-openocd.rules /etc/udev/rules.d/
+
+sudo reboot
+
+sudo apt install can-utils</code></pre>
+    </div>
+
+    <div class="tab-panel" data-panel="fedora" hidden>
+<pre class="code big" data-copy><code>sudo dnf install arm-none-eabi-binutils-cs gdb openocd can-utils xz git make
+
+<span class="c"># create a sym link from gdb to arm-none-eabi-gdb</span>
+sudo ln -s gdb gdb-multiarch
+
+<span class="c"># Download arm-gnu-toolchain-15.2.rel1-x86_64-arm-none-eabi.tar.xz from</span>
+<span class="c"># https://developer.arm.com/downloads/-/arm-gnu-toolchain-downloads</span>
+
+cd /opt
+sudo tar Jxvf ~/Downloads/arm-gnu-toolchain-15.2.rel1-x86_64-arm-none-eabi.tar.xz
+
+export PATH=$PATH:/opt/arm-gnu-toolchain-15.2.rel1-x86_64-arm-none-eabi/bin
+
+sudo cp /lib/udev/rules.d/60-openocd.rules /etc/udev/rules.d/</code></pre>
+    </div>
+  </div>
+</section>
+
+<section class="closing">
+  <h2>Bereit zum Flashen?</h2>
+  <p>Den Quellcode, alle Versionen und die Issues findest du auf GitHub.</p>
+  <div class="cta center">
+    <a class="btn" href="https://github.com/StarkStrom-Driverless/fse_pb_bsp">fse_pb_bsp auf GitHub</a>
+    <a class="btn btn-ghost" href="assets/software_pyramid.png">Architektur-Grafik (PNG)</a>
+  </div>
+</section>
+
+</main>
+
+<footer class="foot">
+  <span>fse_pb_bsp · StarkStrom Augsburg Driverless</span>
+  <a href="#top">Nach oben ↑</a>
+</footer>
+
+<script src="js/main.js"></script>
+</body>
+</html>
