@@ -117,6 +117,37 @@
     <div class="tab-list" role="tablist">
       <button role="tab" aria-selected="true" data-tab="new">Neues Projekt</button>
       <button role="tab" aria-selected="false" data-tab="init">Bestehendes Projekt</button>
+      <button role="tab" aria-selected="false" data-tab="win">Windows</button>
+    </div>
+
+    <div class="tab-panel" data-panel="win" hidden>
+      <div class="split">
+        <div>
+<pre class="code" data-copy><code><span class="c"># PowerShell, gleiche Schritte wie unter Linux</span>
+mkdir my_project
+cd my_project
+
+git submodule add git@github.com:StarkStrom-Driverless/fse_pb_bsp.git
+
+cd fse_pb_bsp
+git checkout &lt;version&gt;
+
+powershell -ExecutionPolicy Bypass -File .\init.ps1
+
+cd ..
+.\ss.cmd build</code></pre>
+        </div>
+        <div>
+          <h3><code>init.ps1</code> statt <code>init.sh</code></h3>
+          <ul class="ticks">
+            <li>legt <code>usr\src</code>, <code>usr\inc</code>, <code>usr\simulink</code> an und kopiert die Starter-Dateien</li>
+            <li>legt <code>ss.cmd</code> in den Projektordner, denn Symlinks brauchen unter Windows Admin-Rechte</li>
+            <li>erstellt das venv (<code>cryptography</code>, <code>click</code>, <code>intelhex</code>, <code>pyyaml</code>, <code>cbor2</code>, <code>cantools</code>)</li>
+            <li>baut <code>libopencm3</code> und schreibt die <code>.vscode</code>-Konfiguration</li>
+          </ul>
+          <p class="callout">Erneut ausführbar, nichts Vorhandenes wird überschrieben. Mit <code>-SkipLibopencm3</code> oder <code>-SkipVenv</code> lassen sich Schritte überspringen. Voraussetzungen siehe <a href="#install">Installation</a>.</p>
+        </div>
+      </div>
     </div>
 
     <div class="tab-panel" data-panel="new">
@@ -292,6 +323,20 @@ cd ..</code></pre>
   <p class="note">Beide Build-Befehle geben den Pfad zur <code>.c</code>-Quelle aus, so springst du direkt in den Code. Ohne <code>./ss</code> geht es auch:
     <code>cd fse_pb_bsp/examples &amp;&amp; make adc</code>, <code>make clean</code> räumt auf.</p>
 
+  <div class="under">
+    <h3>Was unter dem Beispiel passiert</h3>
+    <p class="muted">Wähle ein Beispiel. Das Diagramm zeigt, wie Daten zwischen Hardware, Interrupt, RTOS-Objekten und deinem Task fließen.</p>
+    <div class="ex-pick" id="exPick" role="tablist" aria-label="Beispiel wählen"></div>
+    <div class="ex-view" id="exView" aria-live="polite"></div>
+    <div class="ex-legend">
+      <span><i class="n-hw"></i>Hardware</span>
+      <span><i class="n-isr"></i>Interrupt (ISR)</span>
+      <span><i class="n-obj"></i>RTOS-Objekt / Speicher</span>
+      <span><i class="n-api"></i>bsp-Funktion</span>
+      <span><i class="n-task"></i>dein Task</span>
+    </div>
+  </div>
+
   <div class="ex-wrap">
     <h3>Ein neues Beispiel in zwei Schritten</h3>
     <ol class="steps">
@@ -367,13 +412,40 @@ cd ..</code></pre>
   <div class="block-head">
     <p class="eyebrow">Installation</p>
     <h2>Toolchain einrichten.</h2>
-    <p>Getestet unter Linux. Unter Windows läuft es nicht direkt, nutze WSL2. Beim Flashen kann dort USB-Passthrough Probleme machen; Fallback ist ein Release-Binary, das du direkt per st-link aus dem abgeleiteten Steuergeräte-Repo flashst.</p>
+    <p>Am besten getestet unter Linux. Windows läuft nativ mit STM32CubeCLT (Build, Flash, Bootloader, MATLAB-Workflow), alternativ über WSL2. Dort kann USB-Passthrough beim Flashen Probleme machen; Fallback ist ein Release-Binary, das du direkt per st-link aus dem abgeleiteten Steuergeräte-Repo flashst.</p>
   </div>
 
   <div class="tabs" data-tabs>
     <div class="tab-list" role="tablist">
       <button role="tab" aria-selected="true" data-tab="ubuntu">Ubuntu</button>
       <button role="tab" aria-selected="false" data-tab="fedora">Fedora</button>
+      <button role="tab" aria-selected="false" data-tab="windows">Windows</button>
+    </div>
+
+    <div class="tab-panel" data-panel="windows" hidden>
+      <div class="split">
+        <div>
+          <h3>Voraussetzungen</h3>
+          <ol class="steps compact">
+            <li><span>1</span><div><strong>STM32CubeCLT</strong> von st.com. Liefert <code>arm-none-eabi-*</code> und <code>STM32_Programmer_CLI</code>. Gesucht wird unter <code>C:\ST</code> und <code>Program Files\ST</code>, sonst per <code>STM32CUBECLT_PATH</code> setzen.</div></li>
+            <li><span>2</span><div><strong>make.exe und sh.exe</strong>, z. B. aus dem <a href="https://github.com/xpack-dev-tools/windows-build-tools-xpack/releases">xpack windows-build-tools</a>-Archiv. Entpacken und <code>bin\</code> in den PATH legen oder <code>SS_MAKE</code> auf <code>make.exe</code> zeigen lassen.</div></li>
+            <li><span>3</span><div><strong>Python 3.10+</strong> von python.org. Der Microsoft-Store-Stub funktioniert nicht.</div></li>
+            <li><span>4</span><div><strong>Git</strong> für das Submodule.</div></li>
+          </ol>
+        </div>
+        <div>
+          <h3>Ablauf</h3>
+<pre class="code" data-copy><code><span class="c"># im Projektordner, nach dem Quickstart (init.ps1)</span>
+.\ss.cmd build
+.\ss.cmd flash
+.\ss.cmd bootloader --bin_file zephyr.bin
+.\ss.cmd clean
+
+<span class="c"># optional: F5-Debugging in VS Code</span>
+code --install-extension marus25.cortex-debug</code></pre>
+          <p class="callout"><strong>Flashen</strong> läuft über <code>STM32_Programmer_CLI</code> statt OpenOCD. Nur unter Linux gibt es <code>canflash</code>, die OpenOCD-Befehle, die Beispiel-Befehle und die GUI, dafür fehlt Windows SocketCAN. Bei langen Projektpfaden (&gt; 80 Zeichen) kommt es zu MAX_PATH-Fehlern: Projekt näher an die Laufwerkswurzel legen oder Long Paths aktivieren.</p>
+        </div>
+      </div>
     </div>
 
     <div class="tab-panel" data-panel="ubuntu">
