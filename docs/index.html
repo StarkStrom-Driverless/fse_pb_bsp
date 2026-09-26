@@ -17,6 +17,7 @@
     <a href="#stack">Architektur</a>
     <a href="#start">Quickstart</a>
     <a href="#tooling">Tooling</a>
+    <a href="#gui">GUI</a>
     <a href="#examples">Beispiele</a>
     <a href="#pins">Pins</a>
     <a href="#install">Installation</a>
@@ -195,7 +196,88 @@ cd ..</code></pre>
   </div>
 </section>
 
-<section id="examples" class="block alt">
+<section id="gui" class="block alt">
+  <div class="block-head">
+    <p class="eyebrow">GUI</p>
+    <h2>Dieselben Befehle, als Fenster.</h2>
+    <p>Ein Aufruf von <code>./ss</code> ohne Argumente (oder <code>./ss gui</code>) öffnet die grafische Oberfläche. Strg+C im Terminal schließt sie wieder.
+       Sie braucht <code>imgui-bundle</code>, das <code>init.sh</code> installiert. Nachgebaut zur Orientierung, das echte Fenster sieht im Detail anders aus.</p>
+  </div>
+
+  <div class="gui-win" data-tabs>
+    <div class="gui-bar">
+      <div class="tab-list gui-tabs" role="tablist">
+        <button role="tab" aria-selected="true" data-tab="g-build">Build</button>
+        <button role="tab" aria-selected="false" data-tab="g-ex">Examples</button>
+        <button role="tab" aria-selected="false" data-tab="g-mat">Matlab</button>
+      </div>
+      <span class="gui-title">ss gui</span>
+    </div>
+
+    <div class="gui-body" data-panel="g-build">
+      <div class="gui-col">
+        <h4>tools</h4>
+        <p><i class="dot ok"></i>arm-none-eabi-gcc <i class="dot ok"></i>openocd <i class="dot ok"></i>gdb</p>
+        <h4>firmware</h4>
+        <div class="meter"><label>flash</label><div class="bar"><b style="width:38%"></b></div><span>38 %</span></div>
+        <div class="meter"><label>ram</label><div class="bar"><b style="width:21%"></b></div><span>21 %</span></div>
+        <p class="kv"><span>elf</span>bp_test.elf <em>vor 2 min</em></p>
+        <p class="kv"><span>signed image</span>bp_test.signed.bin</p>
+        <div class="btnrow"><u>build</u><u>clean</u><u class="hot">flash</u></div>
+      </div>
+      <div class="gui-col">
+        <h4>openocd</h4>
+        <p><i class="dot ok"></i>openocd active</p>
+        <div class="btnrow"><u>oocd_start</u><u>oocd_stop</u><u>oocd_state</u></div>
+        <h4>bootloader</h4>
+        <p class="kv"><span>bin</span><em>zephyr.bin</em></p>
+        <p class="kv"><span>position</span><em>0x08000000</em></p>
+        <div class="btnrow"><u>bootloader</u></div>
+        <h4>canflash</h4>
+        <p><i class="dot ok"></i>can0 up</p>
+        <p class="kv"><span>can id</span><em>&lt;hex id&gt;</em></p>
+        <div class="btnrow"><u>canflash</u></div>
+      </div>
+    </div>
+
+    <div class="gui-body single" data-panel="g-ex" hidden>
+      <div class="gui-col">
+        <h4>examples</h4>
+        <div class="ex-list">
+          <u>adc</u><u>can_rx</u><u>can_tx</u><u>can_tod</u><u>error</u><u>eth_udp</u><u>fm</u><u>fsm</u>
+          <u>input</u><u>iob</u><u>output</u><u>pid</u><u>printf</u><u>pwm</u><u>spi</u><u>uart</u>
+        </div>
+        <p class="muted">Ein Beispiel auswählen zeigt seinen Quelltext. Von dort aus lässt es sich bauen (<code>example_build</code>) und flashen (<code>flash_example</code>).</p>
+      </div>
+    </div>
+
+    <div class="gui-body single" data-panel="g-mat" hidden>
+      <div class="gui-col">
+        <h4>workflow <small>Box anklicken führt den Schritt aus</small></h4>
+        <div class="flow">
+          <div class="fb ok"><b>matlab_init</b><small>libraries + model</small></div>
+          <i>→</i>
+          <div class="fb ok"><b>matlab_config</b><small>ert.tlc, step 0.001 s</small></div>
+          <i>→</i>
+          <div class="fb idle"><b>matlab_open</b><small>edit the model</small></div>
+          <i>→</i>
+          <div class="fb warn"><b>matlab_build</b><small>model is newer</small></div>
+          <i>→</i>
+          <div class="fb bad"><b>build</b><small>no elf</small></div>
+          <i>→</i>
+          <div class="fb idle"><b>flash</b><small>openocd down</small></div>
+        </div>
+        <p class="legend"><i class="dot ok"></i>aktuell <i class="dot warn"></i>veraltet <i class="dot bad"></i>fehlt <i class="dot idle"></i>neutral</p>
+        <p class="muted">Der Status ergibt sich aus Dateizeiten und Einstellungen: ist das Modell neuer als der generierte Code, wird <code>matlab_build</code> gelb.
+        Unter <strong>Config</strong> laufen Einrichtung, Libraries und Cleanup, unter <strong>CAN</strong> die generierten Message-Libraries und <code>can_gen</code>.</p>
+      </div>
+    </div>
+
+    <div class="gui-log"><span class="p">$</span> ./ss flash <span class="ok">… flashed via OpenOCD ✓</span></div>
+  </div>
+</section>
+
+<section id="examples" class="block">
   <div class="block-head">
     <p class="eyebrow">Beispiele</p>
     <h2>Eine Peripherie, eine Datei.</h2>
