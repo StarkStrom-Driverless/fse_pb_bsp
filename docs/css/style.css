@@ -302,3 +302,18 @@ main { max-width: 1160px; margin: 0 auto; padding: 0 clamp(1rem, 4vw, 2rem); }
 .ex-src { margin: 0; padding: 1rem; background: #08100d; border: 1px solid #1f322a; border-radius: 8px; font: .8rem/1.6 var(--mono); overflow-x: auto; }
 .ex-src .k { color: #f5b942; } .ex-src .s { color: #7fd6ff; } .ex-src .t { color: #c39bff; } .ex-src .f { color: #33e6a0; }
 @media (max-width: 900px) { .gui-body.gui-ex { grid-template-columns: 1fr; } .ex-side { flex-direction: row; flex-wrap: wrap; border-right: 0; } }
+
+/* simulink */
+.lay-row { display: flex; gap: 8px; width: 100%; }
+.lay-row .lay { flex: 1; width: auto !important; margin: 0 !important; }
+.l-sim { background: color-mix(in srgb, #4f8cff 20%, var(--panel)); color: color-mix(in srgb, #4f8cff 65%, var(--text)); border-color: color-mix(in srgb, #4f8cff 55%, var(--line)); }
+.col.right .l-app { width: auto; }
+.sim { margin-top: 2rem; padding: 1.6rem; background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); }
+.sim .ex-lanes { margin-top: 1.2rem; }
+.sim .nd code { font-size: .78rem; }
+
+/* language switch */
+.lang { display: inline-flex; padding: 3px; gap: 2px; border: 1px solid var(--line); border-radius: 999px; background: var(--panel); }
+.lang button { font: 700 .72rem var(--mono); letter-spacing: .06em; padding: .28rem .6rem; border: 0; border-radius: 999px; background: none; color: var(--muted); cursor: pointer; }
+.lang button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+.col.right .lay-row { width: 78%; margin: 0 auto; }

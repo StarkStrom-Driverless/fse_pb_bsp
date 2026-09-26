@@ -1,6 +1,50 @@
 (function () {
   "use strict";
 
+  /* ---------- language ---------- */
+  var EN = window.SS_EN || { ui: {}, info: {}, html: {}, ex: {}, tag: {} };
+  var DE_UI = {
+    title: document.title,
+    desc: (document.querySelector('meta[name="description"]') || {}).content || "",
+    searchPh: "Pin suchen, z. B. PB5 oder SPI3", searchAria: "Pin suchen",
+    noHits: "Keine Treffer.", count: "{a} von {b} Pins", all: "alle",
+    copy: "kopieren", copied: "kopiert ✓",
+    filterAria: "Funktion filtern", portAria: "Port wählen", exAria: "Beispiel wählen",
+    termAria: "Beispiel-Terminal"
+  };
+  var DE_HTML = {};
+  document.querySelectorAll("[data-i]").forEach(function (e) { DE_HTML[e.getAttribute("data-i")] = e.innerHTML; });
+  var lang = "de", translated = false, langHooks = [];
+
+  function tt(k) { return lang === "en" && EN.ui[k] !== undefined ? EN.ui[k] : DE_UI[k]; }
+  function tr(s) { return lang === "en" && EN.ex[s] !== undefined ? EN.ex[s] : s; }
+
+  function setLang(l, persist) {
+    lang = l;
+    document.documentElement.lang = l;
+    if (persist) { try { localStorage.setItem("ss-lang", l); } catch (e) {} }
+    document.title = tt("title");
+    var md = document.querySelector('meta[name="description"]');
+    if (md) md.setAttribute("content", tt("desc"));
+    document.querySelectorAll("[data-lang]").forEach(function (b) { b.setAttribute("aria-pressed", b.dataset.lang === l); });
+
+    if (l === "en" || translated) {
+      document.querySelectorAll("[data-i]").forEach(function (el) {
+        if (!el.isConnected) return;
+        var k = el.getAttribute("data-i");
+        var v = l === "en" ? EN.html[k] : DE_HTML[k];
+        if (v !== undefined) el.innerHTML = v;
+      });
+      translated = l === "en";
+    }
+    langHooks.forEach(function (h) { h(); });
+  }
+
+  document.querySelectorAll("[data-lang]").forEach(function (b) {
+    b.addEventListener("click", function () { setLang(b.dataset.lang, true); });
+  });
+
+
   /* ---------- hero terminal typing ---------- */
   var term = document.getElementById("term");
   var script = [
@@ -59,13 +103,14 @@
   /* ---------- copy buttons ---------- */
   document.querySelectorAll("pre[data-copy]").forEach(function (pre) {
     var b = document.createElement("button");
-    b.className = "copy"; b.type = "button"; b.textContent = "kopieren";
+    b.className = "copy"; b.type = "button"; b.textContent = tt("copy");
     b.addEventListener("click", function () {
       var txt = pre.querySelector("code").innerText;
-      var done = function () { b.textContent = "kopiert ✓"; b.classList.add("done"); setTimeout(function () { b.textContent = "kopieren"; b.classList.remove("done"); }, 1400); };
+      var done = function () { b.textContent = tt("copied"); b.classList.add("done"); setTimeout(function () { b.textContent = tt("copy"); b.classList.remove("done"); }, 1400); };
       if (navigator.clipboard) navigator.clipboard.writeText(txt).then(done, function () {});
     });
     pre.appendChild(b);
+    langHooks.push(function () { if (!b.classList.contains("done")) b.textContent = tt("copy"); });
   });
 
   /* ---------- stack diagram ---------- */
@@ -76,17 +121,21 @@
     ocm3: ["libopencm3", "Low-Level-Konfigurationsbibliothek für verschiedene Mikrocontroller-Plattformen."],
     rtos: ["FreeRTOS", "Das Echtzeitbetriebssystem. fse_pb_bsp kapselt seine Nutzung (Tasks, Delays, Start)."],
     bsp: ["fse_pb_bsp", "Die eigene Abstraktionsschicht für die Controller-Konfiguration: GPIO, PWM, ADC, CAN, SPI, UART und mehr."],
-    app: ["application", "Deine eigentliche Steuergeräte-Software, ohne Register- oder RTOS-Details."]
+    app: ["application", "Deine eigentliche Steuergeräte-Software in C, ohne Register- oder RTOS-Details."],
+    sim: ["Simulink", "Alternativ zur C-Anwendung: Aus dem Modell erzeugt ./ss matlab_build C-Code. Ein eigener Task ruft <model>_initialize() und danach alle SS_MODEL_STEP_MS <model>_step() auf. Die ss_*-Blöcke rufen darunter die fse_pb_bsp-API auf."]
   };
   var box = document.getElementById("stackInfo");
   var layers = document.querySelectorAll(".lay");
+  var curLayer = null;
   function show(el) {
-    var d = info[el.dataset.k];
+    curLayer = el;
+    var d = (lang === "en" && EN.info[el.dataset.k]) || info[el.dataset.k];
     layers.forEach(function (l) { l.classList.toggle("on", l === el); });
     box.innerHTML = "<h3></h3><p></p>";
     box.firstChild.textContent = d[0];
     box.lastChild.textContent = d[1];
   }
+  langHooks.push(function () { if (curLayer) show(curLayer); });
   layers.forEach(function (l) {
     l.tabIndex = 0;
     l.addEventListener("click", function () { show(l); });
@@ -333,34 +382,36 @@
     return e;
   }
 
+  var curEx = "can_rx";
   function showEx(name) {
+    curEx = name;
     var d = EX[name];
     exPick.querySelectorAll("button").forEach(function (b) { b.setAttribute("aria-selected", b.dataset.k === name); });
     exView.textContent = "";
-    exView.appendChild(mk("p", "ex-sum", d.sum));
+    exView.appendChild(mk("p", "ex-sum", tr(d.sum)));
     var lanes = mk("div", "ex-lanes");
     exView.appendChild(lanes);
     d.lanes.forEach(function (lane) {
       var wrap = mk("div", "lane");
-      wrap.appendChild(mk("div", "lane-t", lane.t));
+      wrap.appendChild(mk("div", "lane-t", tr(lane.t)));
       var row = mk("div", "lane-row");
       lane.n.forEach(function (n, i) {
         if (i) {
           var ar = mk("div", "arr");
-          ar.appendChild(mk("span", "", n[3] || ""));
+          ar.appendChild(mk("span", "", tr(n[3] || "")));
           ar.appendChild(mk("b", "", "→"));
           row.appendChild(ar);
         }
         var box = mk("div", "nd n-" + n[0]);
         box.appendChild(mk("span", "tag", TAG[n[0]]));
-        box.appendChild(mk("code", "", n[1]));
-        if (n[2]) box.appendChild(mk("small", "", n[2]));
+        box.appendChild(mk("code", "", tr(n[1])));
+        if (n[2]) box.appendChild(mk("small", "", tr(n[2])));
         row.appendChild(box);
       });
       wrap.appendChild(row);
       lanes.appendChild(wrap);
     });
-    if (d.note) exView.appendChild(mk("p", "ex-note", d.note));
+    if (d.note) exView.appendChild(mk("p", "ex-note", tr(d.note)));
   }
 
   ORDER.forEach(function (k) {
@@ -369,6 +420,7 @@
     b.addEventListener("click", function () { showEx(k); });
     exPick.appendChild(b);
   });
+  langHooks.push(function () { showEx(curEx); });
   showEx("can_rx");
 
   /* ---------- pin explorer ---------- */
@@ -450,10 +502,29 @@
         return v ? '<td class="sig">' + hl(v, q) + "</td>" : "<td></td>";
       }).join("");
       return '<tr class="' + (any ? "" : "none") + '"><td>' + hl(p[0], q) + "</td>" + tds + "</tr>";
-    }).join("") || '<tr><td colspan="9" style="color:var(--muted)">Keine Treffer.</td></tr>';
-    count.textContent = rows.length + " von " + pins.length + " Pins";
+    }).join("") || '<tr><td colspan="9" style="color:var(--muted)">' + tt("noHits") + "</td></tr>";
+    count.textContent = tt("count").replace("{a}", rows.length).replace("{b}", pins.length);
   }
 
-  document.getElementById("pinSearch").addEventListener("input", function (e) { state.q = e.target.value; render(); });
+  var search = document.getElementById("pinSearch");
+  search.addEventListener("input", function (e) { state.q = e.target.value; render(); });
   render();
+
+  langHooks.push(function () {
+    search.placeholder = tt("searchPh");
+    search.setAttribute("aria-label", tt("searchAria"));
+    fWrap.setAttribute("aria-label", tt("filterAria"));
+    pWrap.setAttribute("aria-label", tt("portAria"));
+    pWrap.firstChild.textContent = tt("all");
+    exPick.setAttribute("aria-label", tt("exAria"));
+    var term = document.querySelector(".terminal");
+    if (term) term.setAttribute("aria-label", tt("termAria"));
+    render();
+  });
+
+  var saved = null;
+  try { saved = localStorage.getItem("ss-lang"); } catch (e) {}
+  var q = /[?&]lang=(de|en)/.exec(location.search);
+  var start = (q && q[1]) || saved || ((navigator.language || "de").toLowerCase().indexOf("de") === 0 ? "de" : "en");
+  if (start === "en") setLang("en", false);
 })();
